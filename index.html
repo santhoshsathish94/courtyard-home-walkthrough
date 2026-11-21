@@ -271,14 +271,14 @@
     </div>
     <div class="dnote" data-d="open" hidden>
     <b>Open plan · same layout, more openness</b><br/>
-    • Same rooms in the same places, same plot<br/>
-    • Courtyard is now a level stone floor under the skylight, so lounge, courtyard and foyer become one 11′-9″ × 19′-5″ living hall<br/>
-    • Stone ledge, pool and 2 of the 4 columns removed; the other 2 are slim and round<br/>
-    • Pooja is an open niche in the NE (slat screen removed), so the kitchen and dining open up<br/>
-    • Upstairs, the useless 1′-9″ walkway becomes part of a wider double-height void<br/>
-    • Common bath under the stair grows from 4′-5″ to 6′-2″ × 3′-2″ (WC + shower + basin): the flight above is a slim folded-plate slab; floor stays level, door opens out<br/>
-    • Both stairs share the slim folded-plate look; a stair-hall window + glass carport door let you see the stair from the parking, like from the balcony<br/>
-    • Study upstairs is a library (bookshelf wall + one table); the washer sits under the utility sink counter
+    • Same rooms in the same places, same plot; lounge, courtyard and foyer form one 11′-9″ × 19′-5″ living hall<br/>
+    • The courtyard fills the whole centre: an 11′-7″ × 7′-8″ double-height space under a wider skylight. The secondary bedroom's door moved to its south side, so the side walkway is gone<br/>
+    • Two slim round columns sit at the kitchen edge; the hall itself has no columns<br/>
+    • Main door and bath doors open outward; bedroom doors open inward and rest against a wall<br/>
+    • NE pooja: teak mandir on the east wall, idols face west, seen from the hall<br/>
+    • No separate dining table; the kitchen island seats six<br/>
+    • Common bath 6′-2″ × 3′-2″ under a slim folded-plate stair; the stair is seen from the parking<br/>
+    • Study upstairs is a library; washer under the utility sink; Buddha fountain on the SE rainwater tank
     </div>
   </div>
 
@@ -739,6 +739,64 @@
         }
       }
     }
+    // Cylinder between two points (used for the statue's arms).
+    function cylBetween(parent, a, b, r0, r1, material) {
+      const A = new THREE.Vector3(...a), B = new THREE.Vector3(...b);
+      const m = new THREE.Mesh(new THREE.CylinderGeometry(r1, r0, A.distanceTo(B), 12), material);
+      m.position.copy(A).add(B).multiplyScalar(0.5);
+      m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), B.clone().sub(A).normalize());
+      m.castShadow = true;
+      parent.add(m);
+      return m;
+    }
+    const buddhaStone = std(0x9b958a, 0.92), darkStone = std(0x7d766b, 0.95);
+    // Garden Buddha fountain: round stone pond, rock plinth, lotus seat, seated Buddha (dhyana mudra) facing -z,
+    // water spilling from an offering bowl into the pond.
+    function addBuddhaFountain(parent, x, y, z, rotY = 0) {
+      const g = new THREE.Group();
+      g.position.set(x, y, z); g.rotation.y = rotY;
+      parent.add(g);
+      const add = (geo, material, px, py, pz, sx = 1, sy = 1, sz = 1, shadow = true) => {
+        const m = new THREE.Mesh(geo, material);
+        m.position.set(px, py, pz); m.scale.set(sx, sy, sz); m.castShadow = shadow; m.receiveShadow = true;
+        g.add(m);
+        return m;
+      };
+      add(new THREE.CylinderGeometry(2.7, 2.8, 1.0, 44), mat.stone, 0, 0.5, 0);
+      add(new THREE.CylinderGeometry(2.38, 2.38, 0.04, 44), mat.water, 0, 1.0, 0, 1, 1, 1, false);
+      add(new THREE.TorusGeometry(2.52, 0.16, 10, 48), mat.stone, 0, 1.02, 0).rotation.x = Math.PI / 2;
+      add(new THREE.DodecahedronGeometry(0.95, 0), darkStone, 0, 1.25, 0.15, 1.35, 0.75, 1.15);
+      add(new THREE.DodecahedronGeometry(0.5, 0), darkStone, 0.95, 1.05, -0.55, 1.0, 0.7, 0.9);
+      add(new THREE.CylinderGeometry(0.85, 0.7, 0.3, 18), buddhaStone, 0, 1.95, 0.1);
+      for (let i = 0; i < 12; i++) {
+        const a = (i / 12) * Math.PI * 2;
+        add(new THREE.SphereGeometry(0.22, 10, 8), buddhaStone, Math.cos(a) * 0.82, 1.95, 0.1 + Math.sin(a) * 0.82, 1.0, 0.5, 0.65).rotation.y = -a;
+      }
+      add(new THREE.SphereGeometry(1, 24, 14), buddhaStone, 0, 2.32, 0.08, 0.95, 0.32, 0.64);      // crossed legs
+      add(new THREE.CylinderGeometry(0.42, 0.55, 1.0, 18), buddhaStone, 0, 2.92, 0.15);             // torso
+      add(new THREE.SphereGeometry(0.5, 20, 12), buddhaStone, 0, 3.4, 0.15, 1.12, 0.55, 0.78);      // shoulders
+      for (const s of [-1, 1]) {
+        cylBetween(g, [s * 0.55, 3.35, 0.12], [s * 0.42, 2.75, -0.08], 0.13, 0.12, buddhaStone);
+        cylBetween(g, [s * 0.42, 2.75, -0.08], [s * 0.12, 2.55, -0.32], 0.12, 0.1, buddhaStone);
+        add(new THREE.BoxGeometry(0.06, 0.34, 0.12), buddhaStone, s * 0.31, 3.98, 0.1);                // long ears
+      }
+      add(new THREE.SphereGeometry(0.17, 12, 8), buddhaStone, 0, 2.55, -0.34, 1.7, 0.6, 1.0);      // hands resting in the lap
+      add(new THREE.CylinderGeometry(0.14, 0.16, 0.2, 12), buddhaStone, 0, 3.72, 0.12);             // neck
+      add(new THREE.SphereGeometry(0.31, 20, 16), buddhaStone, 0, 4.05, 0.1, 0.92, 1.06, 0.95);     // head
+      add(new THREE.SphereGeometry(0.13, 12, 10), buddhaStone, 0, 4.4, 0.12);                        // ushnisha
+      const faceMat = std(0x5f594f, 0.9);                                                            // face, so the front reads clearly
+      for (const s of [-1, 1]) add(new THREE.BoxGeometry(0.1, 0.018, 0.02), faceMat, s * 0.1, 4.08, -0.18, 1, 1, 1, false);   // closed eyes
+      add(new THREE.ConeGeometry(0.035, 0.1, 8), buddhaStone, 0, 4.0, -0.22, 1, 1, 1, false).rotation.x = -Math.PI / 2;      // nose
+      add(new THREE.BoxGeometry(0.08, 0.016, 0.02), faceMat, 0, 3.9, -0.17, 1, 1, 1, false);                                  // lips
+      add(new THREE.SphereGeometry(0.022, 8, 6), faceMat, 0, 4.16, -0.185, 1, 1, 1, false);                                   // urna
+      cylBetween(g, [0.5, 3.48, -0.05], [-0.38, 2.75, -0.28], 0.05, 0.05, buddhaStone);                                       // robe fold across the chest
+      add(new THREE.CylinderGeometry(0.58, 0.58, 0.05, 36), buddhaStone, 0, 4.0, 0.42).rotation.x = Math.PI / 2;   // halo
+      add(new THREE.CylinderGeometry(0.32, 0.2, 0.2, 18), buddhaStone, 0, 1.9, -0.95);              // offering bowl
+      add(new THREE.CylinderGeometry(0.29, 0.29, 0.02, 18), mat.water, 0, 1.99, -0.95, 1, 1, 1, false);
+      add(new THREE.BoxGeometry(0.22, 0.95, 0.03), mat.water, 0, 1.5, -1.26, 1, 1, 1, false);       // water spilling into the pond
+      for (const r of [0.35, 0.6]) add(new THREE.TorusGeometry(r, 0.015, 6, 32), mat.water, 0, 1.03, -1.3, 1, 1, 1, false).rotation.x = Math.PI / 2;
+      return g;
+    }
     function addBed(parent, x, y, z, rotY = 0, w = 5.4, l = 6.6) {
       const g = new THREE.Group(); g.position.set(x, y, z); g.rotation.y = rotY;
       box(g, 0, 0.75, 0.1, w, 0.5, l - 0.2, mat.teak);
@@ -881,24 +939,6 @@
     box(site, -15, -0.5, 16.5, 30, 0.35, 600, mat.road, false);
     for (let z = -150; z <= 180; z += 8) box(site, -15, -0.31, z, 0.4, 0.04, 3.5, mat.cream, false);
 
-    // Generic neighbourhood context — placeholder massing so views out of windows aren't empty (not surveyed).
-    const nbMats = [std(0xe3d7c6, 0.9), std(0xd2c3ae, 0.9), std(0xe8e0d2, 0.9), std(0xcbb79d, 0.9)];
-    function neighbour(x, z, w, d, floors, k) {
-      const m = nbMats[k % nbMats.length], h = floors * 10;
-      box(site, x, h / 2 - 0.3, z, w, h, d, m);
-      box(site, x, h + 1.2, z, w + 0.4, 2.4, d + 0.4, m);
-      box(site, x, h + 2.45, z, w + 0.8, 0.15, d + 0.8, mat.brownRoof);
-      for (let f = 0; f < floors; f++) {
-        for (const sx of [-1, 1]) box(site, x + sx * w * 0.25, f * 10 + 5.2, z + d / 2 + 0.05, w * 0.22, 4.2, 0.12, mat.charcoal, false);
-        for (const sx of [-1, 1]) box(site, x + sx * w * 0.25, f * 10 + 5.2, z - d / 2 - 0.05, w * 0.22, 4.2, 0.12, mat.charcoal, false);
-        for (const sz of [-1, 1]) box(site, x + w / 2 + 0.05, f * 10 + 5.2, z + sz * d * 0.25, 0.12, 4.2, d * 0.2, mat.charcoal, false);
-        for (const sz of [-1, 1]) box(site, x - w / 2 - 0.05, f * 10 + 5.2, z + sz * d * 0.25, 0.12, 4.2, d * 0.2, mat.charcoal, false);
-      }
-    }
-    [[-47, -22, 26, 24, 2], [-47, 10, 26, 22, 2], [-47, 40, 26, 26, 3], [-47, 72, 26, 24, 2],
-      [22, -24, 40, 22, 2], [70, 6, 22, 30, 2], [-47, -55, 26, 26, 2]]
-      .forEach(([x, z, w, d, f], i) => neighbour(x, z, w, d, f, i));
-
     const plotShape = new THREE.Shape();
     plotShape.moveTo(0, 0); plotShape.lineTo(51, 0);
     plotShape.lineTo(46, 33); plotShape.lineTo(0, 33);
@@ -934,9 +974,18 @@
     box(siteGrp, 1.5, -0.22, 27.5, 4.5, 0.15, 9.5, mat.paver, false);    // gate threshold
     box(siteGrp, 23.8, -0.2, 23.7, 5.4, 0.16, 2.4, mat.stone, false);    // entry porch slab
     for (let z = 25.9; z <= 31.2; z += 2.1) box(siteGrp, 23.8, -0.2, z, 2.8, 0.1, 1.3, mat.paver, false);
-    box(siteGrp, 41.5, -0.18, 29.8, 6.2, 0.15, 3.6, mat.paver, false);
-    box(siteGrp, 41.5, 1.35, 29.8, 4.8, 0.2, 1.6, mat.teak);             // garden bench
-    for (const bx of [39.5, 43.5]) box(siteGrp, bx, 0.6, 29.8, 0.3, 1.3, 1.4, mat.teak);
+    if (open) {
+      // SE corner: Buddha water fountain on the rainwater tank slab, facing the house; bench beside it facing the fountain.
+      box(siteGrp, 37.5, -0.18, 29.7, 8.6, 0.15, 5.8, mat.paver, false);
+      box(siteGrp, 34.6, 1.35, 29.7, 1.6, 0.2, 4.8, mat.teak);
+      for (const bz of [27.9, 31.5]) box(siteGrp, 34.6, 0.6, bz, 1.4, 1.3, 0.3, mat.teak);
+      addBuddhaFountain(siteGrp, 39.5, -0.3, 29.7);
+      addWarmLight(siteGrp, 38.0, 1.6, 27.6, 6, 9);
+    } else {
+      box(siteGrp, 41.5, -0.18, 29.8, 6.2, 0.15, 3.6, mat.paver, false);
+      box(siteGrp, 41.5, 1.35, 29.8, 4.8, 0.2, 1.6, mat.teak);             // garden bench
+      for (const bx of [39.5, 43.5]) box(siteGrp, bx, 0.6, 29.8, 0.3, 1.3, 1.4, mat.teak);
+    }
 
     // House at site X=3.5..43.5 (40'), Z=2.5..22.5 (20')
     const house = new THREE.Group();
@@ -981,8 +1030,8 @@
     if (open) {
       // Level stone courtyard floor (covered by the skylight hood), drain channel and one small round planter,
       // set east of the main-door axis so the view from the entrance to the lounge stays clear.
-      box(groundGrp, 19.5, 0.085, 10.0, 7.2, 0.02, 8.0, mat.stone, false);
-      box(groundGrp, 19.5, 0.09, 6.15, 7.2, 0.02, 0.18, mat.charcoal, false);
+      box(groundGrp, 20.125, 0.085, 10.0, 11.75, 0.02, 8.0, mat.stone, false);    // courtyard fills the whole centre (x 14.25–26)
+      box(groundGrp, 20.125, 0.09, 6.15, 11.75, 0.02, 0.18, mat.charcoal, false);
       const bowl = new THREE.Mesh(new THREE.CylinderGeometry(1.25, 1.05, 1.4, 32), mat.stone);
       bowl.position.set(22.0, 0.78, 10.0); bowl.castShadow = bowl.receiveShadow = true; groundGrp.add(bowl);
       const soil = new THREE.Mesh(new THREE.CylinderGeometry(1.1, 1.1, 0.08, 32), mat.soil);
@@ -1010,7 +1059,8 @@
     }
     if (open) {
       // Only the two east columns carry the void edge; slim round columns keep sight lines open.
-      for (const [cx, cz] of [[23, 6], [23, 14]]) {
+      // Two slim round columns at the kitchen edge (x 26) carry the void-edge beams, so the whole living hall is column-free.
+      for (const [cx, cz] of [[26, 6], [26, 14]]) {
         const c = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.32, H1, 20), mat.cream);
         c.position.set(cx, H1 / 2, cz); c.castShadow = c.receiveShadow = true; groundGrp.add(c);
       }
@@ -1028,7 +1078,7 @@
     ]);
     for (let lz = 3.8; lz <= 7.8; lz += 0.65) box(groundGrp, -0.45, 5.15, lz, 0.18, 5.4, 0.35, mat.teak);
     wall(groundGrp, 40, 0, 40, 20, H1, 0.6, mat.cream, [
-      { start: 2.0, width: 4.0, bottom: 3.0, top: 7.8, type: 'window' },
+      { start: 2.0, width: 4.0, bottom: open ? 6.3 : 3.0, top: 7.8, type: 'window' },   // open: high window above the pooja mandir
       { start: 11.5, width: 3.0, bottom: 0, top: 7.4, type: 'door', swing: -1, closed: true, label: 'utility door' },
       { start: 15.2, width: 3.5, bottom: 3.5, top: 7.8, type: 'window' }
     ]);
@@ -1036,7 +1086,7 @@
       // open: stair-hall window + glazed carport door, the same as the first floor's window + balcony door, so the stair is seen from the parking
       ...(open ? [{ start: 3.5, width: 5.5, bottom: 2.5, top: 7.5, type: 'window' }] : []),
       { start: 10.4, width: 3.2, bottom: 0, top: 7.8, type: 'door', closed: true, glazed: open, label: 'carport door' },
-      { start: 18.6, width: 3.4, bottom: 0, top: 8.2, type: 'door', swing: -1, closed: true, label: 'main door' },
+      { start: 18.6, width: 3.4, bottom: 0, top: 8.2, type: 'door', swing: open ? 1 : -1, closed: true, label: 'main door' },   // open: opens outward onto the porch
       { start: 25.5, width: 12.0, bottom: 0, top: 8.4, type: 'slider', open: true, label: 'veranda sliding door' }
     ]);
     addChajja(groundGrp, 'W', 2.5, 9.0, 8.4, 2.0, 0.7);
@@ -1050,7 +1100,7 @@
       { start: 3.5, width: 5.0, bottom: 7.6, top: 9.0, type: 'window' }
     ]);
     wall(groundGrp, 0, 12, 14, 12, H1, 0.5, mat.cream, [
-      { start: 10.4, width: 3.1, bottom: 0, top: 7.5, type: 'door', swing: -1, label: 'bedroom door' }
+      { start: 10.4, width: 3.1, bottom: 0, top: 7.5, type: 'door', swing: -1, hinge: open ? 'end' : 'start', label: 'bedroom door' }   // open: inward, rests against the east wall
     ]);
 
     // 10'×8' RCC dog-leg stair (west) + under-stair WC opening into the lobby
@@ -1129,10 +1179,12 @@
     addTable(furnGround, 16.2, 0.08, 19.05, 3.0, 1.1, 2.6);
     box(furnGround, 16.2, 5.0, 19.66, 2.4, 2.4, 0.05, mat.mirror, false);
     addPlant(furnGround, 23.9, 0.08, 18.9, 1.1);
-    // Dining for six
-    addTable(furnGround, 30.0, 0.08, 7.8, 5.4, 3.0, 2.5);
-    for (const cx of [28.2, 30.0, 31.8]) { addChair(furnGround, cx, 0.08, 5.75, 0); addChair(furnGround, cx, 0.08, 9.85, Math.PI); }
-    addFan(furnGround, 30.0, H1, 7.8);
+    // Dining for six (open: no separate dining table — the kitchen island seats six)
+    if (!open) {
+      addTable(furnGround, 30.0, 0.08, 7.8, 5.4, 3.0, 2.5);
+      for (const cx of [28.2, 30.0, 31.8]) { addChair(furnGround, cx, 0.08, 5.75, 0); addChair(furnGround, cx, 0.08, 9.85, Math.PI); }
+    }
+    addFan(furnGround, open ? 32.0 : 30.0, H1, open ? 10.6 : 7.8);
     // Kitchen: fridge + cooktop run north of the utility door, sink run under the east window, island + stools
     box(furnGround, 38.6, 3.08, 7.3, 2.2, 6.0, 2.2, mat.steel);
     addCounter(furnGround, 37.6, 8.45, 39.7, 11.2, 0.08);
@@ -1143,10 +1195,55 @@
     box(furnGround, 39.45, 3.35, 17.0, 0.12, 0.7, 0.12, mat.steel);
     addCounter(furnGround, 29.6, 12.25, 34.4, 14.75, 0.08);
     for (const sx of [30.4, 32.0, 33.6]) addStool(furnGround, sx, 0.08, 15.6);
-    // Pooja: original = teak slat screen enclosing the nook; open = mandir niche on the NE wall, no screen
-    if (!open) for (let sx = 33.5; sx <= 39.0; sx += 0.7) box(furnGround, sx, 4.55, 5.5, 0.15, 9.0, 0.2, mat.teak);
-    box(furnGround, 36.5, 1.68, 1.5, 4.5, 3.2, 1.5, mat.teak);
-    box(furnGround, 36.5, 4.88, 0.45, 2.6, 3.2, 0.08, mat.brass);
+    if (open) for (const sx of [30.4, 32.0, 33.6]) addStool(furnGround, sx, 0.08, 11.4);
+    if (!open) {
+      // Pooja (original): teak slat screen enclosing the nook, cabinet on the north wall
+      for (let sx = 33.5; sx <= 39.0; sx += 0.7) box(furnGround, sx, 4.55, 5.5, 0.15, 9.0, 0.2, mat.teak);
+      box(furnGround, 36.5, 1.68, 1.5, 4.5, 3.2, 1.5, mat.teak);
+      box(furnGround, 36.5, 4.88, 0.45, 2.6, 3.2, 0.08, mat.brass);
+    } else {
+      // Pooja: carved teak mandir on the NE corner's east wall, so the idols face west (you face east to pray)
+      // and the whole shrine is seen from the living hall.
+      const P = furnGround, marigold = std(0xf59e0b, 0.7), leafMat = std(0x15803d, 0.8), flame = new THREE.MeshBasicMaterial({ color: 0xffb347 });
+      const put = (geo, material, px, py, pz, ry = 0) => { const m = new THREE.Mesh(geo, material); m.position.set(px, py, pz); m.rotation.y = ry; m.castShadow = true; P.add(m); return m; };
+      box(P, 38.85, 1.24, 3.0, 1.7, 2.32, 3.8, mat.teak);                 // base cabinet
+      box(P, 38.85, 2.44, 3.0, 1.8, 0.08, 3.9, mat.teak);                 // altar top
+      box(P, 39.62, 4.0, 3.0, 0.08, 3.2, 3.4, mat.brass);                 // brass back panel
+      for (const pz of [1.25, 4.75]) box(P, 38.12, 4.0, pz, 0.24, 3.2, 0.24, mat.teak);   // pillars
+      box(P, 38.85, 5.72, 3.0, 1.9, 0.3, 4.0, mat.teak);                  // canopy
+      put(new THREE.ConeGeometry(1.25, 1.2, 4), mat.teak, 38.85, 6.47, 3.0, Math.PI / 4);   // shikhara
+      put(new THREE.SphereGeometry(0.12, 12, 8), mat.brass, 38.85, 7.12, 3.0);
+      for (const [iz, s] of [[3.0, 1.0], [2.2, 0.75], [3.8, 0.75]]) {    // three brass idols facing west, halos behind (east)
+        put(new THREE.CylinderGeometry(0.22 * s, 0.26 * s, 0.18 * s, 14), mat.brass, 39.15, 2.57, iz);
+        put(new THREE.CylinderGeometry(0.12 * s, 0.24 * s, 0.6 * s, 14), mat.brass, 39.15, 2.66 + 0.3 * s, iz);
+        put(new THREE.SphereGeometry(0.12 * s, 12, 10), mat.brass, 39.15, 2.66 + 0.72 * s, iz);
+        put(new THREE.ConeGeometry(0.09 * s, 0.2 * s, 10), mat.brass, 39.15, 2.66 + 0.9 * s, iz);
+        put(new THREE.TorusGeometry(0.2 * s, 0.025, 6, 20), mat.brass, 39.33, 2.66 + 0.72 * s, iz, Math.PI / 2);
+      }
+      for (const lz of [2.0, 4.0]) {                                      // diyas
+        put(new THREE.CylinderGeometry(0.16, 0.1, 0.08, 14), mat.brass, 38.3, 2.52, lz);
+        put(new THREE.ConeGeometry(0.05, 0.16, 8), flame, 38.3, 2.64, lz).castShadow = false;
+      }
+      for (const [fx, fz] of [[38.55, 2.6], [38.55, 3.4], [38.4, 3.0]]) put(new THREE.SphereGeometry(0.11, 10, 8), marigold, fx, 2.54, fz);
+      put(new THREE.ConeGeometry(0.16, 0.3, 14, 1, true), mat.brass, 38.05, 5.05, 3.0);   // bell
+      box(P, 38.05, 5.4, 3.0, 0.02, 0.4, 0.02, mat.brass);
+      for (let i = 0; i <= 18; i++) {                                     // marigold + mango-leaf toran across the canopy
+        const tz = 1.15 + (3.7 * i) / 18, sag = 0.22 * (1 - Math.pow((i / 18) * 2 - 1, 2));
+        put(new THREE.SphereGeometry(0.07, 8, 6), i % 3 ? marigold : leafMat, 37.88, 5.5 - sag, tz);
+      }
+      for (const lz of [0.75, 5.25]) {                                    // brass lamp stands
+        box(P, 37.7, 0.12, lz, 0.5, 0.08, 0.5, mat.brass);
+        box(P, 37.7, 1.55, lz, 0.07, 2.8, 0.07, mat.brass);
+        put(new THREE.CylinderGeometry(0.22, 0.12, 0.12, 14), mat.brass, 37.7, 3.0, lz);
+        put(new THREE.ConeGeometry(0.05, 0.16, 8), flame, 37.7, 3.14, lz).castShadow = false;
+      }
+      box(P, 36.6, 0.1, 3.0, 1.6, 0.04, 1.3, std(0x9f1239, 0.9), false);  // seat mat
+      for (const [r, c] of [[1.0, 0xfafaf9], [0.8, 0xdc2626], [0.6, 0xfacc15], [0.4, 0x16a34a], [0.2, 0x2563eb]]) {   // rangoli
+        const m = new THREE.Mesh(new THREE.CylinderGeometry(r, r, 0.012, 32), std(c, 0.9));
+        m.position.set(35.0, 0.09 + (1.0 - r) * 0.01, 3.0); m.receiveShadow = true; P.add(m);
+      }
+      addWarmLight(groundGrp, 38.1, 4.6, 3.0, 8, 9);
+    }
     // Utility strip: sink + washer moved south, door zone kept clear
     if (open) {
       // One counter outside the kitchen: utility sink, and the front-load washing machine tucked under the same top.
@@ -1198,7 +1295,7 @@
     box(upperGrp, 20.0, -0.25, 3.0, 12.0, 0.5, 6.2, mat.slab, false);      // north baths
     box(upperGrp, 33.0, -0.25, 10.0, 14.4, 0.5, 20.4, mat.slab, false);    // east wing
     if (!open) box(upperGrp, 15.0, -0.25, 10.0, 2.2, 0.5, 8.2, mat.slab, false);      // courtyard W (open: void widens to the master wall)
-    box(upperGrp, 24.5, -0.25, 10.0, 3.2, 0.5, 8.2, mat.slab, false);      // courtyard E 3' bridge
+    if (!open) box(upperGrp, 24.5, -0.25, 10.0, 3.2, 0.5, 8.2, mat.slab, false);      // courtyard E 3' bridge (open: the void takes it)
     box(upperGrp, 20.0, -0.25, 17.0, 12.0, 0.5, 6.2, mat.slab, false);     // south bridge
     box(upperGrp, 8.0, -0.25, 25.0, 16.4, 0.5, 10.4, mat.floorTile, false);// SW balcony
     box(upperGrp, 8.0, -0.51, 25.0, 16.38, 0.02, 10.38, mat.slab, false);  // balcony soffit (carport ceiling)
@@ -1207,7 +1304,7 @@
     box(upperGrp, 11.95, 0.02, 16.0, 4.2, 0.04, 7.5, mat.floorTile, false);
     box(upperGrp, 20.0, 0.02, 3.0, 11.6, 0.04, 5.5, mat.floorTile, false);
     if (!open) box(upperGrp, 15.0, 0.02, 10.0, 2.0, 0.04, 8.0, mat.floorTile, false);
-    box(upperGrp, 24.5, 0.02, 10.0, 3.0, 0.04, 8.0, mat.floorTile, false);
+    if (!open) box(upperGrp, 24.5, 0.02, 10.0, 3.0, 0.04, 8.0, mat.floorTile, false);
     box(upperGrp, 20.0, 0.02, 17.0, 12.0, 0.04, 6.0, mat.floorTile, false);
     box(upperGrp, 33.0, 0.02, 10.0, 13.9, 0.04, 19.5, mat.floorTile, false);
 
@@ -1245,27 +1342,30 @@
       { start: 6.5, width: 4.5, bottom: 7.4, top: 8.7, type: 'window' }
     ]);
     wall(upperGrp, 0, 12, 14, 12, H2, 0.45, mat.cream, [
-      { start: 10.4, width: 3.1, bottom: 0, top: 7.5, type: 'door', swing: -1, label: 'master bedroom door' }
+      { start: 10.4, width: 3.1, bottom: 0, top: 7.5, type: 'door', swing: -1, hinge: open ? 'end' : 'start', label: 'master bedroom door' }   // open: rests against the east wall
     ]);
     wall(upperGrp, 20, 0, 20, 6, H2, 0.45, mat.cream);
     wall(upperGrp, 14, 6, 26, 6, H2, 0.5, mat.cream);
     wall(upperGrp, 26, 0, 26, 12, H2, 0.45, mat.cream, [
       { start: 1.5, width: 2.6, bottom: 0, top: 7.2, type: 'door', swing: -1, label: 'bathroom door' },
       { start: 5.0, width: 2.5, bottom: 7.4, top: 8.7, type: 'window' },
-      { start: 8.2, width: 3.0, bottom: 0, top: 7.4, type: 'door', swing: -1, label: 'bedroom door' }
+      ...(open ? [] : [{ start: 8.2, width: 3.0, bottom: 0, top: 7.4, type: 'door', swing: -1, label: 'bedroom door' }])
     ]);
-    wall(upperGrp, 26, 12, 40, 12, H2, 0.45, mat.cream);
+    // open: the secondary bedroom's door moves to its south wall (from the study), hinged so it opens inward against the west wall
+    wall(upperGrp, 26, 12, 40, 12, H2, 0.45, mat.cream, open ? [
+      { start: 0.4, width: 2.6, bottom: 0, top: 7.4, type: 'door', swing: -1, label: 'bedroom door' }
+    ] : []);
 
     // Courtyard void glass railings
     if (open) {
-      // Void runs from the master-bedroom wall (x 14.2) to x 23: railings only on the east and south edges,
-      // plus a short one where the landing meets the void.
-      wall(upperGrp, 23, 6, 23, 14, 3.2, 0.14, mat.glassClear);
-      wall(upperGrp, 14.1, 14, 23, 14, 3.2, 0.14, mat.glassClear);
+      // The double-height courtyard fills the whole centre (x 14.2–26, z 6–14): glass railings on the gallery edge,
+      // where the landing meets it and along the study's edge.
+      wall(upperGrp, 14.1, 14, 26, 14, 3.2, 0.14, mat.glassClear);
       wall(upperGrp, 14.15, 12.25, 14.15, 14, 3.2, 0.14, mat.glassClear);
-      box(upperGrp, 23, 3.25, 10, 0.22, 0.15, 8.2, mat.teak);
-      box(upperGrp, 18.55, 3.25, 14, 8.9, 0.15, 0.22, mat.teak);
+      wall(upperGrp, 25.95, 12.25, 25.95, 14, 3.2, 0.14, mat.glassClear);
+      box(upperGrp, 20.05, 3.25, 14, 11.9, 0.15, 0.22, mat.teak);
       box(upperGrp, 14.15, 3.25, 13.1, 0.22, 0.15, 1.8, mat.teak);
+      box(upperGrp, 25.95, 3.25, 13.1, 0.22, 0.15, 1.8, mat.teak);
     } else {
       wall(upperGrp, 16, 6, 16, 14, 3.2, 0.14, mat.glassClear);
       wall(upperGrp, 23, 6, 23, 14, 3.2, 0.14, mat.glassClear);
@@ -1319,7 +1419,7 @@
     addFan(furnUpper, 33.0, H2, 6.0);
     // Family lounge (open: a study / library — full bookshelf wall, low shelves under the window, one simple table)
     if (open) {
-      addBookshelf(furnUpper, 26.6, 39.4, 12.25, 1.1, 7.6);
+      addBookshelf(furnUpper, 29.4, 39.4, 12.25, 1.1, 7.6);   // starts east of the bedroom door
       addBookshelf(furnUpper, 28.7, 36.8, 19.7, 0.6, 2.0, 0.04, -1);
       addTable(furnUpper, 32.5, 0.04, 16.3, 5.0, 2.6, 2.5, mat.woodLight);
       addChair(furnUpper, 32.5, 0.04, 14.35, 0);
@@ -1358,11 +1458,11 @@
     box(terraceGrp, 0.2, 0.25, 16.2, 0.8, 0.5, 7.8, mat.coolRoof, false);
     box(terraceGrp, 20.0, 0.25, 3.0, 12.0, 0.5, 6.2, mat.coolRoof, false);
     box(terraceGrp, 33.0, 0.25, 10.0, 14.4, 0.5, 20.4, mat.coolRoof, false);
-    box(terraceGrp, 15.0, 0.25, 10.0, 2.2, 0.5, 8.2, mat.coolRoof, false);
-    box(terraceGrp, 24.5, 0.25, 10.0, 3.2, 0.5, 8.2, mat.coolRoof, false);
+    if (!open) box(terraceGrp, 15.0, 0.25, 10.0, 2.2, 0.5, 8.2, mat.coolRoof, false);   // 1'-9" corridor beside the old shaft
+    if (!open) box(terraceGrp, 24.5, 0.25, 10.0, 3.2, 0.5, 8.2, mat.coolRoof, false);
     box(terraceGrp, 20.0, 0.25, 17.0, 12.0, 0.5, 6.2, mat.coolRoof, false);
     // plaster ceiling skin under the terrace slabs (the first-floor ceiling)
-    for (const [cx, cz, w, d] of [[7.0, 6.2, 14.4, 12.8], [11.95, 16.2, 4.3, 7.8], [20.0, 3.0, 12.0, 6.2], [33.0, 10.0, 14.4, 20.4], [15.0, 10.0, 2.2, 8.2], [24.5, 10.0, 3.2, 8.2], [20.0, 17.0, 12.0, 6.2]]) {
+    for (const [cx, cz, w, d] of [[7.0, 6.2, 14.4, 12.8], [11.95, 16.2, 4.3, 7.8], [20.0, 3.0, 12.0, 6.2], [33.0, 10.0, 14.4, 20.4], ...(open ? [] : [[15.0, 10.0, 2.2, 8.2], [24.5, 10.0, 3.2, 8.2]]), [20.0, 17.0, 12.0, 6.2]]) {
       box(terraceGrp, cx, -0.02, cz, w - 0.02, 0.02, d - 0.02, mat.slab, false);
     }
 
@@ -1376,7 +1476,10 @@
     box(terraceGrp, 40, 3.38, 10, 0.7, 0.18, 20.6, mat.brownRoof);
 
     // Stair headroom room (mumty); terrace door swings out onto the terrace
-    wall(terraceGrp, 0, 12, 13.8, 12, 8.2, 0.5, mat.cream);
+    // open: a second door in the north wall leads straight onto the solar terrace (the old 1'-9" corridor is now part of the courtyard)
+    wall(terraceGrp, 0, 12, 13.8, 12, 8.2, 0.5, mat.cream, open ? [
+      { start: 10.4, width: 2.8, bottom: 0.5, top: 7.5, type: 'door', swing: -1, label: 'solar terrace door' }
+    ] : []);
     wall(terraceGrp, 13.8, 12, 13.8, 20, 8.2, 0.5, mat.cream, [
       { start: 3.2, width: 3.2, bottom: 0.5, top: 7.5, type: 'door', swing: -1, hinge: 'end', label: 'terrace door' }
     ]);
@@ -1392,6 +1495,19 @@
     box(terraceGrp, 9.86, 0.5 + 1.65, 19.72, 0.22, 3.3, 0.22, mat.teak);
 
     // Courtyard shaft parapet + ventilated rain-skylight hood (raised: 6.7' headroom over the walkway, taller vent gap)
+    if (open) {
+      // The courtyard now fills the whole centre (x 14.2–26): wider shaft, wider skylight with mid posts.
+      wall(terraceGrp, 14.2, 6, 26, 6, 3.2, 0.4, mat.cream);
+      wall(terraceGrp, 14.2, 14, 26, 14, 3.2, 0.4, mat.cream);
+      wall(terraceGrp, 14.2, 6, 14.2, 14, 3.2, 0.4, mat.cream);
+      wall(terraceGrp, 26, 6, 26, 14, 3.2, 0.4, mat.cream);
+      for (const [px, pz] of [[14.45, 6.25], [25.75, 6.25], [14.45, 13.75], [25.75, 13.75], [20.1, 6.25], [20.1, 13.75]]) box(terraceGrp, px, 5.25, pz, 0.32, 4.1, 0.32, mat.charcoal);
+      box(terraceGrp, 20.35, 7.3, 10.0, 12.1, 0.22, 10.2, mat.glassClear, false);
+      box(terraceGrp, 20.4, 7.3, 5.0, 12.4, 0.25, 0.4, mat.brownRoof);
+      box(terraceGrp, 20.4, 7.3, 15.0, 12.4, 0.25, 0.4, mat.brownRoof);
+      box(terraceGrp, 14.4, 7.3, 10.0, 0.4, 0.25, 10.2, mat.brownRoof);
+      box(terraceGrp, 26.4, 7.3, 10.0, 0.4, 0.25, 10.2, mat.brownRoof);
+    } else {
     wall(terraceGrp, 16, 6, 23, 6, 3.2, 0.4, mat.cream);
     wall(terraceGrp, 16, 14, 23, 14, 3.2, 0.4, mat.cream);
     wall(terraceGrp, 16, 6, 16, 14, 3.2, 0.4, mat.cream);
@@ -1402,6 +1518,7 @@
     box(terraceGrp, 19.5, 7.3, 15.0, 9.4, 0.25, 0.4, mat.brownRoof);
     box(terraceGrp, 14.9, 7.3, 10.0, 0.4, 0.25, 10.2, mat.brownRoof);
     box(terraceGrp, 24.1, 7.3, 10.0, 0.4, 0.25, 10.2, mat.brownRoof);
+    }
 
     // Overhead water tank (over the baths) + screen
     if (open) {
@@ -1488,10 +1605,10 @@
 
     const zonesOpen = [
       [[3.3, 12.2, 9.8, 15.8, 'Common bath'], [0, 12, 10, 20, 'Staircase'], [0, 0, 14, 12, 'Bedroom'], [10, 12, 14, 20, 'Lobby'],
-        [16, 6, 23, 14, 'Courtyard (under skylight)'], [14, 0, 26, 20, 'Living hall'],
+        [14, 6, 26, 14, 'Courtyard (under skylight)'], [14, 0, 26, 20, 'Living hall'],
         [33.4, 0, 40, 5.6, 'Pooja niche'], [26, 0, 40, 20, 'Kitchen & dining'], [0, 20, 16, 31, 'Carport'], [24, 20, 40, 24.2, 'Veranda'], [40, 10.4, 43.3, 19.6, 'Utility'], [-60, -30, -3.5, 70, 'Street']],
       [[0, 12, 9.8, 20, 'Staircase'], [0, 0, 14, 12, 'Master bedroom'], [9.8, 12, 14.1, 20, 'Landing'], [14, 0, 20, 6, 'Master bath'],
-        [20, 0, 26, 6, 'Bath (east bedroom)'], [26, 0, 40, 12, 'East bedroom'], [26, 12, 40, 20, 'Study · library'], [14, 6, 26, 20, 'Gallery'], [0, 20, 16.3, 30.3, 'SW balcony']],
+        [20, 0, 26, 6, 'Bath (east bedroom)'], [26, 0, 40, 12, 'East bedroom'], [26, 12, 40, 20, 'Study · library'], [14, 14, 26, 20, 'Gallery'], [0, 20, 16.3, 30.3, 'SW balcony']],
       [[0, 12, 13.8, 20, 'Stair room (mumty)'], [26, 0, 40, 20, 'Terrace garden & lounge'], [0, 0, 14, 12, 'Solar pergola'], [-1, -1, 41, 21, 'Open terrace']],
     ];
     const measuresOpen = [
@@ -1500,7 +1617,7 @@
       [0, 'Kitchen + dining (open)', 26.0, 0.3, 39.7, 19.7, true], [0, 'Carport', 0.9, 20.3, 15.1, 29.1], [0, 'Veranda', 24.0, 20.3, 40.0, 24.0], [0, 'Utility', 40.3, 10.5, 43.2, 19.5],
       [1, 'Master bedroom', 0.3, 0.3, 13.775, 11.775], [1, 'Bath', 14.225, 0.3, 19.775, 5.75], [1, 'Bath', 20.225, 0.3, 25.775, 5.75],
       [1, 'East bedroom', 26.225, 0.3, 39.7, 11.775], [1, 'Study · library (open)', 26.0, 12.225, 39.7, 19.7, true], [1, 'Landing', 9.8, 12.225, 14.1, 19.7, true],
-      [1, 'Gallery', 14.1, 14.0, 26.0, 19.7, true], [1, 'Double-height void', 14.225, 6.25, 23.0, 13.9, true], [1, 'Walkway', 23.07, 6.0, 25.775, 14.0],
+      [1, 'Gallery', 14.1, 14.0, 26.0, 19.7, true], [1, 'Double-height courtyard', 14.225, 6.25, 25.775, 13.9, true],
       [1, 'Balcony', 0.2, 20.3, 15.8, 29.8],
       [2, 'Stair room', 0.25, 12.25, 13.55, 19.75], [2, 'Terrace garden', 26.0, 0.25, 39.75, 19.75], [2, 'Solar area', 0.25, 0.25, 14.0, 11.75],
     ];
@@ -1546,8 +1663,8 @@
       // Key fixtures named on the dimensioned plan
       result.fixtures = [
         [0, 'Fridge', 38.6, 7.3], [0, 'Hob + chimney', 38.65, 9.8], [0, 'Sink + RO', 38.6, 17.0], [0, 'Utility sink', 41.6, 16.15],
-        [0, 'Washer under counter', 41.6, 18.3], [0, 'Pooja', 36.5, 1.5],
-        [0, 'Dining for 6', 30.0, 7.8], [1, 'Bookshelf wall', 33.0, 12.8], [1, 'Study table', 32.5, 16.3], [1, 'Low shelves', 32.75, 19.4],
+        [0, 'Washer under counter', 41.6, 18.3], [0, 'Pooja · idols face west', 37.4, 3.0], [0, 'Island · seats 6', 32.0, 13.5],
+        [0, 'Buddha fountain', 36.0, 27.2], [1, 'Bookshelf wall', 34.4, 12.8], [1, 'Study table', 32.5, 16.3], [1, 'Low shelves', 32.75, 19.4],
       ];
     }
     return result;
@@ -1726,15 +1843,15 @@
       solid('power', -1, DEV, -3.1, 4.5, 16.9, 0.3, 1.6, 1.2);              // meter + main switch
       solid('power', 0, DEV, 23.7, 5.2, 19.5, 1.4, 1.8, 0.3);               // main DB
       solid('power', 1, DEV, 23.7, 15.2, 19.5, 1.2, 1.5, 0.3);              // first-floor DB
-      solid('power', 2, DEV, 13.0, 22.4, 12.45, 1.4, 1.8, 0.4);             // solar inverter in the stair room
+      solid('power', 2, DEV, 13.35, 22.4, 13.7, 0.4, 1.8, 1.4);             // solar inverter on the stair room's east wall
       pipe('power', -1, [[-8.5, -1.3, 16.4], [-3.1, -1.3, 16.4], [-3.1, 3.7, 16.4]]);
       pipe('power', -1, [[-3.1, 3.7, 17.2], [-3.1, -0.9, 17.2], [-0.3, -0.9, 17.2]]);                                  // main cable enters through the west wall
       pipe('power', 0, [[-0.3, -0.9, 17.2], [-0.3, -0.15, 17.2], [23.7, -0.15, 17.2], [23.7, -0.15, 19.9], [23.7, 4.3, 19.9]]);   // in the floor slab to the main DB
       pipe('power', 0, [[23.7, 6.1, 19.9], [23.7, 10.0, 19.9]]);                                                       // riser
       pipe('power', 1, [[23.7, 10.0, 19.9], [23.7, 14.45, 19.9]]);
       pipe('power', 1, [[23.7, 15.95, 19.9], [23.7, 19.0, 19.9]]);
-      pipe('power', 2, [[23.7, 19.0, 19.9], [23.7, 19.45, 19.4], [14.1, 19.45, 19.4], [14.1, 19.45, 12.45], [13.6, 19.45, 12.45], [13.6, 21.5, 12.45]]);   // inverter AC → riser
-      pipe('power', 2, [[12.5, 26.5, 8.8], [13.0, 26.5, 8.8], [13.0, 26.5, 10.0], [13.0, 19.6, 10.0], [13.0, 19.6, 12.3], [13.0, 21.5, 12.3]]);          // panels DC → inverter
+      pipe('power', 2, [[23.7, 19.0, 19.9], [23.7, 19.45, 19.4], [13.9, 19.45, 19.4], [13.9, 19.45, 14.2], [13.35, 19.45, 14.2], [13.35, 21.5, 14.2]]);   // inverter AC → riser
+      pipe('power', 2, [[12.5, 26.5, 8.8], [13.0, 26.5, 8.8], [13.0, 26.5, 10.0], [13.0, 19.6, 10.0], [13.6, 19.6, 10.0], [13.6, 19.6, 13.0], [13.35, 19.6, 13.0], [13.35, 21.5, 13.0]]);   // panels DC → inverter
       const homeRun = (fl, db, sbx, sby, sbz, viaZ = null) => {
         const cy = fl === 0 ? 9.25 : 18.75, pts = [[db[0], db[1], db[2]], [db[0], cy, db[2]]];
         if (viaZ !== null) pts.push([db[0], cy, viaZ], [sbx, cy, viaZ]); else pts.push([sbx, cy, db[2]]);
@@ -1743,12 +1860,12 @@
         solid('power', fl, SB, sbx, sby, sbz, 0.4, 0.55, 0.12);
       };
       const mdb = [23.7, 6.1, 19.5], fdb = [23.7, 15.95, 19.5];
-      for (const [x, y, z] of [[13.7, 4.2, 11.2], [18.2, 4.2, 19.6], [39.6, 4.2, 11.3], [10.05, 4.2, 15.5], [10.05, 4.2, 12.45], [24.9, 4.2, 19.6]]) homeRun(0, mdb, x, y, z);
+      for (const [x, y, z] of [[10.0, 4.2, 11.7], [18.2, 4.2, 19.6], [39.6, 4.2, 11.3], [10.05, 4.2, 15.5], [10.05, 4.2, 12.45], [24.9, 4.2, 19.6]]) homeRun(0, mdb, x, y, z);   // bedroom switch on the latch side
       pipe('power', 0, [[23.7, 9.25, 19.5], [2.6, 9.25, 19.5], [2.6, 9.25, 20.4], [2.6, 4.2, 20.4]]);                // carport: light + EV/bike charger (beside the new stair window)
       solid('power', 0, SB, 2.6, 4.2, 20.45, 0.4, 0.55, 0.12);
       pipe('power', 0, [[39.6, 9.25, 11.3], [39.6, 9.25, 11.0], [39.6, 7.5, 11.0], [40.45, 7.5, 11.0], [40.45, 4.4, 11.0]]);   // utility + pump controller
       solid('power', 0, SB, 40.45, 4.4, 11.0, 0.12, 0.55, 0.4);
-      for (const [x, y, z] of [[13.7, 14.2, 11.2], [13.7, 14.2, 4.6], [26.3, 14.2, 11.5], [26.3, 14.2, 4.4], [27.3, 14.2, 19.65], [13.85, 14.2, 12.35], [14.3, 14.2, 19.65]]) homeRun(1, fdb, x, y, z);
+      for (const [x, y, z] of [[10.0, 14.2, 11.7], [13.7, 14.2, 4.6], [29.3, 14.2, 11.7], [26.3, 14.2, 4.4], [27.3, 14.2, 19.65], [13.85, 14.2, 12.35], [14.3, 14.2, 19.65]]) homeRun(1, fdb, x, y, z);
       for (const [fl, x, y, z] of [[0, 5.5, 9.4, 6.5], [0, 19.5, 9.4, 3.0], [0, 19.5, 9.4, 17.0], [0, 30.0, 9.4, 10.6], [0, 33.0, 9.4, 12.0], [0, 12.0, 9.4, 16.0],
         [0, 8.0, 7.6, 14.0], [0, 41.6, 8.6, 15.0], [0, 8.0, 9.35, 25.0], [0, 32.0, 9.1, 22.0], [1, 6.0, 18.9, 6.0], [1, 33.0, 18.9, 6.0], [1, 32.5, 18.9, 16.0],
         [1, 12.0, 18.9, 16.0], [1, 20.0, 18.9, 17.0], [1, 17.0, 18.9, 4.0], [1, 23.0, 18.9, 4.0], [1, 8.0, 17.6, 25.0]]) disc('power', fl, LT, x, y, z, 0.3);
@@ -1768,7 +1885,7 @@
       label(0, 'water', 0x2563eb, '<b>West line</b> <span>common bath wet wall + geyser</span>', 8.0, 7.2, 12.3);
       label(0, 'water', 0x2563eb, '<b>Kitchen line</b> <span>washer · utility · kitchen sink + RO · garden tap</span>', 40.6, 5.6, 17.0);
       label(0, 'water', 0x0891b2, '<b>Rising main</b> <span>pump → overhead tank</span>', 40.9, 7.6, 18.85);
-      label(-1, ['water', 'rain'], 0x0891b2, '<b>Sump + rainwater tank ~6,000 L</b> <span>municipal + filtered roof rain · pump with auto level control</span>', 35.5, 1.2, 27.0);
+      label(-1, ['water', 'rain'], 0x0891b2, '<b>Sump + rainwater tank ~6,000 L</b> <span>municipal + filtered roof rain · pump with auto level control</span>', 35.5, 0.8, 24.2);
       label(-1, 'water', 0x0891b2, '<b>Municipal water + meter</b>', -7.5, 1.4, 18.2);
       label(-1, 'drain', 0x92400e, '<b>Biogas digester ~2 m³</b> <span>toilets + kitchen scraps</span>', -1.8, 1.4, 5.0);
       label(-1, 'drain', 0x57534e, '<b>Inlet chamber</b> <span>+ kitchen-scrap feed</span>', -1.8, 0.9, -3.4);
@@ -1784,7 +1901,14 @@
       label(-1, 'power', 0x334155, '<b>EB meter + main switch</b>', -3.1, 6.0, 15.4);
       label(0, 'power', 0x334155, '<b>Main DB</b> <span>RCCB + MCBs</span>', 23.7, 6.6, 19.4);
       label(1, 'power', 0x334155, '<b>First-floor DB</b> <span>directly above</span>', 23.7, 16.6, 19.4);
-      label(2, 'power', 0x334155, '<b>Solar inverter</b> <span>~2 kWp on the pergola, net-metered</span>', 13.0, 24.0, 12.45);
+      label(2, 'power', 0x334155, '<b>Solar inverter</b> <span>~2 kWp on the pergola, net-metered</span>', 13.35, 24.0, 13.7);
+      // Buddha fountain on the tank: recirculating pump, topped up from the rain tank below; outdoor socket fed from the main DB.
+      pipe('main', -1, [[36.4, -1.5, 27.2], [36.4, 0.7, 27.2]]);
+      pipe('power', -1, [[24.3, 4.3, 19.9], [24.3, -0.9, 19.9], [24.3, -0.9, 22.0], [38.6, -0.9, 22.0], [38.6, -0.9, 24.4], [38.6, 0.2, 24.4]]);
+      solid('power', -1, DEV, 38.6, 0.6, 24.4, 0.35, 1.2, 0.35);           // weatherproof outdoor socket post
+      pipe('power', -1, [[38.6, 0.1, 24.6], [38.6, -0.2, 24.6], [36.0, -0.2, 24.6], [36.0, -0.2, 26.4], [36.0, 0.5, 26.4]]);   // → fountain pump
+      pipe('power', -1, [[38.6, -0.2, 24.6], [39.0, -0.2, 24.6], [39.0, -0.2, 25.2], [39.0, 0.1, 25.2]]);                      // → sump pump
+      label(-1, 'water', 0x0891b2, '<b>Buddha fountain</b> <span>recirculating pump, topped up from the rain tank</span>', 36.0, 5.6, 27.2);
 
       for (const b of buckets.values()) {
         const geo = mergeGeometries(b.geos, false);
