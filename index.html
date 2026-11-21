@@ -20,6 +20,13 @@
     #menuBar { position: fixed; top: 12px; left: 14px; z-index: 11; display: flex; gap: 6px; }
     #menuBar button { font-size: 13px; padding: 7px 12px; background: rgba(24,21,18,0.88); border-color: rgba(255,245,230,0.25); }
     #menuBar button.active { background: #b45309; border-color: #f59e0b; }
+    #menuBar button.vid { background: rgba(29,78,216,0.9); border-color: #60a5fa; }
+    #videoBox { position: fixed; inset: 0; z-index: 30; background: rgba(8,6,4,0.86); display: flex; align-items: center; justify-content: center; padding: 12px; }
+    #videoBox .vcard { width: min(1120px, 100%); background: rgba(24,21,18,0.97); border: 1px solid rgba(255,245,230,0.2); border-radius: 14px;
+      overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+    #videoBox .vhead { display: flex; align-items: center; gap: 10px; padding: 8px 8px 8px 14px; color: #f3cfa4; font-size: 13px; }
+    #videoBox .vhead span { color: #d6d3d1; font-size: 11.5px; flex: 1; }
+    #videoBox video { display: block; width: 100%; max-height: calc(100vh - 80px); background: #000; }
     h1 { font-size: 14px; font-weight: 700; color: #f3cfa4; margin-bottom: 3px; }
     p.sub { font-size: 11px; color: #d6d3d1; margin-bottom: 8px; line-height: 1.35; }
     .sec { border-top: 1px solid rgba(255,255,255,0.08); padding-top: 8px; margin-top: 8px; font-size: 12px; }
@@ -123,6 +130,7 @@
       #pause .card { margin-left: 0; }
       #ui { left: 8px; top: 52px; width: min(300px, calc(100vw - 16px)); max-height: calc(100vh - 62px); }
       #menuBar { left: 8px; top: 8px; }
+      #menuBar .lg, #videoBox .vhead span { display: none; }
       #planBar { bottom: 6px; padding: 6px; }
       #planBar .legend { order: 9; flex-basis: 100%; text-align: center; font-size: 10.5px; margin: 0; }
       #map { width: 120px; height: 120px; right: 8px; top: 8px; }
@@ -150,6 +158,13 @@
   <div id="menuBar">
     <button id="btnMenu" title="Show or hide the options panel">☰ Menu</button>
     <button id="btnFull" title="Full screen" hidden>⛶ Full screen</button>
+    <button id="btnVideo" class="vid" title="Watch the photoreal (path-traced) video walk-through">▶ <span class="lg">Photoreal </span>video</button>
+  </div>
+  <div id="videoBox" hidden>
+    <div class="vcard">
+      <div class="vhead"><b>Photoreal walk-through</b><span>Path-traced in Blender Cycles · 53 s · 720p</span><button id="btnVideoClose" title="Close (Esc)">✕ Close</button></div>
+      <video id="video" controls playsinline muted preload="none" poster="media/walkthrough-poster.jpg" src="media/walkthrough-720p.mp4"></video>
+    </div>
   </div>
   <div id="ui">
     <h1>Courtyard Home</h1>
@@ -426,7 +441,7 @@
       foliage1: std(0x2d6a4f, 0.88), foliage2: std(0x40916c, 0.88), foliage3: std(0x52b788, 0.88),
     };
     const SHINY = { glass: 0.9, glassClear: 0.7, water: 0.8, porcelain: 0.6, steel: 0.9, mirror: 1.0, brass: 0.8, charcoal: 0.35, car: 0.7, carGlass: 0.9, solar: 0.8, counter: 0.35 };
-    for (const [k, m] of Object.entries(mat)) { m.userData.env = SHINY[k] ?? 0; m.envMapIntensity = m.userData.env; }
+    for (const [k, m] of Object.entries(mat)) { m.name = k; m.userData.env = SHINY[k] ?? 0; m.envMapIntensity = m.userData.env; }   // names carry into glTF exports
     lampMat.envMapIntensity = 0;
 
     // =========================================================================
@@ -2886,6 +2901,16 @@
     el('togSound').onchange = (e) => { state.sound = e.target.checked; };
     el('togMap').onchange = (e) => { state.showMap = e.target.checked; updateUI(); };
     el('btnMenu').onclick = () => { state.panelOpen = !state.panelOpen; updateUI(); };
+    // Photoreal video, pre-rendered offline (render/scene.py → render/make_video.py)
+    const video = el('video');
+    function showVideo(on) {
+      el('videoBox').hidden = !on;
+      if (on) { const p = video.play(); if (p && p.catch) p.catch(() => {}); } else video.pause();
+    }
+    el('btnVideo').onclick = () => showVideo(true);
+    el('btnVideoClose').onclick = () => showVideo(false);
+    el('videoBox').addEventListener('click', (e) => { if (e.target === el('videoBox')) showVideo(false); });
+    addEventListener('keydown', (e) => { if (e.code === 'Escape' && !el('videoBox').hidden) showVideo(false); });
     // Full screen where the browser allows it (iPhone Safari doesn't; "Add to Home Screen" opens it full screen instead).
     const fsDoc = document, fsRoot = document.documentElement;
     const fsEnabled = !!(fsDoc.fullscreenEnabled || fsDoc.webkitFullscreenEnabled);
@@ -3437,7 +3462,7 @@
     }
     renderer.setAnimationLoop(() => frame(Math.min(clock.getDelta(), 0.05)));
 
-    // Deep links: ?design=v2|v3&walk=<1-9>&t=<solar hour>&yaw=<rad>&pitch=<rad>  (e.g. index.html?design=v3&walk=7&t=7.5)
+    // Deep links: ?design=v2|v3&walk=<1-9>&t=<solar hour>&yaw=<rad>&pitch=<rad>  (e.g. index.html?design=v3&walk=7&t=7.5); ?video=1 opens the photoreal video
     const qs = new URLSearchParams(location.search);
     useDesign(qs.get('design') || DESIGNS[0].key);
     if (qs.get('svc') === '1') setServices(true);
@@ -3455,6 +3480,7 @@
     }
     if (qs.has('plan')) enterPlan(clamp(parseInt(qs.get('plan'), 10) || 0, 0, 2));
     if (qs.get('menu') === '0') { state.panelOpen = false; updateUI(); }
+    if (qs.get('video') === '1') showVideo(true);
     const VIEWS = { hero: 'camHero', lawn: 'camLawn', terrace: 'camTerrace', stairs: 'camStairs', east: 'camEast', svc: 'svcView' };
     if (VIEWS[qs.get('view')]) el(VIEWS[qs.get('view')]).click();
     if (qs.has('shot')) for (let i = 0; i < 40; i++) frame(1 / 60);
