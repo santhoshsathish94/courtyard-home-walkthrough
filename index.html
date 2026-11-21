@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <title>Courtyard Home — First-person Walk-through</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
+    body { overflow: hidden; background: #1e293b; color: #f8fafc; }
+    canvas { display: block; touch-action: none; }
+    #ui {
+      position: fixed; top: 54px; left: 14px; z-index: 10;
+      background: rgba(24, 21, 18, 0.9); backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,245,230,0.14); border-radius: 14px;
+      padding: 12px 14px; width: 290px; max-height: calc(100vh - 68px); overflow-y: auto;
+      box-shadow: 0 14px 35px rgba(0,0,0,0.35);
+    }
+    #menuBar { position: fixed; top: 12px; left: 14px; z-index: 11; display: flex; gap: 6px; }
+    #menuBar button { font-size: 13px; padding: 7px 12px; background: rgba(24,21,18,0.88); border-color: rgba(255,245,230,0.25); }
+    #menuBar button.active { background: #b45309; border-color: #f59e0b; }
+    h1 { font-size: 14px; font-weight: 700; color: #f3cfa4; margin-bottom: 3px; }
+    p.sub { font-size: 11px; color: #d6d3d1; margin-bottom: 8px; line-height: 1.35; }
+    .sec { border-top: 1px solid rgba(255,255,255,0.08); padding-top: 8px; margin-top: 8px; font-size: 12px; }
+    .secT { font-weight: 700; color: #f3cfa4; margin-bottom: 6px; font-size: 12px; }
+    .row { display: flex; justify-content: space-between; margin: 6px 0 3px; color: #e7e5e4; }
+    .row2 { display: flex; gap: 8px; align-items: center; margin-top: 6px; }
+    label { display: flex; align-items: center; gap: 8px; cursor: pointer; margin-bottom: 5px; }
+    input[type="checkbox"] { accent-color: #d97706; }
+    input[type="range"] { width: 100%; accent-color: #d97706; cursor: pointer; }
+    select, input[type="number"] { background: #3f3a36; color: #fafaf9; border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; padding: 3px 5px; font-size: 11px; }
+    input[type="number"] { width: 58px; }
+    label.lat { margin: 0; gap: 4px; font-size: 11px; }
+    .btns { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 6px; }
+    .btns3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px; margin-top: 6px; }
+    button {
+      background: #3f3a36; color: #fafaf9; border: 1px solid rgba(255,255,255,0.12);
+      padding: 6px 6px; border-radius: 7px; font-size: 11px; cursor: pointer; transition: 0.15s;
+    }
+    button:hover { background: #57534e; }
+    button.active { background: #b45309; border-color: #f59e0b; }
+    button.big { width: 100%; padding: 9px; font-size: 13px; font-weight: 700; background: #b45309; border-color: #f59e0b; }
+    button.big:hover { background: #d97706; }
+    button.vr { background: #1d4ed8; border-color: #60a5fa; margin-top: 8px; }
+    .spawns { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px; margin-top: 6px; }
+    .spawns button { font-size: 10.5px; padding: 5px 3px; }
+    #compass {
+      position: fixed; top: 14px; right: 14px; z-index: 10; max-width: 300px;
+      background: rgba(24, 21, 18, 0.86); color: #f3cfa4;
+      padding: 9px 13px; border-radius: 10px; font-size: 11px; line-height: 1.5;
+      border: 1px solid rgba(255,245,230,0.14);
+    }
+    #compass b { color: #fde7c7; }
+    #help {
+      position: fixed; bottom: 12px; left: 50%; transform: translateX(-50%); z-index: 10;
+      font-size: 11.5px; color: #f5f5f4; background: rgba(24,21,18,0.78);
+      padding: 6px 12px; border-radius: 7px; white-space: nowrap; pointer-events: none;
+    }
+    #hud { position: fixed; inset: 0; pointer-events: none; z-index: 8; }
+    #cross { position: absolute; left: 50%; top: 50%; width: 6px; height: 6px; margin: -3px 0 0 -3px; border-radius: 50%;
+      background: rgba(255,255,255,0.9); box-shadow: 0 0 0 1.5px rgba(0,0,0,0.55); transition: 0.12s; }
+    #cross.on { width: 14px; height: 14px; margin: -7px 0 0 -7px; background: rgba(245,158,11,0.35); box-shadow: 0 0 0 2px #f59e0b; }
+    #hint { position: absolute; left: 50%; top: calc(50% + 22px); transform: translateX(-50%); font-size: 13px; font-weight: 600;
+      color: #fff; background: rgba(0,0,0,0.5); padding: 4px 10px; border-radius: 6px; display: none; white-space: nowrap; }
+    #where { position: absolute; left: 50%; top: 14px; transform: translateX(-50%); font-size: 13px; font-weight: 600;
+      color: #fde7c7; background: rgba(24,21,18,0.72); padding: 5px 12px; border-radius: 8px; white-space: nowrap; }
+    #map { position: absolute; right: 14px; top: 14px; width: 190px; height: 190px; border-radius: 10px;
+      border: 2px solid rgba(255,245,230,0.35); box-shadow: 0 6px 20px rgba(0,0,0,0.35); }
+    #mapArrow { position: absolute; left: 50%; top: 50%; width: 0; height: 0; margin: -9px 0 0 -7px;
+      border-left: 7px solid transparent; border-right: 7px solid transparent; border-bottom: 18px solid #f59e0b;
+      transform-origin: 7px 9px; filter: drop-shadow(0 0 2px #000); }
+    #map .n { position: absolute; top: 3px; left: 50%; transform: translateX(-50%); font-size: 11px; font-weight: 700; color: #fff; text-shadow: 0 0 3px #000; }
+    #pause { position: fixed; inset: 0; z-index: 9; display: flex; align-items: center; justify-content: center; background: rgba(10,8,6,0.35); }
+    #pause .card { background: rgba(24,21,18,0.94); border: 1px solid rgba(255,245,230,0.2); border-radius: 14px; padding: 18px 22px; width: min(460px, 92vw); text-align: center; margin-left: 300px; }
+    #pause h2 { color: #f3cfa4; font-size: 18px; margin-bottom: 6px; }
+    #pause p { font-size: 12.5px; color: #e7e5e4; margin-bottom: 10px; }
+    #pause .keys { font-size: 11.5px; color: #d6d3d1; line-height: 1.7; margin-bottom: 12px; }
+    #pause .keys b { color: #fde7c7; }
+    #touch { position: fixed; inset: 0; pointer-events: none; z-index: 9; }
+    #joy { position: absolute; width: 120px; height: 120px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.45);
+      background: rgba(0,0,0,0.18); display: none; }
+    #knob { position: absolute; left: 35px; top: 35px; width: 50px; height: 50px; border-radius: 50%; background: rgba(255,255,255,0.55); }
+    #touch .bar { position: absolute; left: 10px; top: 10px; display: flex; gap: 6px; pointer-events: auto; }
+    #touch .bar button { font-size: 13px; padding: 8px 12px; }
+    .you { color: #fff; background: #dc2626; font: 700 11px system-ui, sans-serif; padding: 2px 7px; border-radius: 10px; white-space: nowrap;
+      box-shadow: 0 0 0 2px #fff, 0 3px 8px rgba(0,0,0,0.4); }
+    .you i { display: inline-block; font-style: normal; margin-right: 3px; }
+    [hidden] { display: none !important; }
+    .mlabel { background: rgba(255,250,240,0.94); color: #3b2a1e; font: 600 11px system-ui, sans-serif; padding: 3px 7px; border-radius: 6px;
+      border: 1px solid rgba(120,70,30,0.35); text-align: center; white-space: nowrap; line-height: 1.3; box-shadow: 0 2px 6px rgba(0,0,0,0.18); }
+    .mlabel b { font-size: 11.5px; color: #7c2d12; }
+    .mlabel span { font-weight: 500; color: #57534e; font-size: 10px; }
+    .mlabel.tight { background: rgba(254,226,226,0.95); border-color: #dc2626; }
+    .mlabel.small { font-size: 9.5px; padding: 1px 4px; }
+    .mlabel.small b { font-size: 9.5px; }
+    .mdim { background: #1f2937; color: #fff; font: 700 11px system-ui, sans-serif; padding: 2px 6px; border-radius: 4px; white-space: nowrap; }
+    .flabel { color: #1c1917; background: rgba(255,255,255,0.8); font: 600 9.5px system-ui, sans-serif; padding: 0 4px; border-radius: 3px; white-space: nowrap; border: 1px dashed rgba(120,70,30,0.5); }
+    .mtape { background: #0e7490; color: #fff; font: 700 13px system-ui, sans-serif; padding: 3px 8px; border-radius: 5px; white-space: nowrap; }
+    #planBar { position: fixed; left: 50%; bottom: 12px; transform: translateX(-50%); z-index: 11; background: rgba(24,21,18,0.92);
+      border: 1px solid rgba(255,245,230,0.2); border-radius: 10px; padding: 8px 10px; display: flex; flex-wrap: wrap; justify-content: center;
+      gap: 6px; align-items: center; font-size: 12px; max-width: calc(100vw - 16px); }
+    #planBar .legend { color: #e7e5e4; margin: 0 6px; font-size: 11.5px; line-height: 1.4; }
+    #cross.measure { background: #22d3ee; box-shadow: 0 0 0 2px #0e7490; width: 10px; height: 10px; margin: -5px 0 0 -5px; }
+    .slabel { background: rgba(15,23,42,0.9); color: #f8fafc; font: 600 10.5px system-ui, sans-serif; padding: 2px 7px 2px 6px; border-radius: 5px;
+      white-space: nowrap; border-left: 4px solid var(--c, #94a3b8); box-shadow: 0 2px 6px rgba(0,0,0,0.3); }
+    .slabel span { font-weight: 400; color: #cbd5e1; }
+    .svcSys { display: grid; grid-template-columns: 1fr 1fr; gap: 0 8px; margin: 2px 0 2px; }
+    .svcSys label { margin-bottom: 3px; font-size: 11.5px; gap: 5px; }
+    .svcSys i, .chip { display: inline-block; width: 10px; height: 10px; border-radius: 2px; vertical-align: -1px; }
+    details.svcInfo { margin-top: 6px; font-size: 11px; color: #e7e5e4; line-height: 1.45; }
+    details.svcInfo summary { cursor: pointer; color: #f3cfa4; font-weight: 600; margin-bottom: 4px; }
+    details.svcInfo b { color: #fde7c7; }
+    details.svcInfo ul { margin: 3px 0 7px 16px; }
+    #svcLegend { position: fixed; top: 14px; right: 14px; z-index: 10; background: rgba(24,21,18,0.88); border: 1px solid rgba(255,245,230,0.18);
+      border-radius: 10px; padding: 8px 11px; font-size: 11px; color: #e7e5e4; line-height: 1.55; max-width: 220px; }
+    #svcLegend b { color: #f3cfa4; }
+    .svc-on .mlabel { padding: 1px 5px; opacity: 0.85; }
+    .svc-on .mlabel br, .svc-on .mlabel span { display: none; }
+    .svc-on .mlabel b::after { content: ' '; }
+    @media (max-width: 760px) {
+      #compass, #help { display: none; }
+      #pause .card { margin-left: 0; }
+      #ui { left: 8px; top: 52px; width: min(300px, calc(100vw - 16px)); max-height: calc(100vh - 62px); }
+      #menuBar { left: 8px; top: 8px; }
+      #planBar { bottom: 6px; padding: 6px; }
+      #planBar .legend { order: 9; flex-basis: 100%; text-align: center; font-size: 10.5px; margin: 0; }
+      #map { width: 120px; height: 120px; right: 8px; top: 8px; }
+      #touch .bar { max-width: calc(100vw - 140px); flex-wrap: wrap; left: 8px; top: 8px; }
+      #touch .bar button { font-size: 12px; padding: 7px 9px; }
+      #where { top: auto; bottom: 10px; font-size: 12px; max-width: 92vw; overflow: hidden; text-overflow: ellipsis; }
+      .mlabel { font-size: 9.5px; padding: 2px 4px; }
+      .mlabel b { font-size: 10px; }
+      .mdim { font-size: 9.5px; padding: 1px 4px; }
+      .slabel { font-size: 9px; padding: 1px 5px 1px 4px; }
+      .slabel span { display: none; }
+      #svcLegend { top: 50px; bottom: auto; right: 6px; font-size: 9.5px; padding: 5px 7px; max-width: 140px; line-height: 1.4; }
+    }
+  </style>
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+      }
+    }
+  </script>
+</head>
+<body>
+  <div id="menuBar">
+    <button id="btnMenu" title="Show or hide the options panel">☰ Menu</button>
+    <button id="btnFull" title="Full screen" hidden>⛶ Full screen</button>
+  </div>
+  <div id="ui">
+    <h1>Courtyard Home</h1>
+    <div class="row2" style="margin:4px 0 6px">
+      <select id="design" style="flex:1;font-size:12px;padding:5px">
+        <option value="open">Open plan · same layout (improved)</option>
+        <option value="v2">Original layout (v2)</option>
+      </select>
+    </div>
+    <p class="sub">Same plot (W33·S46·E33·N51, road on the west). Switch designs to compare them; both can be walked through in first person.</p>
+
+    <div class="sec">
+      <button id="btnWalk" class="big">🚶 Walk inside (first-person)</button>
+      <div class="spawns" id="spawns"></div>
+      <div class="row"><span>Eye height</span><span id="eyeVal"></span></div>
+      <input type="range" id="eyeH" min="4.2" max="6.4" step="0.05" value="5.4" />
+      <div class="row"><span>Field of view</span><span id="fovVal"></span></div>
+      <input type="range" id="fov" min="45" max="90" step="1" value="62" />
+      <label style="margin-top:6px"><input type="checkbox" id="togSound" checked /> Footstep sounds</label>
+      <label><input type="checkbox" id="togMap" checked /> Mini-map while walking</label>
+      <button id="btnVR" class="big vr" hidden>🥽 Enter VR (true 1:1 scale)</button>
+    </div>
+
+    <div class="sec">
+      <div class="secT">📏 Measurements</div>
+      <button id="btnPlan" class="big" style="background:#0e7490;border-color:#22d3ee">📐 Floor plan with room sizes</button>
+      <div class="btns3"><button data-plan="0">Ground plan</button><button data-plan="1">First plan</button><button data-plan="2">Terrace plan</button></div>
+      <p class="sub" style="margin:6px 0 0">While walking: <b>P</b> opens the plan of the floor you're on (you-are-here marker), <b>R</b> draws the room's size on its floor, <b>T</b> is a tape measure (click two points). The top bar shows the room's clear size.</p>
+    </div>
+
+    <div class="sec" id="svcSec">
+      <div class="secT">🔧 Services: water · drainage · biogas · rain · electrical</div>
+      <label><input type="checkbox" id="svcOn" /> Show the services plan</label>
+      <div class="svcSys">
+        <label><input type="checkbox" data-sys="water" checked /><i style="background:#2563eb"></i>Water</label>
+        <label><input type="checkbox" data-sys="drain" checked /><i style="background:#92400e"></i>Drainage + biogas</label>
+        <label><input type="checkbox" data-sys="rain" checked /><i style="background:#16a34a"></i>Rainwater</label>
+        <label><input type="checkbox" data-sys="power" checked /><i style="background:#f97316"></i>Electrical</label>
+      </div>
+      <label><input type="checkbox" id="svcXray" checked /> X-ray: see pipes through walls and ground</label>
+      <div class="btns"><button id="svcView">👁 3D overview</button><button id="svcPlan">📐 On the floor plans</button></div>
+      <p class="sub" id="svcNote" style="margin:6px 0 0"></p>
+      <details class="svcInfo"><summary>How it works and why</summary>
+        <b>Water</b> (blue cold · red hot · teal pump line)
+        <ul>
+          <li>One underground <b>sump + rainwater tank (~6,000 L, SE)</b> takes municipal water and filtered roof rain. One pump with an auto level controller fills the overhead tank, so it never runs dry or overflows.</li>
+          <li><b>Overhead tank 1,500 L</b> sits right over the two first-floor baths, raised to 5′-6″ so the showers get ~8′ of head without a pressure pump.</li>
+          <li>Three short downtakes: the <b>bath core</b> goes straight down the shared wall; the <b>west line</b> goes down the bedroom/stair wall to the balcony tap and the common bath; the <b>kitchen line</b> goes down the SE corner to the washer, utility sink, kitchen sink (RO) and a garden tap.</li>
+          <li>A <b>solar water heater</b> beside the tank feeds both upstairs baths with a ~5′ hot run. The common bath gets a small 3 L geyser instead of a 40′ hot pipe that would waste water while you wait.</li>
+        </ul>
+        <b>Drainage + biogas</b> (brown soil · grey waste · yellow gas)
+        <ul>
+          <li>Toilet waste goes to a <b>biogas digester (~2 m³, NW, buried)</b>, and kitchen scraps go into its feed chute. A gas pipe along the plinth runs to the stove: about 0.3–0.5 m³ a day, or 45–60 min on one burner (a supplement to LPG). The digester's overflow goes to a <b>soak pit</b> under the driveway (no street sewer).</li>
+          <li>Bath, kitchen and washer water stays out of the digester (soap stops the gas). It runs through a grease trap, then a sand filter, into a <b>700 L garden-reuse tank</b> with a hand pump for the plants; its overflow goes to the same soak pit.</li>
+          <li>The first-floor stacks run outside the north wall on a solid stretch, so there are no leaks indoors, with one vent above the terrace.</li>
+          <li>Check with your engineer: the 3′ side strip is tight next to the footing.</li>
+        </ul>
+        <b>Rainwater</b> (green)
+        <ul>
+          <li>The terrace slopes east to two outlets (NE + SE corners). One collector takes the rain through a first-flush + filter into the SE tank. The balcony pipe joins along the south boundary, and tank overflow goes to a recharge pit.</li>
+          <li>About 800 sq ft of roof × ~1 m of rain a year ≈ 60,000 L a year captured.</li>
+        </ul>
+        <b>Electrical</b> (orange)
+        <ul>
+          <li>Meter + main switch at the gate. The <b>main DB</b> is inside by the main door, and the <b>first-floor DB is directly above it</b> (one riser). Each room gets one switchboard by its door.</li>
+          <li>Circuits: lights + fans per floor; 6 A sockets per floor; 16 A for the kitchen, washer, pump, geyser and a carport EV/bike charger; one AC point per bedroom; outdoor lights on a photo-timer.</li>
+          <li><b>~2 kWp solar</b> on the existing pergola (~8 units a day), net-metered. The inverter is in the stair room, close to the panels.</li>
+          <li>LED lights, BLDC fans (~30 W instead of 75 W), 2-way switches on the stair, a motion sensor at the porch, and the skylight means no daytime lights in the hall.</li>
+        </ul>
+      </details>
+    </div>
+
+    <div class="sec">
+      <div class="secT">☀ Sun &amp; time (real sun path)</div>
+      <div class="row"><span>Solar time</span><span id="timeVal"></span></div>
+      <input type="range" id="time" min="4" max="22" step="0.25" value="14" />
+      <div class="row2">
+        <select id="month">
+          <option>Jan</option><option>Feb</option><option>Mar</option><option>Apr</option><option>May</option><option>Jun</option>
+          <option>Jul</option><option>Aug</option><option>Sep</option><option>Oct</option><option>Nov</option><option>Dec</option>
+        </select>
+        <label class="lat">Latitude <input type="number" id="lat" value="13" min="-60" max="60" step="0.5" /> °N</label>
+      </div>
+      <div class="btns"><button id="btnDay" class="active">☀ Daylight</button><button id="btnNight">🌙 Evening</button></div>
+    </div>
+
+    <div class="sec">
+      <div class="secT">🏠 Model</div>
+      <label><input type="checkbox" id="togGround" checked /> Ground floor + kitchen utility</label>
+      <label><input type="checkbox" id="togUpper" checked /> First floor + SW balcony</label>
+      <label><input type="checkbox" id="togTerrace" checked /> Usable terrace (garden/solar/tank)</label>
+      <label><input type="checkbox" id="togFurn" checked /> Furniture &amp; fixtures</label>
+      <label><input type="checkbox" id="togTrees" checked /> Trees &amp; plants</label>
+      <div class="row"><span>Explode floors</span><span id="expVal">0 ft</span></div>
+      <input type="range" id="explode" min="0" max="24" step="0.5" value="0" />
+      <div class="btns3">
+        <button id="camHero">SW Road</button>
+        <button id="camLawn">SE Lawn</button>
+        <button id="camTerrace">Terrace</button>
+        <button id="camTop">Top Plan</button>
+        <button id="camStairs">Stairs/Door</button>
+        <button id="camEast">Utility</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="compass">
+    <div class="dnote" data-d="v2" hidden>
+    <b>v2 · original plan, fixed</b><br/>
+    • Entry is clear now: the sofa moved to the courtyard lounge<br/>
+    • Kitchen counter split, so the utility door works<br/>
+    • Car moved 1.5′, so the carport door opens<br/>
+    • RCC dog-leg stair: 16 equal 7.4″ risers, 11.3″ treads, glass railings<br/>
+    • Under-stair WC with a sloped ceiling<br/>
+    • Balcony gets a glazed hinged door (the old slider left only 1.7′ to pass)<br/>
+    • Courtyard skylight hood raised (it was at head height on the terrace)<br/>
+    • Terrace stair-void railing; all doors open and close<br/>
+    • Trees and shrubs moved off the walls and the utility strip
+    </div>
+    <div class="dnote" data-d="open" hidden>
+    <b>Open plan · same layout, more openness</b><br/>
+    • Same rooms in the same places, same plot<br/>
+    • Courtyard is now a level stone floor under the skylight, so lounge, courtyard and foyer become one 11′-9″ × 19′-5″ living hall<br/>
+    • Stone ledge, pool and 2 of the 4 columns removed; the other 2 are slim and round<br/>
+    • Pooja is an open niche in the NE (slat screen removed), so the kitchen and dining open up<br/>
+    • Upstairs, the useless 1′-9″ walkway becomes part of a wider double-height void<br/>
+    • Common bath under the stair grows from 4′-5″ to 6′-2″ × 3′-2″ (WC + shower + basin): the flight above is a slim folded-plate slab; floor stays level, door opens out<br/>
+    • Both stairs share the slim folded-plate look; a stair-hall window + glass carport door let you see the stair from the parking, like from the balcony<br/>
+    • Study upstairs is a library (bookshelf wall + one table); the washer sits under the utility sink counter
+    </div>
+  </div>
+
+  <div id="hud" hidden>
+    <div id="cross"></div>
+    <div id="hint"></div>
+    <div id="where"></div>
+    <div id="map"><div id="mapArrow"></div><span class="n">N</span></div>
+  </div>
+
+  <div id="pause" hidden>
+    <div class="card">
+      <h2>Paused</h2>
+      <p>Click <b>Resume</b> or anywhere on the scene to keep walking.</p>
+      <div class="keys"><b>W A S D</b> / <b>↑ ↓</b> walk · <b>mouse</b> look · <b>← →</b> turn · <b>Shift</b> run<br/>
+        <b>E</b> or <b>click</b>: open / close doors · <b>P</b> plan of this floor · <b>R</b> room size on the floor · <b>U</b> services · <b>T</b> tape · <b>1–9</b> jump to a room · <b>M</b> mini-map · <b>Esc</b> pause</div>
+      <div class="btns"><button id="btnResume" class="big">▶ Resume walking</button><button id="btnExit">⟲ Back to 3D overview</button></div>
+    </div>
+  </div>
+
+  <div id="touch" hidden>
+    <div id="joy"><div id="knob"></div></div>
+    <div class="bar"><button id="tMenu">☰ Menu</button><button id="tPlan" title="Floor plan of this floor">📐 Plan</button><button id="tDims" title="Show this room's size">📏 Size</button><button id="tSvc" title="Show services">🔧</button><button id="tFull" hidden>⛶</button><button id="tExit">✕ Exit</button></div>
+  </div>
+
+  <div id="svcLegend" hidden>
+    <b>Services</b><br>
+    <span class="chip" style="background:#2563eb"></span> cold water &nbsp;<span class="chip" style="background:#dc2626"></span> hot (solar)<br>
+    <span class="chip" style="background:#0891b2"></span> municipal / pump line<br>
+    <span class="chip" style="background:#92400e"></span> soil → biogas &nbsp;<span class="chip" style="background:#64748b"></span> grey<br>
+    <span class="chip" style="background:#eab308"></span> biogas → stove<br>
+    <span class="chip" style="background:#16a34a"></span> rain → SE tank<br>
+    <span class="chip" style="background:#f97316"></span> electrical &nbsp;<span class="chip" style="background:#334155"></span> DB / meter<br>
+    <span id="svcLegendNote"></span>
+  </div>
+
+  <div id="planBar" hidden>
+    <button data-fl="0" class="active">Ground</button><button data-fl="1">First</button><button data-fl="2">Terrace</button>
+    <div class="legend" id="planLegend"></div>
+    <button id="planSvc">🔧 Services</button>
+    <button id="planExit">✕ Close plan</button>
+  </div>
+
+  <div id="help">Drag: orbit • Right-drag: pan • Scroll: zoom • 🚶 <b>Walk inside</b> for first person</div>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    import { Octree } from 'three/addons/math/Octree.js';
+    import { Capsule } from 'three/addons/math/Capsule.js';
+    import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+    import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+    import { XRControllerModelFactory } from 'three/addons/webxr/XRControllerModelFactory.js';
+    import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+
+    const FT_PER_M = 3.28084;
+    const el = (id) => document.getElementById(id);
+    const clamp = THREE.MathUtils.clamp, lerp = THREE.MathUtils.lerp;
+    const smooth = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
+
+    // =========================================================================
+    // RENDERER, CAMERA, LIGHTS
+    // =========================================================================
+    const scene = new THREE.Scene();
+    scene.fog = new THREE.Fog(0xcde7f6, 105, 270);
+
+    const camera = new THREE.PerspectiveCamera(44, innerWidth / innerHeight, 0.5, 450);
+    camera.position.set(-25, 27, 56);
+    const rig = new THREE.Group();      // camera parent; scaled to feet only while in VR
+    rig.add(camera);
+    scene.add(rig);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(innerWidth, innerHeight);
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.shadowMap.autoUpdate = false;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.05;
+    renderer.setClearColor(0x1c1915, 1);
+    renderer.xr.enabled = true;
+    document.body.appendChild(renderer.domElement);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.target.set(0, 9, 0);
+    controls.maxPolarAngle = Math.PI * 0.497;
+
+    const pmrem = new THREE.PMREMGenerator(renderer);
+    scene.environment = pmrem.fromScene(new RoomEnvironment(renderer), 0.04).texture;
+
+    const ambLight = new THREE.AmbientLight(0xfffaf2, 0.45);
+    const hemiLight = new THREE.HemisphereLight(0xdcecff, 0x8d7a64, 0.42);
+    scene.add(ambLight, hemiLight);
+
+    const sun = new THREE.DirectionalLight(0xfff3dc, 1.4);
+    sun.castShadow = true;
+    sun.shadow.mapSize.set(2048, 2048);
+    Object.assign(sun.shadow.camera, { left: -38, right: 38, top: 38, bottom: -38, near: 1, far: 320 });
+    sun.shadow.bias = -0.0004;
+    sun.shadow.normalBias = 0.035;
+    scene.add(sun, sun.target);
+
+    const lampMat = new THREE.MeshStandardMaterial({ color: 0xfff4e0, emissive: 0xffd49a, emissiveIntensity: 0, roughness: 0.5 });
+    const warmLights = [];
+    function addWarmLight(parent, x, y, z, intensity = 22, dist = 26) {
+      const pt = new THREE.PointLight(0xffb86c, 0, dist, 1.6);
+      pt.position.set(x, y, z);
+      pt.userData.maxI = intensity;
+      pt.visible = false;
+      parent.add(pt);
+      warmLights.push(pt);
+      return pt;
+    }
+    function addCeilingLight(parent, x, ceilY, z, intensity = 14, dist = 18) {
+      addWarmLight(parent, x, ceilY - 0.9, z, intensity, dist);
+      const disc = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.55, 0.08, 20), lampMat);
+      disc.position.set(x, ceilY - 0.05, z);
+      parent.add(disc);
+    }
+
+    // =========================================================================
+    // MATERIALS (original palette, a few additions)
+    // =========================================================================
+    const std = (color, roughness, extra = {}) => new THREE.MeshStandardMaterial({ color, roughness, ...extra });
+    const mat = {
+      cream: std(0xf5ede0, 0.88), creamTrim: std(0xe6dbc6, 0.85), coolRoof: std(0xf7f5f0, 0.75),
+      stone: std(0xb8a38c, 0.92), brownRoof: std(0x5c341f, 0.7), soffitWood: std(0x8f5934, 0.78),
+      teak: std(0x663a22, 0.6), doorTeak: std(0x5a321c, 0.55), woodLight: std(0xc5976a, 0.7),
+      charcoal: std(0x2b2927, 0.5, { metalness: 0.35 }),
+      solar: std(0x172554, 0.25, { metalness: 0.5 }), tank: std(0x334155, 0.6),
+      floorTile: std(0xede5d8, 0.38), slab: std(0xd8d0c3, 0.85),
+      glass: new THREE.MeshPhysicalMaterial({ color: 0xcfe8f2, transparent: true, opacity: 0.2, roughness: 0.05, depthWrite: false }),
+      glassClear: new THREE.MeshPhysicalMaterial({ color: 0xeaf6fb, transparent: true, opacity: 0.16, roughness: 0.05, depthWrite: false }),
+      water: new THREE.MeshPhysicalMaterial({ color: 0x3aa7d6, transparent: true, opacity: 0.72, roughness: 0.06 }),
+      grass: std(0x62b264, 0.95), lawnBright: std(0x54a856, 0.95), road: std(0x475569, 0.92),
+      paver: std(0xcec5b6, 0.88), soil: std(0x583e31, 0.95),
+      sofa: std(0x8f7d66, 0.95), sofaCushion: std(0xcdbb9f, 0.95), rug: std(0x9a5f45, 1.0),
+      bed: std(0xfbf9f5, 0.9), blanket: std(0x7c5a44, 0.9),
+      counter: std(0x55504b, 0.35), porcelain: std(0xffffff, 0.25), steel: std(0xc9ced3, 0.3, { metalness: 0.8 }),
+      mirror: std(0xe5ecef, 0.04, { metalness: 1.0 }),
+      car: std(0x94a3b8, 0.32, { metalness: 0.35 }), carGlass: std(0x1f2a33, 0.1, { metalness: 0.2 }), rubber: std(0x1b1b1b, 0.9),
+      terracotta: std(0xb85614, 0.85), brass: std(0xd4a348, 0.35, { metalness: 0.6 }),
+      foliage1: std(0x2d6a4f, 0.88), foliage2: std(0x40916c, 0.88), foliage3: std(0x52b788, 0.88),
+    };
+    const SHINY = { glass: 0.9, glassClear: 0.7, water: 0.8, porcelain: 0.6, steel: 0.9, mirror: 1.0, brass: 0.8, charcoal: 0.35, car: 0.7, carGlass: 0.9, solar: 0.8, counter: 0.35 };
+    for (const [k, m] of Object.entries(mat)) { m.userData.env = SHINY[k] ?? 0; m.envMapIntensity = m.userData.env; }
+    lampMat.envMapIntensity = 0;
+
+    // =========================================================================
+    // GEOMETRY HELPERS
+    // =========================================================================
+    function box(parent, x, y, z, w, h, d, material, cast = true) {
+      const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), material);
+      m.position.set(x, y, z);
+      m.castShadow = cast;
+      m.receiveShadow = true;
+      parent.add(m);
+      return m;
+    }
+
+    // Shape in the x-y plane extruded along +z by `depth`, starting at z0.
+    function prism(parent, shape, depth, material, z0) {
+      const geo = new THREE.ExtrudeGeometry(shape, { depth, bevelEnabled: false, curveSegments: 1 });
+      const m = new THREE.Mesh(geo, material);
+      m.position.z = z0;
+      m.castShadow = true; m.receiveShadow = true;
+      parent.add(m);
+      return m;
+    }
+
+    function slopedBar(parent, x1, y1, x2, y2, z, material, thick = 0.14, depth = 0.22) {
+      const len = Math.hypot(x2 - x1, y2 - y1);
+      const m = box(parent, (x1 + x2) / 2, (y1 + y2) / 2, z, len, thick, depth, material);
+      m.rotation.z = Math.atan2(y2 - y1, x2 - x1);
+      return m;
+    }
+
+    // Operable doors / sliders: registry used by the walk-through.
+    const dynamics = [];       // { kind, open, t, label, ... }
+    const dynColliders = [];   // { mesh, hx, hy, hz } thin boxes the player can bump into
+    const interactMeshes = []; // meshes that can be clicked / aimed at
+
+    function applyDyn(d) {
+      const e = d.t * d.t * (3 - 2 * d.t);
+      if (d.kind === 'door') d.pivot.rotation.y = d.openAngle * e;
+      else for (const p of d.moving) p.group.position.x = p.closedX + (p.openX - p.closedX) * e;
+    }
+
+    function wall(parent, x1, z1, x2, z2, h, thick, material, openings = []) {
+      const dx = x2 - x1, dz = z2 - z1;
+      const len = Math.hypot(dx, dz);
+      const grp = new THREE.Group();
+      grp.position.set(x1, 0, z1);
+      grp.rotation.y = -Math.atan2(dz, dx);
+
+      const sorted = [...openings].sort((a, b) => a.start - b.start);
+      let cursor = 0;
+      for (const op of sorted) {
+        if (op.start > cursor) {
+          const seg = op.start - cursor;
+          box(grp, cursor + seg / 2, h / 2, 0, seg, h, thick, material);
+        }
+        if (op.bottom > 0) box(grp, op.start + op.width / 2, op.bottom / 2, 0, op.width, op.bottom, thick, material);
+        if (op.top < h) {
+          const hh = h - op.top;
+          box(grp, op.start + op.width / 2, op.top + hh / 2, 0, op.width, hh, thick, material);
+        }
+        const mid = op.start + op.width / 2;
+        const wh = op.top - op.bottom;
+
+        if (op.type === 'window' || (op.type === 'slider' && op.bottom > 0.6)) {
+          box(grp, mid, op.bottom + wh / 2, 0, op.width, wh, 0.08, mat.glass, false);
+          box(grp, mid, op.bottom + 0.08, 0, op.width, 0.14, thick + 0.1, mat.teak);
+          box(grp, mid, op.top - 0.08, 0, op.width, 0.14, thick + 0.1, mat.teak);
+          box(grp, op.start + 0.06, op.bottom + wh / 2, 0, 0.12, wh, thick + 0.06, mat.teak);
+          box(grp, op.start + op.width - 0.06, op.bottom + wh / 2, 0, 0.12, wh, thick + 0.06, mat.teak);
+          const isSl = op.type === 'slider';
+          const panels = isSl ? Math.max(2, Math.round(op.width / 3)) : Math.max(1, Math.round(op.width / 2.6));
+          for (let p = 1; p < panels; p++) {
+            box(grp, op.start + (op.width / panels) * p, op.bottom + wh / 2, 0, 0.1, wh, 0.16, isSl ? mat.charcoal : mat.teak);
+          }
+        } else if (op.type === 'slider') {
+          // Operable sliding glass door: even panels slide over their neighbour.
+          box(grp, mid, op.bottom + 0.06, 0, op.width, 0.12, thick + 0.1, mat.charcoal);
+          box(grp, mid, op.top - 0.08, 0, op.width, 0.16, thick + 0.1, mat.teak);
+          const n = Math.max(2, Math.round(op.width / 3)), pw = op.width / n, ph = wh - 0.3;
+          const d = { kind: 'slider', moving: [], open: !!op.open, t: op.open ? 1 : 0, label: op.label || 'sliding door' };
+          for (let p = 0; p < n; p++) {
+            const g = new THREE.Group();
+            g.position.set(op.start + pw * (p + 0.5), op.bottom + 0.14, p % 2 === 0 ? -0.08 : 0.08);
+            const gl = new THREE.Mesh(new THREE.BoxGeometry(pw + 0.05, ph, 0.04), mat.glass);
+            gl.position.y = ph / 2;
+            g.add(gl);
+            for (const sx of [-1, 1]) {
+              const st = new THREE.Mesh(new THREE.BoxGeometry(0.12, ph, 0.1), mat.charcoal);
+              st.position.set(sx * (pw / 2 - 0.04), ph / 2, 0); st.castShadow = true; g.add(st);
+            }
+            for (const sy of [0.06, ph - 0.06]) {
+              const rl = new THREE.Mesh(new THREE.BoxGeometry(pw, 0.12, 0.1), mat.charcoal);
+              rl.position.set(0, sy, 0); g.add(rl);
+            }
+            const hd = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.9, 0.16), mat.steel);
+            hd.position.set((p % 2 === 0 ? 1 : -1) * (pw / 2 - 0.25), 3.4, 0); g.add(hd);
+            g.userData.dynamic = true;
+            grp.add(g);
+            gl.userData.dyn = d;
+            interactMeshes.push(gl);
+            dynColliders.push({ mesh: gl, hx: (pw + 0.05) / 2, hy: ph / 2, hz: 0.07 });
+            if (p % 2 === 0) {
+              const dir = p + 1 < n ? 1 : -1;
+              d.moving.push({ group: g, closedX: g.position.x, openX: g.position.x + dir * pw * 0.94 });
+            }
+          }
+          applyDyn(d);
+          dynamics.push(d);
+        } else if (op.type === 'door') {
+          // Hinged door: teak frame + leaf on a pivot at a jamb; swing = +1 (local +z side) or -1;
+          // hinge: 'start' (default) or 'end'; glazed: glass leaf in a teak frame.
+          const fw = 0.2, depth = thick + 0.12;
+          box(grp, op.start + fw / 2, op.bottom + wh / 2, 0, fw, wh, depth, mat.teak);
+          box(grp, op.start + op.width - fw / 2, op.bottom + wh / 2, 0, fw, wh, depth, mat.teak);
+          box(grp, mid, op.top - fw / 2, 0, op.width, fw, depth, mat.teak);
+          const swing = op.swing ?? 1, atEnd = op.hinge === 'end', hs = atEnd ? -1 : 1;
+          const lw = op.width - 2 * fw - 0.04, lh = wh - fw - 0.04;
+          const pivot = new THREE.Group();
+          pivot.position.set(atEnd ? op.start + op.width - fw - 0.02 : op.start + fw + 0.02, op.bottom + 0.02, swing * (thick / 2 - 0.12));
+          const leaf = new THREE.Mesh(new THREE.BoxGeometry(lw, lh, op.glazed ? 0.06 : 0.16), op.glazed ? mat.glass : mat.doorTeak);
+          leaf.position.set(hs * lw / 2, lh / 2, 0);
+          leaf.castShadow = !op.glazed; leaf.receiveShadow = true;
+          pivot.add(leaf);
+          if (op.glazed) {
+            for (const [fx, fy, fwid, fh] of [[-lw / 2 + 0.12, 0, 0.24, lh], [lw / 2 - 0.12, 0, 0.24, lh], [0, lh / 2 - 0.12, lw, 0.24], [0, -lh / 2 + 0.25, lw, 0.5], [0, -lh / 2 + 3.2, lw, 0.12]]) {
+              const fr = new THREE.Mesh(new THREE.BoxGeometry(fwid, fh, 0.14), mat.teak);
+              fr.position.set(fx, fy, 0); fr.castShadow = true; leaf.add(fr);
+            }
+          } else {
+            for (const s of [1, -1]) for (const py of [0.25, -0.22]) {
+              const pan = new THREE.Mesh(new THREE.BoxGeometry(lw - 0.55, lh * 0.38, 0.03), mat.teak);
+              pan.position.set(0, py * lh, s * 0.09); leaf.add(pan);
+            }
+          }
+          for (const s of [1, -1]) {
+            const hnd = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.07, 0.07), mat.brass);
+            hnd.position.set(hs * (lw / 2 - 0.45), 3.4 - op.bottom - lh / 2, s * 0.14); leaf.add(hnd);
+          }
+          pivot.userData.dynamic = true;
+          grp.add(pivot);
+          const d = { kind: 'door', pivot, lw, hs, openAngle: -swing * hs * 1.5, open: !op.closed, t: op.closed ? 0 : 1, label: op.label || 'door' };
+          applyDyn(d);
+          leaf.userData.dyn = d;
+          dynamics.push(d);
+          interactMeshes.push(leaf);
+          dynColliders.push({ mesh: leaf, hx: lw / 2, hy: lh / 2, hz: 0.09 });
+        }
+        cursor = op.start + op.width;
+      }
+      if (cursor < len) {
+        const seg = len - cursor;
+        box(grp, cursor + seg / 2, h / 2, 0, seg, h, thick, material);
+      }
+      parent.add(grp);
+      return grp;
+    }
+
+    function addSlope(parent, p1, p2, p3, p4, thick, topMaterial, botMaterial) {
+      const pts = [
+        p1, p2, p3, p4,
+        [p1[0], p1[1] - thick, p1[2]], [p2[0], p2[1] - thick, p2[2]],
+        [p3[0], p3[1] - thick, p3[2]], [p4[0], p4[1] - thick, p4[2]],
+      ];
+      const tri = (indices, m) => {
+        const pos = [];
+        for (const i of indices) pos.push(...pts[i]);
+        const geo = new THREE.BufferGeometry();
+        geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+        geo.computeVertexNormals();
+        const mesh = new THREE.Mesh(geo, m);
+        mesh.castShadow = true; mesh.receiveShadow = true;
+        parent.add(mesh);
+      };
+      tri([0, 3, 2, 0, 2, 1], topMaterial);
+      tri([4, 5, 6, 4, 6, 7], botMaterial);
+      tri([0, 1, 5, 0, 5, 4], topMaterial);
+      tri([2, 3, 7, 2, 7, 6], topMaterial);
+      tri([3, 0, 4, 3, 4, 7], topMaterial);
+      tri([1, 2, 6, 1, 6, 5], topMaterial);
+    }
+
+    function addChajja(parent, side, a, b, yTop, depth = 1.8, drop = 0.65) {
+      if (side === 'N') addSlope(parent, [a, yTop, 0], [b, yTop, 0], [b, yTop - drop, -depth], [a, yTop - drop, -depth], 0.2, mat.brownRoof, mat.soffitWood);
+      if (side === 'S') addSlope(parent, [b, yTop, 20], [a, yTop, 20], [a, yTop - drop, 20 + depth], [b, yTop - drop, 20 + depth], 0.2, mat.brownRoof, mat.soffitWood);
+      if (side === 'W') addSlope(parent, [0, yTop, b], [0, yTop, a], [-depth, yTop - drop, a], [-depth, yTop - drop, b], 0.2, mat.brownRoof, mat.soffitWood);
+      if (side === 'E') addSlope(parent, [40, yTop, a], [40, yTop, b], [40 + depth, yTop - drop, b], [40 + depth, yTop - drop, a], 0.2, mat.brownRoof, mat.soffitWood);
+    }
+
+    // RCC dog-leg stair (plan fixed by the brief): flight A along z 16.35–19.45 climbs west (x 9.8 → 3.2),
+    // half-landing x 0.5–3.2, flight B along z 12.55–15.65 climbs east (x 3.2 → 9.8). 16 equal risers.
+    const stairColliders = []; // collision-only ramps + guards (parent-local triangles)
+    function addDogLegStair(parent, floorY, topY, opt = {}) {
+      // Plan (parent frame): landing x x0..x0+L; flights run along x; flight B on z0..z0+W climbs +x, flight A on the far side climbs -x.
+      const n = opt.n ?? 8, t = opt.t ?? 6.6 / 7, W = opt.W ?? 3.1, G = opt.gap ?? 0.7, L = opt.L ?? 2.7;
+      const x0 = opt.x0 ?? 0.5, z0 = opt.z0 ?? 12.55;
+      const r = (topY - floorY) / (2 * n), CAP = 0.07, WV = 0.6;
+      const xLo = x0 + L, xHi = xLo + (n - 1) * t, zB = z0 + W / 2, zA = z0 + W + G + W / 2;
+      const landY = floorY + n * r;
+      const yA0 = floorY - CAP, yB0 = landY - CAP;
+      const soffitA = (x) => yA0 + r * (xHi - x) / t - WV;
+      const soffitB = (x) => yB0 + r * (x - xLo) / t - WV;
+
+      const FA = opt.foldA ?? 0;
+      const sA = new THREE.Shape();
+      sA.moveTo(xHi, yA0);
+      for (let k = 1; k <= n - 1; k++) { sA.lineTo(xHi - (k - 1) * t, yA0 + k * r); sA.lineTo(xHi - k * t, yA0 + k * r); }
+      sA.lineTo(xLo, yA0 + n * r);
+      if (FA > 0) {
+        // Folded-plate flight A: stepped underside at a constant thickness (sits on the floor at the bottom when groundStart).
+        sA.lineTo(xLo, yA0 + (n - 1) * r - FA);
+        for (let k = n - 1; k >= 1; k--) {
+          const xs = xHi - (k - 1) * t - FA;
+          sA.lineTo(xs, yA0 + k * r - FA);
+          sA.lineTo(xs, Math.max(yA0 + (k - 1) * r - FA, opt.groundStart ? yA0 : -Infinity));
+        }
+        sA.lineTo(xHi, opt.groundStart ? yA0 : yA0 - FA);
+      } else {
+        sA.lineTo(xLo, soffitA(xLo));
+        if (opt.groundStart) sA.lineTo(xHi - WV * t / r, yA0); else sA.lineTo(xHi, soffitA(xHi));
+      }
+      sA.closePath();
+      prism(parent, sA, W, mat.creamTrim, zA - W / 2);
+
+      const sB = new THREE.Shape();
+      sB.moveTo(xLo, yB0);
+      for (let k = 1; k <= n - 1; k++) { sB.lineTo(xLo + (k - 1) * t, yB0 + k * r); sB.lineTo(xLo + k * t, yB0 + k * r); }
+      sB.lineTo(xHi, yB0 + n * r);
+      const FB = opt.foldB ?? 0;
+      if (FB > 0) {
+        // Folded-plate flight: the underside follows the steps at a constant thickness, so the room below gains headroom.
+        sB.lineTo(xHi, yB0 + (n - 1) * r - FB);
+        for (let k = n - 1; k >= 1; k--) {
+          const xs = xLo + (k - 1) * t + FB;
+          sB.lineTo(xs, yB0 + k * r - FB);
+          sB.lineTo(xs, yB0 + (k - 1) * r - FB);
+        }
+        sB.lineTo(xLo, yB0 - FB);
+      } else {
+        sB.lineTo(xHi, soffitB(xHi));
+        sB.lineTo(xLo, soffitB(xLo));
+      }
+      sB.closePath();
+      prism(parent, sB, W, mat.creamTrim, zB - W / 2);
+      const soffitFold = (x) => yB0 + clamp(Math.floor((x - xLo - FB) / t) + 1, 0, n - 1) * r - FB;
+
+      // Half-landing slab + teak finishes (tread caps overhang 1" as nosing).
+      const zMid = z0 + W + G / 2, span = 2 * W + G + 0.3;
+      box(parent, x0 + L / 2, landY - CAP - 0.25, zMid, L, 0.5, span, mat.creamTrim);
+      box(parent, x0 + L / 2 + 0.04, landY - CAP / 2, zMid, L + 0.08, CAP, span, mat.teak);
+      for (let k = 1; k <= n - 1; k++) {
+        box(parent, xHi - (k - 0.5) * t + 0.04, floorY + k * r - CAP / 2, zA, t + 0.08, CAP, W + 0.04, mat.teak);
+        box(parent, xLo + (k - 0.5) * t - 0.04, landY + k * r - CAP / 2, zB, t + 0.08, CAP, W + 0.04, mat.teak);
+      }
+
+      // Inner-edge railings: stepped glass panes + sloped teak handrail.
+      const railH = 3.0, zRA = zA - W / 2 - 0.05, zRB = zB + W / 2 + 0.05;
+      for (let k = 1; k <= n - 1; k++) {
+        box(parent, xHi - (k - 0.5) * t, floorY + k * r + 1.45, zRA, t - 0.06, 2.6, 0.05, mat.glassClear, false);
+        box(parent, xLo + (k - 0.5) * t, landY + k * r + 1.45, zRB, t - 0.06, 2.6, 0.05, mat.glassClear, false);
+      }
+      slopedBar(parent, xHi, floorY + r + railH, xLo, landY + railH, zRA, mat.teak);
+      slopedBar(parent, xLo, landY + r + railH, xHi, topY + railH, zRB, mat.teak);
+      box(parent, xHi, floorY + (r + railH) / 2, zRA, 0.22, r + railH, 0.22, mat.teak);
+      box(parent, xLo, landY + railH / 2, zRA, 0.22, railH, 0.22, mat.teak);
+      box(parent, xLo, landY + (r + railH) / 2, zRB, 0.22, r + railH, 0.22, mat.teak);
+      box(parent, xHi, topY + railH / 2, zRB, 0.22, railH, 0.22, mat.teak);
+      box(parent, xLo, landY + railH + r / 2, (zRA + zRB) / 2, 0.2, 0.14, zRA - zRB, mat.teak);
+
+      // Collision-only helpers: smooth ramps over each flight + guards along both long edges.
+      const V = (x, y, z) => new THREE.Vector3(x, y, z);
+      const tris = [];
+      const quadUp = (a, b, c, d) => { tris.push([a, b, c], [a, c, d]); };
+      const quad2 = (a, b, c, d) => { tris.push([a, b, c], [a, c, d], [a, c, b], [a, d, c]); };
+      const EPS = 0.06;
+      const rampA = (x) => floorY + r * (xHi + t - x) / t + EPS;
+      const rampB = (x) => landY + r * (x - (xLo - t)) / t + EPS;
+      const z0A = zA - W / 2, z1A = zA + W / 2, z0B = zB - W / 2, z1B = zB + W / 2;
+      quadUp(V(xHi + t, rampA(xHi + t), z0A), V(xHi + t, rampA(xHi + t), z1A), V(xLo, rampA(xLo), z1A), V(xLo, rampA(xLo), z0A));
+      quadUp(V(xLo - t, rampB(xLo - t), z0B), V(xHi, rampB(xHi), z0B), V(xHi, rampB(xHi), z1B), V(xLo - t, rampB(xLo - t), z1B));
+      for (const z of [z0A + 0.03, z1A]) quad2(V(xHi, rampA(xHi) - 0.5, z), V(xLo, rampA(xLo) - 0.5, z), V(xLo, rampA(xLo) + 3.8, z), V(xHi, rampA(xHi) + 3.8, z));
+      for (const z of [z0B, z1B - 0.03]) quad2(V(xLo, rampB(xLo) - 0.5, z), V(xHi, rampB(xHi) - 0.5, z), V(xHi, rampB(xHi) + 3.8, z), V(xLo, rampB(xLo) + 3.8, z));
+      for (const tr of tris) {   // make ramp normals face up
+        const n = new THREE.Triangle(tr[0], tr[1], tr[2]).getNormal(new THREE.Vector3());
+        if (Math.abs(n.y) > 0.3 && n.y < 0) tr.reverse();
+      }
+      stairColliders.push({ parent, tris });
+      return { soffitA, soffitB, soffitFold, landY, r, n, t, xLo, xHi, yB0, FB };
+    }
+
+    // ---------------------------- furniture ----------------------------------
+    const fans = [];
+    const bookMats = [std(0x7c2d12, 0.85), std(0x1e3a8a, 0.85), std(0x166534, 0.85), std(0xb45309, 0.85), std(0x57534e, 0.85), std(0xe7e5e4, 0.85)];
+    // Shelf unit against a wall at zBack, opening toward +z (facing 1) or -z (facing -1), filled with books.
+    function addBookshelf(parent, x0, x1, zBack, depth, h, y = 0.04, facing = 1) {
+      const w = x1 - x0, xc = (x0 + x1) / 2, zc = zBack + facing * depth / 2;
+      box(parent, xc, y + h / 2, zBack + facing * 0.04, w, h, 0.08, mat.teak);
+      const bays = Math.max(1, Math.round(w / 3));
+      for (let i = 0; i <= bays; i++) box(parent, x0 + (w * i) / bays, y + h / 2, zc, 0.1, h, depth, mat.teak);
+      const n = Math.max(1, Math.round(h / 1.25)), sh = (h - 0.1) / n;
+      for (let i = 0; i <= n; i++) box(parent, xc, y + 0.05 + sh * i, zc, w, 0.08, depth, mat.teak);
+      const rnd = rng(Math.round(x0 * 31 + zBack * 7 + h * 13));
+      for (let i = 0; i < n; i++) {
+        const y0 = y + 0.09 + sh * i;
+        for (let bx = x0 + 0.12; bx < x1 - 0.3;) {
+          if (rnd() < 0.07) { bx += 0.4; continue; }
+          const bw = 0.1 + rnd() * 0.16, bh = sh * (0.55 + rnd() * 0.35);
+          box(parent, bx + bw / 2, y0 + bh / 2, zc + facing * 0.04, bw, bh, depth * 0.78, bookMats[Math.floor(rnd() * bookMats.length)], false);
+          bx += bw + 0.012;
+        }
+      }
+    }
+    function addBed(parent, x, y, z, rotY = 0, w = 5.4, l = 6.6) {
+      const g = new THREE.Group(); g.position.set(x, y, z); g.rotation.y = rotY;
+      box(g, 0, 0.75, 0.1, w, 0.5, l - 0.2, mat.teak);
+      for (const [lx, lz] of [[-w / 2 + 0.25, -l / 2 + 0.4], [w / 2 - 0.25, -l / 2 + 0.4], [-w / 2 + 0.25, l / 2 - 0.15], [w / 2 - 0.25, l / 2 - 0.15]]) box(g, lx, 0.25, lz, 0.3, 0.5, 0.3, mat.teak);
+      box(g, 0, 1.25, 0.1, w - 0.15, 0.5, l - 0.35, mat.bed);
+      box(g, 0, 1.54, 0.95, w - 0.02, 0.12, l * 0.6, mat.blanket);
+      box(g, -w / 4 + 0.05, 1.66, -l / 2 + 0.95, w / 2 - 0.35, 0.3, 1.1, mat.bed);
+      box(g, w / 4 - 0.05, 1.66, -l / 2 + 0.95, w / 2 - 0.35, 0.3, 1.1, mat.bed);
+      box(g, 0, 1.75, -l / 2 + 0.12, w + 0.2, 3.5, 0.25, mat.teak);
+      parent.add(g); return g;
+    }
+    function addNightstand(parent, x, y, z) {
+      box(parent, x, y + 0.9, z, 1.5, 1.8, 1.4, mat.woodLight);
+      box(parent, x, y + 2.05, z, 0.12, 0.5, 0.12, mat.brass);
+      const shade = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.42, 0.55, 16), lampMat);
+      shade.position.set(x, y + 2.55, z); parent.add(shade);
+    }
+    function addWardrobe(parent, x, y, z, w, d, rotY = 0, h = 7.0) {
+      const g = new THREE.Group(); g.position.set(x, y, z); g.rotation.y = rotY;
+      box(g, 0, h / 2, 0, w, h, d, mat.woodLight);
+      const n = Math.max(2, Math.round(w / 1.6));
+      for (let i = 1; i < n; i++) box(g, -w / 2 + (w / n) * i, h / 2, d / 2 + 0.01, 0.04, h - 0.3, 0.03, mat.teak, false);
+      for (let i = 0; i < n; i++) box(g, -w / 2 + (w / n) * (i + 0.5) + (i % 2 ? -0.28 : 0.28), 3.6, d / 2 + 0.05, 0.06, 1.2, 0.06, mat.brass, false);
+      parent.add(g); return g;
+    }
+    function addSofa(parent, x, y, z, rotY = 0, w = 6.6, d = 2.7) {
+      const g = new THREE.Group(); g.position.set(x, y, z); g.rotation.y = rotY;
+      box(g, 0, 0.75, 0.15, w - 0.9, 0.7, d - 0.3, mat.sofa);
+      const n = Math.max(1, Math.round((w - 0.9) / 2.0)), cw = (w - 0.9) / n;
+      for (let i = 0; i < n; i++) box(g, -(w - 0.9) / 2 + cw * (i + 0.5), 1.22, 0.25, cw - 0.06, 0.25, d - 0.65, mat.sofaCushion);
+      box(g, 0, 1.45, -d / 2 + 0.3, w - 0.9, 1.5, 0.6, mat.sofa);
+      box(g, -w / 2 + 0.225, 1.0, 0, 0.45, 1.3, d, mat.sofa);
+      box(g, w / 2 - 0.225, 1.0, 0, 0.45, 1.3, d, mat.sofa);
+      for (const [lx, lz] of [[-w / 2 + 0.3, -d / 2 + 0.3], [w / 2 - 0.3, -d / 2 + 0.3], [-w / 2 + 0.3, d / 2 - 0.3], [w / 2 - 0.3, d / 2 - 0.3]]) box(g, lx, 0.2, lz, 0.18, 0.4, 0.18, mat.teak);
+      parent.add(g); return g;
+    }
+    function addTable(parent, x, y, z, w, d, h = 2.5, topMat = mat.teak) {
+      box(parent, x, y + h - 0.08, z, w, 0.16, d, topMat);
+      for (const sx of [-1, 1]) for (const sz of [-1, 1]) box(parent, x + sx * (w / 2 - 0.25), y + (h - 0.16) / 2, z + sz * (d / 2 - 0.25), 0.2, h - 0.16, 0.2, mat.teak);
+    }
+    function addChair(parent, x, y, z, rotY = 0) {
+      const g = new THREE.Group(); g.position.set(x, y, z); g.rotation.y = rotY;
+      box(g, 0, 1.5, 0, 1.4, 0.14, 1.4, mat.teak);
+      for (const sx of [-1, 1]) for (const sz of [-1, 1]) box(g, sx * 0.58, 0.72, sz * 0.58, 0.12, 1.44, 0.12, mat.teak);
+      box(g, 0, 2.55, -0.62, 1.4, 1.0, 0.1, mat.teak);
+      box(g, 0, 1.62, 0.02, 1.25, 0.1, 1.25, mat.sofaCushion);
+      parent.add(g); return g;
+    }
+    function addStool(parent, x, y, z) {
+      box(parent, x, y + 2.4, z, 1.1, 0.12, 1.1, mat.teak);
+      for (const sx of [-1, 1]) for (const sz of [-1, 1]) box(parent, x + sx * 0.42, y + 1.17, z + sz * 0.42, 0.09, 2.34, 0.09, mat.charcoal);
+    }
+    function addCounter(parent, x0, z0, x1, z1, y = 0, h = 2.95) {
+      const w = x1 - x0, d = z1 - z0, cx = (x0 + x1) / 2, cz = (z0 + z1) / 2;
+      box(parent, cx, y + 0.25, cz, w - 0.25, 0.5, d - 0.25, mat.charcoal);
+      box(parent, cx, y + 0.5 + (h - 0.62) / 2, cz, w - 0.06, h - 0.62, d - 0.06, mat.woodLight);
+      box(parent, cx, y + h - 0.06, cz, w, 0.12, d, mat.counter);
+    }
+    function addToilet(parent, x, y, z, rotY = 0) {
+      const g = new THREE.Group(); g.position.set(x, y, z); g.rotation.y = rotY;
+      box(g, 0, 0.6, 0.1, 1.1, 1.2, 1.7, mat.porcelain);
+      box(g, 0, 1.24, 0.1, 1.25, 0.08, 1.75, mat.porcelain);
+      box(g, 0, 1.9, -0.85, 1.4, 1.3, 0.55, mat.porcelain);
+      parent.add(g);
+    }
+    function addVanity(parent, x, y, z, w, rotY = 0, d = 1.5) {
+      const g = new THREE.Group(); g.position.set(x, y, z); g.rotation.y = rotY;
+      box(g, 0, 1.75, 0, w, 1.7, d, mat.woodLight);
+      box(g, 0, 2.66, 0, w + 0.05, 0.12, d + 0.05, mat.counter);
+      box(g, 0, 2.8, 0.1, w * 0.55, 0.16, d * 0.65, mat.porcelain);
+      box(g, 0, 3.05, -d / 2 + 0.2, 0.08, 0.5, 0.08, mat.steel);
+      box(g, 0, 4.7, -d / 2 + 0.02, w - 0.1, 2.4, 0.04, mat.mirror, false);
+      parent.add(g);
+    }
+    function addFan(parent, x, ceilY, z) {
+      const g = new THREE.Group(); g.position.set(x, ceilY, z);
+      const rod = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.9, 8), mat.charcoal); rod.position.y = -0.45; g.add(rod);
+      const rotor = new THREE.Group(); rotor.position.y = -0.95; g.add(rotor);
+      rotor.add(new THREE.Mesh(new THREE.CylinderGeometry(0.38, 0.3, 0.32, 20), mat.brass));
+      for (let i = 0; i < 3; i++) {
+        const arm = new THREE.Group(); arm.rotation.y = i * Math.PI * 2 / 3; rotor.add(arm);
+        const blade = new THREE.Mesh(new THREE.BoxGeometry(2.1, 0.03, 0.42), mat.woodLight);
+        blade.position.set(1.35, -0.02, 0); blade.rotation.x = 0.12; arm.add(blade);
+      }
+      g.userData.dynamic = true;
+      parent.add(g); fans.push(rotor);
+    }
+    function addPlant(parent, x, y, z, s = 1) {
+      const pot = new THREE.Mesh(new THREE.CylinderGeometry(0.55 * s, 0.42 * s, 1.1 * s, 14), mat.terracotta);
+      pot.position.set(x, y + 0.55 * s, z); pot.castShadow = pot.receiveShadow = true; parent.add(pot);
+      const leaf = new THREE.Mesh(new THREE.DodecahedronGeometry(0.85 * s, 1), mat.foliage2);
+      leaf.position.set(x, y + 1.75 * s, z); leaf.scale.set(1, 1.25, 1); leaf.castShadow = true; parent.add(leaf);
+    }
+    function addCar(parent, x, y, z) {
+      const g = new THREE.Group(); g.position.set(x, y, z);
+      box(g, 0, 1.55, 0, 13.4, 1.5, 5.5, mat.car);
+      box(g, -0.6, 3.0, 0, 7.2, 1.45, 5.0, mat.carGlass);
+      box(g, -0.6, 3.78, 0, 6.6, 0.16, 4.8, mat.car);
+      box(g, 6.68, 1.55, 0, 0.1, 0.5, 4.2, mat.charcoal);
+      for (const wx of [-4.3, 4.2]) for (const wz of [-2.55, 2.55]) {
+        const wh = new THREE.Mesh(new THREE.CylinderGeometry(1.05, 1.05, 0.75, 20), mat.rubber);
+        wh.rotation.x = Math.PI / 2; wh.position.set(wx, 1.05, wz); wh.castShadow = true; g.add(wh);
+      }
+      parent.add(g);
+    }
+    function addTree(parent, x, z, s = 1.0, variant = 0, trunkH = 1.0) {
+      const g = new THREE.Group();
+      g.position.set(x, 0, z);
+      const th = 5.6 * s * trunkH;
+      const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.26 * s, 0.4 * s, th, 8), mat.teak);
+      trunk.position.y = th / 2; trunk.castShadow = true;
+      g.add(trunk);
+      const fMat = [mat.foliage1, mat.foliage2, mat.foliage3][variant % 3];
+      const lift = th - 5.6 * s;
+      for (const [px, py, pz, r] of [[0, 6.2, 0, 2.3], [-1.3, 5.4, 0.8, 1.8], [1.4, 5.5, -0.7, 1.9], [0.2, 7.6, 0.3, 1.65]]) {
+        const leaf = new THREE.Mesh(new THREE.DodecahedronGeometry(r * s, 1), fMat);
+        leaf.position.set(px * s, py * s + lift, pz * s);
+        leaf.castShadow = true; leaf.receiveShadow = true;
+        g.add(leaf);
+      }
+      parent.add(g);
+    }
+    let bushSeed = 7;
+    function addBush(parent, x, y, z, s = 1.0) {
+      bushSeed = (bushSeed * 16807) % 2147483647;
+      const m = new THREE.Mesh(new THREE.DodecahedronGeometry(0.85 * s, 1), bushSeed % 2 ? mat.foliage2 : mat.foliage3);
+      m.position.set(x, y + 0.6 * s, z);
+      m.scale.set(1.25, 0.85, 1.25); m.castShadow = true;
+      parent.add(m);
+    }
+
+    // =========================================================================
+    // SITE & PLOT (W33 × S46 × E33 × N51)
+    // =========================================================================
+    const site = new THREE.Group();
+    site.position.set(-25, 0, -16.5);
+    scene.add(site);
+
+    box(site, 25, -0.8, 16.5, 900, 0.5, 900, mat.grass, false);
+    box(site, -15, -0.5, 16.5, 30, 0.35, 600, mat.road, false);
+    for (let z = -150; z <= 180; z += 8) box(site, -15, -0.31, z, 0.4, 0.04, 3.5, mat.cream, false);
+
+    // Generic neighbourhood context — placeholder massing so views out of windows aren't empty (not surveyed).
+    const nbMats = [std(0xe3d7c6, 0.9), std(0xd2c3ae, 0.9), std(0xe8e0d2, 0.9), std(0xcbb79d, 0.9)];
+    function neighbour(x, z, w, d, floors, k) {
+      const m = nbMats[k % nbMats.length], h = floors * 10;
+      box(site, x, h / 2 - 0.3, z, w, h, d, m);
+      box(site, x, h + 1.2, z, w + 0.4, 2.4, d + 0.4, m);
+      box(site, x, h + 2.45, z, w + 0.8, 0.15, d + 0.8, mat.brownRoof);
+      for (let f = 0; f < floors; f++) {
+        for (const sx of [-1, 1]) box(site, x + sx * w * 0.25, f * 10 + 5.2, z + d / 2 + 0.05, w * 0.22, 4.2, 0.12, mat.charcoal, false);
+        for (const sx of [-1, 1]) box(site, x + sx * w * 0.25, f * 10 + 5.2, z - d / 2 - 0.05, w * 0.22, 4.2, 0.12, mat.charcoal, false);
+        for (const sz of [-1, 1]) box(site, x + w / 2 + 0.05, f * 10 + 5.2, z + sz * d * 0.25, 0.12, 4.2, d * 0.2, mat.charcoal, false);
+        for (const sz of [-1, 1]) box(site, x - w / 2 - 0.05, f * 10 + 5.2, z + sz * d * 0.25, 0.12, 4.2, d * 0.2, mat.charcoal, false);
+      }
+    }
+    [[-47, -22, 26, 24, 2], [-47, 10, 26, 22, 2], [-47, 40, 26, 26, 3], [-47, 72, 26, 24, 2],
+      [22, -24, 40, 22, 2], [70, 6, 22, 30, 2], [-47, -55, 26, 26, 2]]
+      .forEach(([x, z, w, d, f], i) => neighbour(x, z, w, d, f, i));
+
+    const plotShape = new THREE.Shape();
+    plotShape.moveTo(0, 0); plotShape.lineTo(51, 0);
+    plotShape.lineTo(46, 33); plotShape.lineTo(0, 33);
+    plotShape.closePath();
+    const plotGeo = new THREE.ExtrudeGeometry(plotShape, { depth: 0.25, bevelEnabled: false });
+    plotGeo.rotateX(Math.PI / 2);
+    const plotMesh = new THREE.Mesh(plotGeo, mat.lawnBright);
+    plotMesh.position.y = -0.3; plotMesh.receiveShadow = true;
+    site.add(plotMesh);
+    const streetTrees = new THREE.Group();   // shared context trees (both designs)
+    site.add(streetTrees);
+
+    // =========================================================================
+    // DESIGN v2 — the original plan with the rough spots fixed
+    // =========================================================================
+    function buildV2(opt = {}) {
+    // open: same rooms and layout, but the courtyard becomes a level, walkable hall under the skylight,
+    // the void above widens to the master wall, and screens/columns that chopped the space are removed.
+    const open = !!opt.open;
+    const root = new THREE.Group();
+    site.add(root);
+    const siteGrp = new THREE.Group();       // compound walls, gate, paving for this design
+    root.add(siteGrp);
+    wall(siteGrp, 0, 0, 51, 0, 4.5, 0.5, mat.creamTrim);
+    wall(siteGrp, 51, 0, 46, 33, 4.5, 0.5, mat.creamTrim);
+    wall(siteGrp, 0, 33, 46, 33, 4.5, 0.5, mat.creamTrim);
+    wall(siteGrp, 0, 0, 0, 33, 4.5, 0.5, mat.creamTrim, [{ start: 21.5, width: 10.5, bottom: 0, top: 4.5, type: 'open' }]);
+    for (let gz = 21.8; gz <= 26.5; gz += 0.65) box(siteGrp, 0.05, 2.2, gz, 0.14, 4.1, 0.22, mat.teak);
+    box(siteGrp, 0, 2.6, 21.2, 1.1, 5.2, 1.1, mat.stone);
+    box(siteGrp, 0, 2.6, 32.3, 1.1, 5.2, 1.1, mat.stone);
+
+    box(siteGrp, 11.5, -0.22, 27.5, 16, 0.15, 10.0, mat.paver, false);   // driveway
+    box(siteGrp, 1.5, -0.22, 27.5, 4.5, 0.15, 9.5, mat.paver, false);    // gate threshold
+    box(siteGrp, 23.8, -0.2, 23.7, 5.4, 0.16, 2.4, mat.stone, false);    // entry porch slab
+    for (let z = 25.9; z <= 31.2; z += 2.1) box(siteGrp, 23.8, -0.2, z, 2.8, 0.1, 1.3, mat.paver, false);
+    box(siteGrp, 41.5, -0.18, 29.8, 6.2, 0.15, 3.6, mat.paver, false);
+    box(siteGrp, 41.5, 1.35, 29.8, 4.8, 0.2, 1.6, mat.teak);             // garden bench
+    for (const bx of [39.5, 43.5]) box(siteGrp, bx, 0.6, 29.8, 0.3, 1.3, 1.4, mat.teak);
+
+    // House at site X=3.5..43.5 (40'), Z=2.5..22.5 (20')
+    const house = new THREE.Group();
+    house.position.set(3.5, 0, 2.5);
+    root.add(house);
+
+    const groundGrp = new THREE.Group();
+    const upperGrp = new THREE.Group();
+    const terraceGrp = new THREE.Group();
+    const furnGround = new THREE.Group();
+    const furnUpper = new THREE.Group();
+    const treesGrp = new THREE.Group();
+    house.add(groundGrp, upperGrp, terraceGrp);
+    groundGrp.add(furnGround);
+    upperGrp.add(furnUpper);
+    root.add(treesGrp);
+
+    // =========================================================================
+    // 1. GROUND FLOOR
+    // =========================================================================
+    const H1 = 9.5;
+    box(groundGrp, 20, -0.15, 10, 40.4, 0.35, 20.4, mat.slab, false);
+    box(groundGrp, 20, 0.04, 10, 39.6, 0.08, 19.6, mat.floorTile, false);
+
+    // SE lawn veranda deck & shade canopy
+    box(groundGrp, 32.0, 0.02, 22.0, 16.0, 0.25, 4.0, mat.woodLight);
+    box(groundGrp, 32.0, 9.4, 22.0, 16.2, 0.32, 4.2, mat.brownRoof);
+    box(groundGrp, 32.0, 9.22, 22.0, 15.8, 0.12, 3.8, mat.soffitWood);
+
+    // East kitchen wet-utility strip
+    box(groundGrp, 41.6, -0.05, 15.0, 3.2, 0.22, 9.0, mat.paver, false);
+    box(groundGrp, 41.6, 8.8, 15.0, 3.4, 0.22, 9.4, mat.brownRoof);
+    box(groundGrp, 41.6, 8.68, 15.0, 3.3, 0.02, 9.3, mat.soffitWood, false);
+    box(groundGrp, 43.0, 4.4, 10.7, 0.25, 8.8, 0.25, mat.charcoal);
+    box(groundGrp, 43.0, 4.4, 19.3, 0.25, 8.8, 0.25, mat.charcoal);
+
+    // Stone entry portal + small rain canopy over the main door
+    box(groundGrp, 17.5, 4.8, 20.1, 1.2, 9.6, 0.9, mat.stone);
+    box(groundGrp, 22.8, 4.8, 20.1, 1.2, 9.6, 0.9, mat.stone);
+    addSlope(groundGrp, [23.4, 9.0, 20.3], [16.9, 9.0, 20.3], [16.9, 8.55, 22.4], [23.4, 8.55, 22.4], 0.22, mat.brownRoof, mat.soffitWood);
+
+    if (open) {
+      // Level stone courtyard floor (covered by the skylight hood), drain channel and one small round planter,
+      // set east of the main-door axis so the view from the entrance to the lounge stays clear.
+      box(groundGrp, 19.5, 0.085, 10.0, 7.2, 0.02, 8.0, mat.stone, false);
+      box(groundGrp, 19.5, 0.09, 6.15, 7.2, 0.02, 0.18, mat.charcoal, false);
+      const bowl = new THREE.Mesh(new THREE.CylinderGeometry(1.25, 1.05, 1.4, 32), mat.stone);
+      bowl.position.set(22.0, 0.78, 10.0); bowl.castShadow = bowl.receiveShadow = true; groundGrp.add(bowl);
+      const soil = new THREE.Mesh(new THREE.CylinderGeometry(1.1, 1.1, 0.08, 32), mat.soil);
+      soil.position.set(22.0, 1.42, 10.0); groundGrp.add(soil);
+      const rim = new THREE.Mesh(new THREE.TorusGeometry(1.18, 0.08, 8, 40), mat.teak);
+      rim.rotation.x = Math.PI / 2; rim.position.set(22.0, 1.5, 10.0); groundGrp.add(rim);
+    } else {
+    // Courtyard: seat-height stone ledge around a planter bed + reflecting pool, open to the sky
+    {
+      const x0 = 15.8, x1 = 23.2, z0 = 5.9, z1 = 14.1, h = 1.3, t = 0.45;
+      box(groundGrp, (x0 + x1) / 2, h / 2, z0 + t / 2, x1 - x0, h, t, mat.stone);
+      box(groundGrp, (x0 + x1) / 2, h / 2, z1 - t / 2, x1 - x0, h, t, mat.stone);
+      box(groundGrp, x0 + t / 2, h / 2, (z0 + z1) / 2, t, h, z1 - z0 - 2 * t, mat.stone);
+      box(groundGrp, x1 - t / 2, h / 2, (z0 + z1) / 2, t, h, z1 - z0 - 2 * t, mat.stone);
+      box(groundGrp, (x0 + x1) / 2, h + 0.04, z0 + t / 2, x1 - x0 + 0.1, 0.08, t + 0.12, mat.teak);
