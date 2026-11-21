@@ -12,17 +12,20 @@ import sys
 FPS = 24
 FONT = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
 CAPTIONS = [  # (shot start s, shot end s, caption)
-    (0, 7, "Arriving from the west road, along the south garden"),
-    (7, 15, "Main door \u2192 foyer, looking up into the double-height courtyard"),
-    (15, 24, "Open living hall and courtyard \u2192 kitchen island and NE pooja"),
-    (24, 32, "Folded-plate stair up to the first floor"),
-    (32, 41, "First-floor gallery over the courtyard \u2192 library"),
-    (41, 46, "SE corner: Buddha fountain over the rainwater tank"),
-    (46, 53, "Courtyard Home \u00b7 40\u2032 \u00d7 20\u2032 house \u00b7 W33 \u00b7 S46 \u00b7 E33 \u00b7 N51 plot"),
+    (0, 9, "Arriving from the west road"),
+    (9, 18, "Under the L-balcony to the walnut main door"),
+    (18, 27, "Living hall around the courtyard"),
+    (27, 36, "Sage & walnut kitchen \u00b7 NE pooja, idols facing west"),
+    (36, 44, "Folded-plate stair with walnut treads"),
+    (44, 52, "First-floor gallery over the courtyard \u2192 library"),
+    (52, 59, "Master bedroom"),
+    (59, 67, "The L-shaped balcony over the garden"),
+    (67, 73, "Buddha fountain in the SE corner, facing west"),
+    (73, 81, "Courtyard Home \u00b7 40\u2032 \u00d7 20\u2032 house \u00b7 W33 \u00b7 S46 \u00b7 E33 \u00b7 N51 plot"),
 ]
 OUTPUTS = {
-    "hq": ("walkthrough-720p-hq.mp4", ["-crf", "16"]),
-    "web": ("walkthrough-720p.mp4", ["-crf", "20", "-maxrate", "6M", "-bufsize", "12M"]),
+    "hq": ("walkthrough-1080p-hq.mp4", ["-crf", "17"]),
+    "web": ("walkthrough-1080p.mp4", ["-crf", "21", "-maxrate", "8M", "-bufsize", "16M"]),
 }
 
 ap = argparse.ArgumentParser()
@@ -31,7 +34,7 @@ ap.add_argument("--outdir", default="video")
 ap.add_argument("--outputs", default="hq,web")
 ap.add_argument("--limit", type=int, default=0, help="encode only the first N frames (test run)")
 ap.add_argument("--suffix", default="")
-ap.add_argument("--poster", type=int, default=1172, help="frame used for the poster JPG")
+ap.add_argument("--poster", type=int, default=1790, help="frame used for the poster JPG")
 args = ap.parse_args()
 os.makedirs(os.path.join(args.outdir, "captions"), exist_ok=True)
 
@@ -50,8 +53,8 @@ for i, (a, b, text) in enumerate(CAPTIONS):
         f.write(text)                                   # no trailing newline: it would add an empty line to the box
     a0, b0 = a + (0.8 if a == 0 else 0.35), b - 0.35
     filters.append(
-        f"drawtext=fontfile={FONT}:textfile={path}:fontsize=26:fontcolor=white:box=1:boxcolor=black@0.5:boxborderw=12"
-        f":x=36:y=h-th-40:enable='between(t,{a0},{b0})':alpha='min(1,min((t-{a0})/0.4,({b0}-t)/0.4))'")
+        f"drawtext=fontfile={FONT}:textfile={path}:fontsize=38:fontcolor=white:box=1:boxcolor=black@0.45:boxborderw=18"
+        f":x=54:y=h-th-60:enable='between(t,{a0},{b0})':alpha='min(1,min((t-{a0})/0.4,({b0}-t)/0.4))'")
 filters.append(f"fade=t=out:st={max(0.0, dur - 1.0):.3f}:d=1.0")
 script = os.path.join(args.outdir, "filters.txt")
 with open(script, "w", encoding="utf-8") as f:
