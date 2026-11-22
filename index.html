@@ -191,7 +191,7 @@
     <div class="sec">
       <div class="secT">📏 Measurements</div>
       <button id="btnPlan" class="big" style="background:#0e7490;border-color:#22d3ee">📐 Floor plan with room sizes</button>
-      <div class="btns3"><button data-plan="0">Ground plan</button><button data-plan="1">First plan</button><button data-plan="2">Terrace plan</button></div>
+      <div class="btns3"><button data-plan="0">Ground plan</button><button data-plan="1">First plan</button><button data-plan="2">Terrace plan</button><button data-plan="3" id="panelBasement">Basement plan</button></div>
       <p class="sub" style="margin:6px 0 0">While walking: <b>P</b> opens the plan of the floor you're on (you-are-here marker), <b>R</b> draws the room's size on its floor, <b>T</b> is a tape measure (click two points). The top bar shows the room's clear size.</p>
     </div>
 
@@ -212,7 +212,7 @@
         <ul>
           <li>One underground <b>sump + rainwater tank (~6,000 L, SE)</b> takes municipal water and filtered roof rain. One pump with an auto level controller fills the overhead tank, so it never runs dry or overflows.</li>
           <li><b>Overhead tank 1,500 L</b> sits right over the two first-floor baths, raised to 5′-6″ so the showers get ~8′ of head without a pressure pump.</li>
-          <li>Three short downtakes: the <b>bath core</b> goes straight down the shared wall; the <b>west line</b> goes down the bedroom/stair wall to the balcony tap and the common bath; the <b>kitchen line</b> goes down the SE corner to the washer, utility sink, kitchen sink (RO) and a garden tap.</li>
+          <li>Three short downtakes: the <b>bath core</b> goes straight down the shared wall; the <b>west line</b> goes down the bedroom/stair wall to the balcony tap and the common bath; the <b>kitchen line</b> drops once in the SE corner of the south wall: the kitchen sink (RO) on the inside, and the utility sink and washer of the wash court on the outside, back to back.</li>
           <li>A <b>solar water heater</b> beside the tank feeds both upstairs baths with a ~5′ hot run. The common bath gets a small 3 L geyser instead of a 40′ hot pipe that would waste water while you wait.</li>
         </ul>
         <b>Drainage + biogas</b> (brown soil · grey waste · yellow gas)
@@ -220,6 +220,7 @@
           <li>Toilet waste goes to a <b>biogas digester (~2 m³, NW, buried)</b>, and kitchen scraps go into its feed chute. A gas pipe along the plinth runs to the stove: about 0.3–0.5 m³ a day, or 45–60 min on one burner (a supplement to LPG). The digester's overflow goes to a <b>soak pit</b> under the driveway (no street sewer).</li>
           <li>Bath, kitchen and washer water stays out of the digester (soap stops the gas). It runs through a grease trap, then a sand filter, into a <b>700 L garden-reuse tank</b> with a hand pump for the plants; its overflow goes to the same soak pit.</li>
           <li>The first-floor stacks run outside the north wall on a solid stretch, so there are no leaks indoors, with one vent above the terrace.</li>
+          <li>The basement is tanked (waterproofed walls and raft). A small sump in its plant room has an auto pump that lifts any seepage to the grey line.</li>
           <li>Check with your engineer: the 3′ side strip is tight next to the footing.</li>
         </ul>
         <b>Rainwater</b> (green)
@@ -233,6 +234,7 @@
           <li>Circuits: lights + fans per floor; 6 A sockets per floor; 16 A for the kitchen, washer, pump, geyser and a carport EV/bike charger; one AC point per bedroom; outdoor lights on a photo-timer.</li>
           <li><b>~2 kWp solar</b> on the existing pergola (~8 units a day), net-metered. The inverter is in the stair room, close to the panels.</li>
           <li>LED lights, BLDC fans (~30 W instead of 75 W), 2-way switches on the stair, a motion sensor at the porch, and the skylight means no daytime lights in the hall.</li>
+          <li>Basement: an <b>ERV</b> (heat-recovery fresh-air unit, ~60 W, runs all the time) draws fresh air through a louvre hidden in the east plinth band, which is 2′ above the garden, and exhausts through a second louvre 5′ away. A dehumidifier keeps it dry. Lined, silenced ducts feed slot diffusers in the theatre ceiling.</li>
         </ul>
       </details>
     </div>
@@ -290,11 +292,13 @@
     • The courtyard fills the whole centre: an 11′-7″ × 7′-8″ double-height space under a wider skylight. The secondary bedroom's door moved to its south side, so the side walkway is gone<br/>
     • Two slim round columns sit at the kitchen edge; the hall itself has no columns<br/>
     • Main door and bath doors open outward; bedroom doors open inward and rest against a wall<br/>
-    • NE pooja: teak mandir on the east wall, idols face west, seen from the hall<br/>
-    • No separate dining table; the kitchen island seats six<br/>
+    • NE pooja: teak mandir on the east wall, idols face west, seen from the hall; a store room right beside it<br/>
+    • Kitchen: one door (to the wash court); fridge → sink under the south window → hob on the east wall; the island seats five (no separate dining table)<br/>
     • Common bath 6′-2″ × 3′-2″ under a slim folded-plate stair; the stair is seen from the parking<br/>
-    • Study upstairs is a library; washer under the utility sink; Buddha fountain on the SE rainwater tank, facing west<br/>
+    • Washer + utility sink in a screened wash court on the SE deck; Buddha fountain on the SE rainwater tank, facing west<br/>
     • L-shaped balcony: the SW deck runs on as a 4′ glass-railed strip along the south face (also the porch roof)<br/>
+    • Raised 2′ + 2′ (plot above the road, house above the plot), hidden by a dark recessed plinth, a gentle driveway ramp and wide shallow steps<br/>
+    • 🤫 Secret basement theatre: slide the kitchen island aside (E) and walk down. Two sound-lock doors, six recliners, fresh air through hidden plinth louvres, and an escape well<br/>
     • Modern palette: warm white, walnut, sandstone, black aluminium windows, sage + walnut kitchen
     </div>
   </div>
@@ -333,7 +337,7 @@
   </div>
 
   <div id="planBar" hidden>
-    <button data-fl="0" class="active">Ground</button><button data-fl="1">First</button><button data-fl="2">Terrace</button>
+    <button data-fl="0" class="active">Ground</button><button data-fl="1">First</button><button data-fl="2">Terrace</button><button data-fl="3" id="planBasement">Basement</button>
     <div class="legend" id="planLegend"></div>
     <button id="planSvc">🔧 Services</button>
     <button id="planExit">✕ Close plan</button>
@@ -442,6 +446,24 @@
       terracotta: std(0xa65a3a, 0.85), brass: std(0xd4a348, 0.35, { metalness: 0.6 }),
       foliage1: std(0x2d6a4f, 0.88), foliage2: std(0x40916c, 0.88), foliage3: std(0x52b788, 0.88),
       winFrame: std(0x262626, 0.45, { metalness: 0.4 }), deck: std(0x8a5a36, 0.7), cabinet: std(0x8c9a7e, 0.55), slate: std(0x4a4844, 0.85),
+      plinth: std(0x34322f, 0.9),
+      // basement home theatre
+      carpet: std(0x3a3c44, 1.0), acoustic: std(0x6a5a52, 0.95), recliner: std(0x8a5a3c, 0.5), concrete: std(0xa29e97, 0.9),
+      theatreCeil: std(0x161a26, 0.95), star: new THREE.MeshBasicMaterial({ color: 0xfff3d6 }), cove: new THREE.MeshBasicMaterial({ color: 0xffc27a }),
+      screen: new THREE.MeshBasicMaterial({ map: (() => {
+        // A calm "movie still" for the screen: dusk sky, sun, layered hills.
+        const c = document.createElement('canvas'); c.width = 512; c.height = 288;
+        const g = c.getContext('2d'), sky = g.createLinearGradient(0, 0, 0, 288);
+        sky.addColorStop(0, '#1d2b53'); sky.addColorStop(0.55, '#c8664b'); sky.addColorStop(1, '#f2b46d');
+        g.fillStyle = sky; g.fillRect(0, 0, 512, 288);
+        g.fillStyle = '#ffe2a8'; g.beginPath(); g.arc(330, 170, 34, 0, Math.PI * 2); g.fill();
+        for (const [col, base, amp, f] of [['#5b3a4a', 190, 26, 0.012], ['#3a2836', 222, 30, 0.017], ['#1f1720', 252, 22, 0.023]]) {
+          g.fillStyle = col; g.beginPath(); g.moveTo(0, 288);
+          for (let x = 0; x <= 512; x += 8) g.lineTo(x, base - amp * Math.sin(x * f) - amp * 0.5 * Math.sin(x * f * 2.7 + 1));
+          g.lineTo(512, 288); g.fill();
+        }
+        const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+      })() }),
     };
     const SHINY = { glass: 0.9, glassClear: 0.7, water: 0.8, porcelain: 0.6, steel: 0.9, mirror: 1.0, brass: 0.8, charcoal: 0.35, car: 0.7, carGlass: 0.9, solar: 0.8, counter: 0.35, winFrame: 0.3, floorTile: 0.25 };
     for (const [k, m] of Object.entries(mat)) { m.name = k; m.userData.env = SHINY[k] ?? 0; m.envMapIntensity = m.userData.env; }   // names carry into glTF exports
@@ -734,6 +756,14 @@
       stairColliders.push({ parent, tris });
       return { soffitA, soffitB, soffitFold, landY, r, n, t, xLo, xHi, yB0, FB };
     }
+    // Collision-only slope over a run of outdoor steps (x0..x1 wide) through the nosings, from (zA, yA) to (zB, yB):
+    // the walking capsule can't climb 7–8" risers on its own.
+    function addStepRamp(parent, x0, x1, zA, yA, zB, yB) {
+      const V = (x, y, z) => new THREE.Vector3(x, y + 0.06, z);
+      const tris = [[V(x0, yA, zA), V(x1, yA, zA), V(x1, yB, zB)], [V(x0, yA, zA), V(x1, yB, zB), V(x0, yB, zB)]];
+      for (const tr of tris) if (new THREE.Triangle(...tr).getNormal(new THREE.Vector3()).y < 0) tr.reverse();
+      stairColliders.push({ parent, tris });
+    }
 
     // ---------------------------- furniture ----------------------------------
     const fans = [];
@@ -913,11 +943,12 @@
       box(g, -0.6, 3.0, 0, 7.2, 1.45, 5.0, mat.carGlass);
       box(g, -0.6, 3.78, 0, 6.6, 0.16, 4.8, mat.car);
       box(g, 6.68, 1.55, 0, 0.1, 0.5, 4.2, mat.charcoal);
-      for (const wx of [-4.3, 4.2]) for (const wz of [-2.55, 2.55]) {
+      for (const wx of [-4.3, 4.2]) for (const wz of [-2.35, 2.35]) {
         const wh = new THREE.Mesh(new THREE.CylinderGeometry(1.05, 1.05, 0.75, 20), mat.rubber);
         wh.rotation.x = Math.PI / 2; wh.position.set(wx, 1.05, wz); wh.castShadow = true; g.add(wh);
       }
       parent.add(g);
+      return g;
     }
     function addTree(parent, x, z, s = 1.0, variant = 0, trunkH = 1.0) {
       const g = new THREE.Group();
@@ -952,19 +983,29 @@
     site.position.set(-25, 0, -16.5);
     scene.add(site);
 
-    box(site, 25, -0.8, 16.5, 900, 0.5, 900, mat.grass, false);
+    // Natural ground around the plot (four slabs leave a hole under the open design's basement).
+    for (const [cx, cz, w, d] of [[-204, 16.5, 442, 900], [259.5, 16.5, 431, 900], [30.5, -216.75, 27, 433.5], [30.5, 244.75, 27, 443.5]]) {
+      box(site, cx, -0.8, cz, w, 0.5, d, mat.grass, false);
+    }
     box(site, -15, -0.5, 16.5, 30, 0.35, 600, mat.road, false);
     for (let z = -150; z <= 180; z += 8) box(site, -15, -0.31, z, 0.4, 0.04, 3.5, mat.cream, false);
 
-    const plotShape = new THREE.Shape();
-    plotShape.moveTo(0, 0); plotShape.lineTo(51, 0);
-    plotShape.lineTo(46, 33); plotShape.lineTo(0, 33);
-    plotShape.closePath();
-    const plotGeo = new THREE.ExtrudeGeometry(plotShape, { depth: 0.25, bevelEnabled: false });
-    plotGeo.rotateX(Math.PI / 2);
-    const plotMesh = new THREE.Mesh(plotGeo, mat.lawnBright);
-    plotMesh.position.y = -0.3; plotMesh.receiveShadow = true;
-    site.add(plotMesh);
+    // Plot lawn (site coords). Each design adds its own, so the open design can raise its plot and cut out the house
+    // footprint (basement below), the sunken driveway ramp (x 0–19.5, z 22.6–33) and the basement's escape well.
+    function addPlotLawn(parent, raised) {
+      const shape = new THREE.Shape();
+      const pts = raised
+        ? [[0, 0], [51, 0], [46, 33], [19.5, 33], [19.5, 22.6], [43.6, 22.6], [43.6, 2.4], [29.3, 2.4], [29.3, 0.5], [26.5, 0.5], [26.5, 2.4], [3.4, 2.4], [3.4, 22.6], [0, 22.6]]
+        : [[0, 0], [51, 0], [46, 33], [0, 33]];
+      shape.moveTo(...pts[0]);
+      for (const p of pts.slice(1)) shape.lineTo(...p);
+      shape.closePath();
+      const geo = new THREE.ExtrudeGeometry(shape, { depth: 0.25, bevelEnabled: false });
+      geo.rotateX(Math.PI / 2);
+      const m = new THREE.Mesh(geo, mat.lawnBright);
+      m.position.y = -0.3; m.receiveShadow = true;
+      parent.add(m);
+    }
     const streetTrees = new THREE.Group();   // shared context trees (both designs)
     site.add(streetTrees);
 
@@ -1002,22 +1043,44 @@
     // open: same rooms and layout, but the courtyard becomes a level, walkable hall under the skylight,
     // the void above widens to the master wall, and screens/columns that chopped the space are removed.
     const open = !!opt.open;
+    // open: the plot sits 2' above the road and the house 2' above the plot (flood-safe, but it should not look raised).
+    const PLOT_RISE = open ? 2.0 : 0, HOUSE_RISE = open ? 3.6 : 0;
     const root = new THREE.Group();
     site.add(root);
     const siteGrp = new THREE.Group();       // compound walls, gate, paving for this design
+    siteGrp.position.y = PLOT_RISE;
     root.add(siteGrp);
+    addPlotLawn(siteGrp, open);
     wall(siteGrp, 0, 0, 51, 0, 4.5, 0.5, mat.creamTrim);
     wall(siteGrp, 51, 0, 46, 33, 4.5, 0.5, mat.creamTrim);
     wall(siteGrp, 0, 33, 46, 33, 4.5, 0.5, mat.creamTrim);
     wall(siteGrp, 0, 0, 0, 33, 4.5, 0.5, mat.creamTrim, [{ start: 21.5, width: 10.5, bottom: 0, top: 4.5, type: 'open' }]);
-    for (let gz = 21.8; gz <= 26.5; gz += 0.65) box(siteGrp, 0.05, 2.2, gz, 0.14, 4.1, 0.22, mat.teak);
-    box(siteGrp, 0, 2.6, 21.2, 1.1, 5.2, 1.1, mat.stone);
-    box(siteGrp, 0, 2.6, 32.3, 1.1, 5.2, 1.1, mat.stone);
+    if (open) {
+      // The 2' rise is held by a stone retaining base under the compound wall: seen from the road, the wall stays 4.5' above the garden inside.
+      for (const [x1, z1, x2, z2] of [[0, 0, 51, 0], [51, 0, 46, 33], [0, 33, 46, 33], [0, 0, 0, 22.3]]) {
+        const g = new THREE.Group();
+        g.position.set((x1 + x2) / 2, 0, (z1 + z2) / 2); g.rotation.y = -Math.atan2(z2 - z1, x2 - x1);
+        box(g, 0, -1.2, 0, Math.hypot(x2 - x1, z2 - z1) + 0.55, 2.3, 0.6, mat.stone);
+        siteGrp.add(g);
+      }
+      box(siteGrp, 1.5, -1.3, 22.45, 4.0, 2.05, 0.3, mat.stone);           // low retaining edge between the ramp and the west strip
+    }
+    // Gate leaf + pillars (open: they run down to the road, because the driveway starts at road level).
+    for (let gz = 21.8; gz <= 26.5; gz += 0.65) box(siteGrp, 0.05, open ? 0.825 : 2.2, gz, 0.14, open ? 6.15 : 4.1, 0.22, mat.teak);
+    box(siteGrp, 0, open ? 1.425 : 2.6, 21.2, 1.1, open ? 7.55 : 5.2, 1.1, mat.stone);
+    box(siteGrp, 0, open ? 1.425 : 2.6, 32.3, 1.1, open ? 7.55 : 5.2, 1.1, mat.stone);
 
-    box(siteGrp, 11.5, -0.22, 27.5, 16, 0.15, 10.0, mat.paver, false);   // driveway
-    box(siteGrp, 1.5, -0.22, 27.5, 4.5, 0.15, 9.5, mat.paver, false);    // gate threshold
-    box(siteGrp, 23.8, -0.2, 23.7, 5.4, 0.16, 2.4, mat.stone, false);    // entry porch slab
-    for (let z = 25.9; z <= 31.2; z += 2.1) box(siteGrp, 23.8, -0.2, z, 2.8, 0.1, 1.3, mat.paver, false);
+    if (open) {
+      // Driveway: one long 1:10 ramp from the road at the gate up to garden level at the carport's east end.
+      const rise = PLOT_RISE + 0.025, run = 20.0, ang = Math.atan2(rise, run);
+      const ramp = box(siteGrp, 9.5 + 0.15 * Math.sin(ang), -1.3125 - 0.15 * Math.cos(ang), 27.65, Math.hypot(run, rise), 0.3, 10.1, mat.paver, false);
+      ramp.rotation.z = ang;
+    } else {
+      box(siteGrp, 11.5, -0.22, 27.5, 16, 0.15, 10.0, mat.paver, false);   // driveway
+      box(siteGrp, 1.5, -0.22, 27.5, 4.5, 0.15, 9.5, mat.paver, false);    // gate threshold
+      box(siteGrp, 23.8, -0.2, 23.7, 5.4, 0.16, 2.4, mat.stone, false);    // entry porch slab
+    }
+    for (let z = open ? 27.8 : 25.9; z <= 32.0; z += 2.1) box(siteGrp, 23.8, -0.2, z, 2.8, 0.1, 1.3, mat.paver, false);
     if (open) {
       // SE corner: Buddha water fountain on the rainwater tank slab, facing west towards the bench, with a dark slate wall behind him.
       box(siteGrp, 37.5, -0.18, 29.7, 8.6, 0.15, 5.8, mat.paver, false);
@@ -1032,9 +1095,9 @@
       for (const bx of [39.5, 43.5]) box(siteGrp, bx, 0.6, 29.8, 0.3, 1.3, 1.4, mat.teak);
     }
 
-    // House at site X=3.5..43.5 (40'), Z=2.5..22.5 (20')
+    // House at site X=3.5..43.5 (40'), Z=2.5..22.5 (20'); open: floor finish 3.68 = 2' above the plot
     const house = new THREE.Group();
-    house.position.set(3.5, 0, 2.5);
+    house.position.set(3.5, HOUSE_RISE, 2.5);
     root.add(house);
 
     const groundGrp = new THREE.Group();
@@ -1052,22 +1115,80 @@
     // 1. GROUND FLOOR
     // =========================================================================
     const H1 = 9.5;
-    box(groundGrp, 20, -0.15, 10, 40.4, 0.35, 20.4, mat.slab, false);
-    box(groundGrp, 20, 0.04, 10, 39.6, 0.08, 19.6, mat.floorTile, false);
+    const PL = PLOT_RISE - HOUSE_RISE - 0.3;   // garden (plot) level in house-local feet: -1.9 for open, -0.3 for v2
+    // open: the slab + tiles stop around the secret stair's opening (x 28.4–31.6, z 4.4–14.0), which the island covers.
+    const cutStair = (x0, z0, x1, z1) => open ? [[x0, z0, 28.4, z1], [31.6, z0, x1, z1], [28.4, z0, 31.6, 4.4], [28.4, 14.0, 31.6, z1]] : [[x0, z0, x1, z1]];
+    for (const [x0, z0, x1, z1] of cutStair(-0.2, -0.2, 40.2, 20.2)) box(groundGrp, (x0 + x1) / 2, -0.15, (z0 + z1) / 2, x1 - x0, 0.35, z1 - z0, mat.slab, open);   // open: it shades the basement
+    for (const [x0, z0, x1, z1] of cutStair(0.2, 0.2, 39.8, 19.8)) box(groundGrp, (x0 + x1) / 2, 0.04, (z0 + z1) / 2, x1 - x0, 0.08, z1 - z0, mat.floorTile, false);
 
-    // SE lawn veranda deck & shade canopy (open: the first-floor L-balcony above is its roof)
-    box(groundGrp, 32.0, 0.02, 22.0, 16.0, 0.25, 4.0, mat.woodLight);
+    // SE lawn veranda deck & shade canopy (open: the first-floor L-balcony above is its roof; the deck runs on to the utility strip)
+    box(groundGrp, open ? 33.6 : 32.0, 0.02, 22.0, open ? 19.2 : 16.0, 0.25, 4.0, mat.woodLight);
     if (!open) {
       box(groundGrp, 32.0, 9.4, 22.0, 16.2, 0.32, 4.2, mat.brownRoof);
       box(groundGrp, 32.0, 9.22, 22.0, 15.8, 0.12, 3.8, mat.soffitWood);
     }
 
-    // East kitchen wet-utility strip
-    box(groundGrp, 41.6, -0.05, 15.0, 3.2, 0.22, 9.0, mat.paver, false);
-    box(groundGrp, 41.6, 8.8, 15.0, 3.4, 0.22, 9.4, mat.brownRoof);
-    box(groundGrp, 41.6, 8.68, 15.0, 3.3, 0.02, 9.3, mat.soffitWood, false);
-    box(groundGrp, 43.0, 4.4, 10.7, 0.25, 8.8, 0.25, mat.charcoal);
-    box(groundGrp, 43.0, 4.4, 19.3, 0.25, 8.8, 0.25, mat.charcoal);
+    // East kitchen wet-utility strip (v2). open: only a small paved landing outside the kitchen door, joined to the deck
+    // and part of the screened wash court; the rest of the east side is garden again.
+    const uz0 = open ? 16.4 : 10.5, uz1 = open ? 20.0 : 19.5, ucz = (uz0 + uz1) / 2, ulen = uz1 - uz0;
+    box(groundGrp, 41.6, -0.05, ucz, 3.2, 0.22, ulen, mat.paver, false);
+    if (open) {
+      // Slim slab over the landing and the deck's east end, flush with the L-balcony slab, on two black posts.
+      box(groundGrp, 41.7, 9.75, 20.2, 3.4, 0.5, 8.0, mat.slab);
+      for (const pz of [16.6, 23.9]) box(groundGrp, 43.0, 4.78, pz, 0.25, 9.44, 0.25, mat.charcoal);
+    } else {
+      box(groundGrp, 41.6, 8.8, ucz, 3.4, 0.22, ulen + 0.4, mat.brownRoof);
+      box(groundGrp, 41.6, 8.68, ucz, 3.3, 0.02, ulen + 0.3, mat.soffitWood, false);
+      for (const pz of [10.7, 19.3]) box(groundGrp, 43.0, 4.4, pz, 0.25, 8.8, 0.25, mat.charcoal);
+    }
+
+    if (open) {
+      // ---- Raised house: nothing reads as "raised" — a shadow-line plinth, a stone porch, a timber deck edge, steps tucked under cover ----
+      const solidTo = (x, top, z, w, d, m = mat.stone, bottom = PL - 0.05) => box(groundGrp, x, (top + bottom) / 2, z, w, top - bottom, d, m);
+      // Recessed dark plinth under the crisp slab edge (the slab overhangs it by 0.3'), so the 2' rise reads as a shadow line.
+      // Along the carport it runs deeper, down to the driveway ramp.
+      for (const [x, z, w, d, bot] of [[8.1, 19.85, 16.2, 0.5, -3.75], [28.2, 19.85, 24.0, 0.5, PL - 0.05], [20, 0.15, 40.2, 0.5, PL - 0.05],
+        [0.15, 10, 0.5, 19.2, PL - 0.05], [39.85, 10, 0.5, 19.2, PL - 0.05]]) solidTo(x, -0.33, z, w, d, mat.plinth, bot);
+      // Main door: a stone landing at floor level, then 3 wide 8" steps down to the garden path.
+      solidTo(20.3, 0.08, 21.45, 6.6, 2.3);
+      solidTo(20.3, -0.58, 23.1, 6.6, 1.0);
+      solidTo(20.3, -1.24, 24.1, 6.6, 1.0);
+      addStepRamp(groundGrp, 17.0, 23.6, 22.6, 0.08, 25.6, PL);
+      // Veranda deck: skirt down to the lawn, 3 timber steps at its west end, a planter, then a stone seat-ledge facing the Buddha pond.
+      solidTo(33.6, -0.11, 22.0, 19.2, 3.96, mat.plinth);
+      solidTo(26.7, -0.537, 24.45, 5.4, 0.9, mat.woodLight);
+      solidTo(26.7, -1.218, 25.35, 5.4, 0.9, mat.woodLight);
+      addStepRamp(groundGrp, 24.0, 29.4, 24.0, 0.145, 26.7, PL);
+      solidTo(31.0, -0.85, 24.5, 3.2, 1.0, mat.plinth);
+      box(groundGrp, 31.0, -0.87, 24.5, 2.9, 0.06, 0.7, mat.soil, false);
+      addBush(groundGrp, 30.2, -0.9, 24.5, 0.55);
+      addBush(groundGrp, 31.8, -0.9, 24.5, 0.5);
+      // Sit-out on the deck's west half: a teak bench against the solid wall, facing the garden.
+      box(groundGrp, 27.0, 1.53, 20.95, 4.0, 0.14, 1.25, mat.teak);
+      for (const bx of [25.25, 28.75]) box(groundGrp, bx, 0.83, 20.95, 0.3, 1.26, 1.1, mat.teak);
+      // Wash court on the deck's east end + the landing: a teak batten screen (7' high, open above for air)
+      // hides the washer and utility sink from the Buddha garden; the battens let the east morning sun in to dry clothes.
+      const batten = (x0, z0, x1, z1) => {
+        const len = Math.hypot(x1 - x0, z1 - z0), n = Math.round(len / 0.5);
+        for (let i = 0; i <= n; i++) {
+          const f = i / n, bx = x0 + (x1 - x0) * f, bz = z0 + (z1 - z0) * f;
+          box(groundGrp, bx, 3.67, bz, 0.16, 7.05, 0.16, mat.teak);
+        }
+        const g = new THREE.Group(); g.position.set((x0 + x1) / 2, 0, (z0 + z1) / 2); g.rotation.y = -Math.atan2(z1 - z0, x1 - x0);
+        box(g, 0, 7.25, 0, len + 0.16, 0.14, 0.2, mat.teak);
+        groundGrp.add(g);
+      };
+      batten(37.0, 20.35, 37.0, 23.85);
+      batten(37.0, 23.85, 43.1, 23.85);
+      batten(43.1, 23.85, 43.1, 16.5);
+      batten(43.1, 16.5, 40.35, 16.5);
+      // Utility strip skirt; carport door: 4 steps down to the driveway, tucked under the deck.
+      box(groundGrp, 41.6, (-0.16 + PL - 0.05) / 2, ucz, 3.2, -0.11 - PL, ulen, mat.plinth);
+      solidTo(12.0, -0.516, 20.6, 4.0, 0.8, mat.stone, -2.7);
+      solidTo(12.0, -1.112, 21.4, 4.0, 0.8, mat.stone, -2.7);
+      solidTo(12.0, -1.709, 22.2, 4.0, 0.8, mat.stone, -2.7);
+      addStepRamp(groundGrp, 10.0, 14.0, 20.2, 0.08, 23.8, -2.6);   // runs on under the driveway surface
+    }
 
     // Stone entry portal + small rain canopy over the main door (open: the L-balcony strip above is the porch roof,
     // and a full-height sandstone strip between the carport door and the portal marks the entrance)
@@ -1126,8 +1247,14 @@
       { start: 13.5, width: 4.2, bottom: 3.5, top: 8.2, type: 'window' }
     ]);
     for (let lz = 3.8; lz <= 7.8; lz += 0.65) box(groundGrp, -0.45, 5.15, lz, 0.18, 5.4, 0.35, mat.teak);
-    wall(groundGrp, 40, 0, 40, 20, H1, 0.6, mat.cream, [
-      { start: 2.0, width: 4.0, bottom: open ? 6.3 : 3.0, top: 7.8, type: 'window' },   // open: high window above the pooja mandir
+    wall(groundGrp, 40, 0, 40, 20, H1, 0.6, mat.cream, open ? [
+      // open: pooja high window, store-room vent, and the kitchen's only door (out to the wash court; it opens outward
+      // on its north hinge, so the open leaf lies along the landing's edge). The wall between them carries the hob + chimney.
+      { start: 1.6, width: 3.8, bottom: 6.3, top: 7.8, type: 'window' },
+      { start: 8.0, width: 2.0, bottom: 6.6, top: 7.8, type: 'window' },
+      { start: 16.8, width: 2.6, bottom: 0, top: 7.4, type: 'door', swing: -1, closed: true, label: 'kitchen door' },
+    ] : [
+      { start: 2.0, width: 4.0, bottom: 3.0, top: 7.8, type: 'window' },
       { start: 11.5, width: 3.0, bottom: 0, top: 7.4, type: 'door', swing: -1, closed: true, label: 'utility door' },
       { start: 15.2, width: 3.5, bottom: 3.5, top: 7.8, type: 'window' }
     ]);
@@ -1136,7 +1263,9 @@
       ...(open ? [{ start: 3.5, width: 5.5, bottom: 2.5, top: 7.5, type: 'window' }] : []),
       { start: 10.4, width: 3.2, bottom: 0, top: 7.8, type: 'door', closed: true, glazed: open, label: 'carport door' },
       { start: 18.6, width: 3.4, bottom: 0, top: 8.2, type: 'door', swing: open ? 1 : -1, closed: true, label: 'main door' },   // open: opens outward onto the porch
-      { start: 25.5, width: 12.0, bottom: 0, top: 8.4, type: 'slider', open: true, label: 'veranda sliding door' }
+      // open: the veranda slider becomes the kitchen window over the new south counter (the wash court is outside it)
+      open ? { start: 30.6, width: 6.0, bottom: 3.6, top: 7.4, type: 'window' }
+        : { start: 25.5, width: 12.0, bottom: 0, top: 8.4, type: 'slider', open: true, label: 'veranda sliding door' }
     ]);
     addChajja(groundGrp, 'W', 2.5, 9.0, 8.4, 2.0, 0.7);
     addChajja(groundGrp, 'W', 12.8, 18.5, 8.7, 1.8, 0.6);
@@ -1200,9 +1329,11 @@
     }
 
     // SW carport
-    box(groundGrp, 0.5, 4.9, 29.5, 0.75, 9.8, 0.75, mat.stone);
-    box(groundGrp, 15.5, 4.9, 29.5, 0.75, 9.8, 0.75, mat.stone);
-    addCar(furnGround, 8.2, -0.15, 26.7);
+    box(groundGrp, 0.5, open ? 3.1 : 4.9, 29.5, 0.75, open ? 13.4 : 9.8, 0.75, mat.stone);   // open: both pillars run down to the driveway ramp
+    box(groundGrp, 15.5, open ? 3.9 : 4.9, 29.5, 0.75, open ? 11.8 : 9.8, 0.75, mat.stone);
+    // open: the car stands on the 1:10 driveway ramp (house-local y of the ramp at x 8.2), tilted with it, clear of the carport-door steps
+    const car = addCar(furnGround, 8.2, open ? -2.69 : -0.15, open ? 27.05 : 26.7);
+    if (open) car.rotation.z = Math.atan2(PLOT_RISE + 0.025, 20);
 
     // --- ground furniture ---
     // NW bedroom: bed against the solid south wall, wardrobe on the east wall
@@ -1233,18 +1364,89 @@
       addTable(furnGround, 30.0, 0.08, 7.8, 5.4, 3.0, 2.5);
       for (const cx of [28.2, 30.0, 31.8]) { addChair(furnGround, cx, 0.08, 5.75, 0); addChair(furnGround, cx, 0.08, 9.85, Math.PI); }
     }
-    addFan(furnGround, open ? 32.0 : 30.0, H1, open ? 10.6 : 7.8);
-    // Kitchen: fridge + cooktop run north of the utility door, sink run under the east window, island + stools
-    box(furnGround, 38.6, 3.08, 7.3, 2.2, 6.0, 2.2, mat.steel);
-    addCounter(furnGround, 37.6, 8.45, 39.7, 11.2, 0.08);
-    box(furnGround, 38.65, 3.06, 9.8, 1.7, 0.04, 1.6, mat.charcoal);
-    box(furnGround, 39.0, 6.9, 9.8, 1.4, 1.2, 2.2, mat.steel);
-    addCounter(furnGround, 37.6, 14.8, 39.7, 19.65, 0.08);
-    box(furnGround, 38.6, 2.96, 17.0, 1.4, 0.06, 2.0, mat.steel);
-    box(furnGround, 39.45, 3.35, 17.0, 0.12, 0.7, 0.12, mat.steel);
-    addCounter(furnGround, 29.6, 12.25, 34.4, 14.75, 0.08, 2.95, mat.teak);   // walnut island, white quartz top
-    for (const sx of [30.4, 32.0, 33.6]) addStool(furnGround, sx, 0.08, 15.6);
-    if (open) for (const sx of [30.4, 32.0, 33.6]) addStool(furnGround, sx, 0.08, 11.4);
+    addFan(furnGround, 30.0, H1, open ? 9.2 : 7.8);
+    if (!open) {
+      // Kitchen (v2): fridge + cooktop run north of the utility door, sink run under the east window, island + stools
+      box(furnGround, 38.6, 3.08, 7.3, 2.2, 6.0, 2.2, mat.steel);
+      addCounter(furnGround, 37.6, 8.45, 39.7, 11.2, 0.08);
+      box(furnGround, 38.65, 3.06, 9.8, 1.7, 0.04, 1.6, mat.charcoal);
+      box(furnGround, 39.0, 6.9, 9.8, 1.4, 1.2, 2.2, mat.steel);
+      addCounter(furnGround, 37.6, 14.8, 39.7, 19.65, 0.08);
+      box(furnGround, 38.6, 2.96, 17.0, 1.4, 0.06, 2.0, mat.steel);
+      box(furnGround, 39.45, 3.35, 17.0, 0.12, 0.7, 0.12, mat.steel);
+      addCounter(furnGround, 29.6, 12.25, 34.4, 14.75, 0.08, 2.95, mat.teak);   // walnut island, white quartz top
+      for (const sx of [30.4, 32.0, 33.6]) addStool(furnGround, sx, 0.08, 15.6);
+    } else {
+      // Kitchen (open): L along the south window and the east wall. Fridge (tall bank, west end of the south run) →
+      // sink under the window → hob + chimney on the east wall: a ~23' work triangle. The only door is at the SE corner.
+      box(furnGround, 27.4, 4.19, 18.55, 0.12, 8.22, 2.3, mat.teak);               // walnut side panel facing the foyer
+      box(furnGround, 30.24, 4.19, 18.55, 0.12, 8.22, 2.3, mat.teak);
+      box(furnGround, 28.82, 3.13, 18.62, 2.7, 6.1, 2.1, mat.steel);               // double-door fridge (front at z 17.57)
+      box(furnGround, 28.82, 7.25, 18.62, 2.7, 2.0, 2.1, mat.teak);                // cabinet above
+      box(furnGround, 28.82, 3.13, 17.55, 0.03, 5.9, 0.04, mat.charcoal);          // door split + handles
+      for (const hx of [28.62, 29.02]) box(furnGround, hx, 3.9, 17.5, 0.06, 1.8, 0.08, mat.charcoal);
+      addCounter(furnGround, 30.3, 17.7, 37.3, 19.65, 0.08);                       // south run (sage, quartz top)
+      box(furnGround, 33.6, 3.045, 18.65, 2.7, 0.03, 1.6, mat.steel, false);      // double-bowl sink under the window
+      for (const bx of [32.97, 34.23]) box(furnGround, bx, 3.06, 18.65, 1.2, 0.02, 1.35, mat.charcoal, false);
+      box(furnGround, 33.6, 3.55, 19.4, 0.1, 1.0, 0.1, mat.steel);                 // gooseneck tap
+      box(furnGround, 33.6, 4.02, 19.17, 0.08, 0.08, 0.5, mat.steel);
+      box(furnGround, 35.62, 1.55, 17.7, 1.95, 2.3, 0.04, mat.steel);              // dishwasher front
+      box(furnGround, 36.95, 4.6, 19.48, 0.6, 1.1, 0.35, mat.porcelain);           // RO purifier beside the window
+      addCounter(furnGround, 37.6, 11.8, 39.7, 16.4, 0.08);                        // east run: hob on the solid wall
+      box(furnGround, 38.65, 3.06, 14.1, 1.7, 0.04, 2.4, mat.charcoal);            // black-glass hob
+      for (const [bx, bz] of [[38.3, 13.55], [39.0, 13.55], [38.3, 14.65], [39.0, 14.65]]) {
+        const burner = new THREE.Mesh(new THREE.TorusGeometry(0.2, 0.04, 6, 18), mat.steel);
+        burner.rotation.x = Math.PI / 2; burner.position.set(bx, 3.1, bz); furnGround.add(burner);
+      }
+      box(furnGround, 39.0, 6.9, 14.1, 1.4, 1.2, 3.0, mat.steel);                  // chimney hood, ducted straight out through the east wall
+      box(furnGround, 39.35, 8.4, 14.1, 0.6, 1.8, 0.8, mat.steel);
+      box(furnGround, 39.68, 4.65, 14.1, 0.04, 3.2, 4.6, mat.stone, false);        // sandstone backsplash
+      // Store room between the kitchen and the pooja: 4" partitions, high vent window, shelves on the east + north walls,
+      // and a walnut barn door that slides along the partition (it never swings into the aisle or the island's path).
+      wall(groundGrp, 35.765, 5.7, 35.765, 11.6, H1, 0.33, mat.cream, [{ start: 0.9, width: 2.4, bottom: 0, top: 7.2, type: 'open' }]);
+      wall(groundGrp, 35.93, 5.865, 39.7, 5.865, H1, 0.33, mat.cream);
+      wall(groundGrp, 35.93, 11.435, 39.7, 11.435, H1, 0.33, mat.cream);
+      for (const sy of [1.6, 2.9, 4.2, 5.5, 6.8]) {
+        box(furnGround, 39.08, sy, 8.65, 1.25, 0.06, 5.2, mat.woodLight);          // east shelves (z 6.05–11.25), sacks below
+        box(furnGround, 37.675, sy, 6.66, 1.55, 0.06, 1.25, mat.woodLight);        // north shelves (x 36.9–38.45, clear of the doorway)
+      }
+      const jarMats = [mat.steel, mat.steel, std(0xc49a5b, 0.35), std(0xf1ede4, 0.6), mat.steel, std(0x8c6b4f, 0.5)];
+      const jarGeo = new THREE.CylinderGeometry(0.24, 0.24, 0.62, 12);
+      const jar = (m, x, y, z) => { const j = new THREE.Mesh(jarGeo, m); j.position.set(x, y, z); j.castShadow = j.receiveShadow = true; furnGround.add(j); };
+      [1.6, 2.9, 4.2, 5.5].forEach((sy, r) => {                                    // steel dabbas, glass + ceramic jars
+        for (let k = 0; k < 8; k++) jar(jarMats[(k + r * 3) % 6], 39.0 + ((k + r) % 2) * 0.12, sy + 0.34, 6.4 + k * 0.62);
+        for (let k = 0; k < 2; k++) jar(jarMats[(k + r) % 6], 37.3 + k * 0.62, sy + 0.34, 6.62);
+      });
+      for (const [rx, rz] of [[38.9, 7.0], [38.9, 8.6], [37.4, 10.6]]) box(furnGround, rx, 0.75, rz, 1.1, 1.3, 1.3, std(0xd6c9a8, 0.95));   // rice / atta sacks
+      box(furnGround, 37.8, H1 - 0.03, 8.65, 1.2, 0.04, 1.2, lampMat, false);       // ceiling light panel
+      {
+        const barn = new THREE.Group();                                             // local x runs along the partition (world +z)
+        barn.position.set(35.47, 0, 0); barn.rotation.y = -Math.PI / 2; groundGrp.add(barn);
+        box(barn, 9.05, 7.48, 0, 5.3, 0.1, 0.08, mat.winFrame);                     // black top rail
+        const lg = new THREE.Group(); lg.position.set(7.8, 0, 0); lg.userData.dynamic = true; barn.add(lg);
+        const leaf = box(lg, 0, 3.77, 0, 2.6, 7.34, 0.12, mat.doorTeak);
+        for (const gx of [-0.65, 0, 0.65]) box(lg, gx, 3.77, 0.065, 0.03, 7.2, 0.02, mat.teak, false);    // vertical grooves (aisle face)
+        box(lg, -1.05, 3.5, 0.11, 0.06, 1.6, 0.06, mat.charcoal);                   // pull handle
+        for (const hx of [-0.9, 0.9]) box(lg, hx, 7.42, 0, 0.12, 0.16, 0.16, mat.winFrame);   // rollers
+        const d = { kind: 'slider', moving: [{ group: lg, closedX: 7.8, openX: 10.35 }], open: false, t: 0, label: 'store room door' };
+        leaf.userData.dyn = d; interactMeshes.push(leaf);
+        dynColliders.push({ mesh: leaf, hx: 1.3, hy: 3.67, hz: 0.06 });
+        dynamics.push(d);
+      }
+      // Island = dining for five + the lid of the secret basement stair. It stands on a tiled floor panel, and the lot
+      // glides 3.55' east on hidden rails (E / click), uncovering the stair. The stools stay on the fixed floor.
+      const isl = new THREE.Group(); isl.userData.dynamic = true; furnGround.add(isl);
+      box(isl, 30.0, 0.04, 9.2, 3.2, 0.1, 9.6, mat.floorTile, false);              // floor panel over the stair (x 28.4–31.6)
+      box(isl, 30.35, 0.34, 9.2, 2.5, 0.5, 9.2, mat.charcoal);                       // recessed plinth
+      const islBody = box(isl, 30.35, 1.76, 9.2, 2.7, 2.34, 9.4, mat.teak);          // walnut body (x 29.0–31.7)
+      const islTop = box(isl, 30.0, 2.99, 9.2, 3.6, 0.12, 9.6, mat.counter);          // quartz top, 0.8' dining overhang west
+      for (const dz of [6.1, 9.2, 12.3]) box(isl, 31.71, 1.76, dz, 0.02, 2.2, 0.03, mat.charcoal, false);   // drawer-bank joints (kitchen side)
+      const islD = { kind: 'slider', moving: [{ group: isl, closedX: 0, openX: 3.55 }], open: false, t: 0, label: 'island (secret stair)', speed: 0.32 };
+      for (const m of [islBody, islTop]) { m.userData.dyn = islD; interactMeshes.push(m); }
+      dynColliders.push({ mesh: islTop, hx: 1.8, hy: 1.6, hz: 4.8 });
+      dynamics.push(islD);
+      for (const sz of [5.4, 7.3, 9.2, 11.1, 13.0]) addStool(furnGround, 27.35, 0.08, sz);
+    }
     if (!open) {
       // Pooja (original): teak slat screen enclosing the nook, cabinet on the north wall
       for (let sx = 33.5; sx <= 39.0; sx += 0.7) box(furnGround, sx, 4.55, 5.5, 0.15, 9.0, 0.2, mat.teak);
@@ -1293,32 +1495,29 @@
       }
       addWarmLight(groundGrp, 38.1, 4.6, 3.0, 8, 9);
     }
-    // Utility strip: sink + washer moved south, door zone kept clear
+    // Utility: v2 keeps its strip; open: the washer + utility sink sit in the screened wash court on the SE deck
     if (open) {
-      // One counter outside the kitchen: utility sink, and the front-load washing machine tucked under the same top.
-      addCounter(furnGround, 40.6, 15.2, 42.6, 17.2, 0.06);
-      box(furnGround, 41.6, 2.95, 16.15, 1.2, 0.06, 1.2, mat.steel);
-      box(furnGround, 41.6, 2.96, 16.15, 1.0, 0.02, 1.0, mat.charcoal, false);
-      box(furnGround, 40.7, 3.35, 16.15, 0.12, 0.7, 0.12, mat.steel);
-      box(furnGround, 41.6, 2.95, 18.3, 2.0, 0.12, 2.2, mat.counter);
-      box(furnGround, 41.6, 1.43, 18.3, 1.9, 2.75, 1.95, mat.porcelain);
+      // Slim (1.6' deep) utility sink against the solid wall just east of the kitchen window: its drain joins the kitchen sink's.
+      addCounter(furnGround, 37.3, 20.35, 39.6, 21.95, 0.145);
+      box(furnGround, 38.45, 3.11, 21.15, 1.5, 0.03, 1.1, mat.steel, false);
+      box(furnGround, 38.45, 3.125, 21.15, 1.3, 0.02, 0.9, mat.charcoal, false);
+      box(furnGround, 38.45, 3.6, 20.42, 0.1, 0.7, 0.1, mat.steel);
+      box(furnGround, 38.45, 3.92, 20.62, 0.08, 0.08, 0.4, mat.steel);
+      // Front-load washer against the east screen, door facing west, where the court is deepest.
+      box(furnGround, 42.0, 1.545, 22.55, 2.0, 2.8, 2.0, mat.porcelain);
+      box(furnGround, 40.99, 2.7, 22.55, 0.03, 0.3, 1.7, mat.charcoal, false);       // control panel
       const drum = new THREE.Mesh(new THREE.CylinderGeometry(0.58, 0.58, 0.05, 24), mat.charcoal);
-      drum.rotation.z = Math.PI / 2; drum.position.set(42.57, 1.5, 18.3); furnGround.add(drum);
+      drum.rotation.z = Math.PI / 2; drum.position.set(40.99, 1.45, 22.55); furnGround.add(drum);
       const glassDoor = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.45, 0.06, 24), mat.glassClear);
-      glassDoor.rotation.z = Math.PI / 2; glassDoor.position.set(42.6, 1.5, 18.3); furnGround.add(glassDoor);
-      // Kitchen: make the fridge, hob + chimney and sink read clearly.
-      box(furnGround, 37.48, 3.08, 7.3, 0.03, 5.9, 0.05, mat.charcoal);           // fridge door split
-      box(furnGround, 37.44, 3.7, 7.05, 0.06, 1.8, 0.08, mat.charcoal);           // handles
-      box(furnGround, 37.44, 3.7, 7.55, 0.06, 1.8, 0.08, mat.charcoal);
-      for (const [bx, bz] of [[38.3, 9.35], [39.0, 9.35], [38.3, 10.25], [39.0, 10.25]]) {
-        const burner = new THREE.Mesh(new THREE.TorusGeometry(0.2, 0.04, 6, 18), mat.steel);
-        burner.rotation.x = Math.PI / 2; burner.position.set(bx, 3.1, bz); furnGround.add(burner);
+      glassDoor.rotation.z = Math.PI / 2; glassDoor.position.set(40.96, 1.45, 22.55); furnGround.add(glassDoor);
+      // Ceiling pulley drying rack under the slab (clothes hang above head height), a couple of towels on it.
+      for (const rz of [20.9, 21.5, 22.1, 22.7, 23.3]) box(furnGround, 41.3, 7.7, rz, 2.8, 0.05, 0.05, mat.steel, false);
+      for (const rx of [39.9, 42.7]) {
+        box(furnGround, rx, 7.7, 22.1, 0.06, 0.08, 2.6, mat.steel, false);
+        box(furnGround, rx, 8.6, 22.1, 0.02, 1.8, 0.02, mat.charcoal, false);
       }
-      box(furnGround, 39.3, 8.35, 9.8, 0.6, 2.2, 0.8, mat.steel);                 // chimney duct to the ceiling
-      box(furnGround, 38.6, 2.98, 17.0, 1.2, 0.02, 1.7, mat.charcoal, false);     // sink bowl
-      box(furnGround, 39.4, 3.75, 17.0, 0.1, 1.0, 0.1, mat.steel);                // gooseneck tap
-      box(furnGround, 39.15, 4.22, 17.0, 0.55, 0.08, 0.08, mat.steel);
-      box(furnGround, 39.45, 4.6, 18.3, 0.35, 1.1, 0.7, mat.porcelain);           // RO purifier
+      box(furnGround, 40.7, 7.05, 21.5, 0.9, 1.3, 0.03, std(0x4f6d8f, 0.95));
+      box(furnGround, 41.9, 7.15, 22.7, 0.8, 1.1, 0.03, std(0xe7dccb, 0.95));
     } else {
       addCounter(furnGround, 40.6, 15.2, 42.6, 17.1, 0.06);
       box(furnGround, 41.6, 2.95, 16.15, 1.2, 0.06, 1.2, mat.steel);
@@ -1331,6 +1530,131 @@
     addCeilingLight(groundGrp, 5.5, H1, 6.5, 14, 18);           // bedroom
     addCeilingLight(groundGrp, 12.0, H1, 16.0, 12, 16);         // lobby
     addCeilingLight(groundGrp, 19.5, H1, 3.0, 14, 18);          // courtyard lounge
+
+    // =========================================================================
+    // 1b. SECRET BASEMENT (open design): a home theatre under the living hall, reached by the stair under the kitchen island
+    // =========================================================================
+    // Local y: floor finish 0.08 = house-local -10.0; the ceiling is the ground slab's underside (local 9.755).
+    let basementGrp = null, basementCeil = null;
+    if (open) {
+      const B = basementGrp = new THREE.Group(); B.position.y = -10.08; house.add(B);
+      const C = basementCeil = new THREE.Group(); B.add(C);           // ceiling layer: hidden in the basement plan + minimap
+      const BC = 9.755, AC = 8.7;                                      // slab underside; theatre acoustic ceiling (8'-7" clear)
+      const wallB = (x0, z0, x1, z1, m = mat.cream) => box(B, (x0 + x1) / 2, BC / 2, (z0 + z1) / 2, x1 - x0, BC, z1 - z0, m);
+      // Structure: raft slab, waterproofed RCC retaining walls, room walls; the pockets that are never dug stay earth.
+      box(B, 26.9, -0.25, 9.9, 26.2, 0.5, 20.6, mat.concrete, false);
+      for (const [x0, z0, x1, z1] of [[26.25, 0.0, 40.0, 4.0], [26.25, 4.0, 28.0, 16.0], [32.0, 4.0, 40.0, 7.6], [-0.2, -0.2, 14.0, 20.2]]) box(B, (x0 + x1) / 2, BC / 2, (z0 + z1) / 2, x1 - x0, BC, z1 - z0, mat.soil, false);
+      wallB(14.0, 0.0, 14.4, 20.0);                                     // theatre west
+      wallB(25.75, 0.0, 26.25, 16.0);                                   // theatre east (the two kitchen-edge columns run down inside it)
+      wallB(22.6, 16.2, 23.0, 19.6);                                    // sound-lock lobby west
+      wallB(14.0, 19.6, 40.0, 20.0);                                    // south
+      wallB(28.0, 4.0, 28.4, 16.4);                                     // stair well west
+      wallB(31.6, 4.0, 32.0, 16.4);                                     // stair well east = plant room west
+      wallB(28.0, 4.0, 32.0, 4.4);                                      // stair well north end
+      wallB(31.6, 7.6, 40.0, 8.0);                                      // plant room north
+      wallB(39.6, 7.6, 40.0, 20.0);                                     // plant room east (its top is the plinth band, above the garden)
+      // Doors: escape door (theatre → egress well); theatre door + lobby door = two doors in series, a sound lock; plant room door.
+      wall(B, 14.0, 0.2, 26.25, 0.2, BC, 0.4, mat.cream, [{ start: 9.4, width: 2.0, bottom: 0, top: 6.8, type: 'door', swing: 1, hinge: 'end', closed: true, label: 'escape door (egress well)' }]);
+      wall(B, 22.6, 16.2, 28.0, 16.2, BC, 0.4, mat.cream, [{ start: 0.6, width: 2.6, bottom: 0, top: 7.0, type: 'door', swing: 1, closed: true, label: 'theatre door' }]);
+      wall(B, 28.2, 16.4, 28.2, 19.6, BC, 0.4, mat.cream, [{ start: 0.4, width: 2.6, bottom: 0, top: 7.0, type: 'door', swing: -1, hinge: 'end', closed: true, label: 'sound-lock door' }]);
+      wall(B, 31.8, 16.4, 31.8, 19.6, BC, 0.4, mat.cream, [{ start: 0.4, width: 2.6, bottom: 0, top: 7.0, type: 'door', swing: -1, hinge: 'end', closed: true, label: 'plant room door' }]);
+
+      // ---------- Secret stair: 16 risers of 7.6", 15 treads of 9.6", descending south from the island (z 4.4) to z 16.4 ----------
+      for (let k = 1; k <= 15; k++) {
+        const top = 10.16 - 0.63 * k, z0 = 4.4 + 0.8 * (k - 1);
+        box(B, 30.0, top / 2, z0 + 0.4, 3.2, top, 0.8, mat.cream);                    // solid flight
+        box(B, 30.0, top - 0.03, z0 + 0.44, 3.2, 0.06, 0.88, mat.teak);                // walnut tread with nosing
+        if (k % 2) box(B, 28.42, top + 0.55, z0 + 0.4, 0.04, 0.12, 0.3, mat.cove, false);   // step light in the wall
+      }
+      const rail = box(B, 31.5, 6.6, 12.6, 0.1, 0.12, 9.68, mat.winFrame);              // black handrail below the slab
+      rail.rotation.x = Math.atan2(5.99, 7.6);
+      addStepRamp(B, 28.5, 31.5, 4.4, 10.16, 17.2, 0.08);
+      box(B, 30.0, 0.04, 18.0, 3.2, 0.08, 3.2, mat.floorTile, false);                 // landing
+      box(B, 26.875, 0.04, 18.0, 2.25, 0.08, 3.2, mat.carpet, false);                 // lobby
+
+      // ---------- Home theatre (11'-4" × 19'-2"): room-in-room build, fabric walls, walnut battens, star ceiling ----------
+      box(B, 20.08, 0.04, 10.0, 11.35, 0.08, 19.2, mat.carpet, false);                // carpet on a floating floor
+      box(B, 18.5, 0.455, 16.5, 8.2, 0.75, 6.2, mat.carpet);                          // 9" riser for the back row (x 14.4–22.6, z 13.4–19.6)
+      box(B, 18.1, 0.455, 12.9, 7.4, 0.75, 1.0, mat.carpet);                          // riser front (x 14.4–21.8, z 12.4–13.4)
+      box(B, 22.2, 0.2675, 12.9, 0.8, 0.375, 1.0, mat.carpet);                        // half step at the aisle end
+      box(B, 18.1, 0.62, 12.385, 7.4, 0.04, 0.03, mat.cove, false);                   // LED nosing strip
+      box(B, 20.08, 4.6, 0.43, 11.35, 8.2, 0.05, mat.charcoal, false);                // black screen wall
+      box(B, 14.43, 4.4, 10.0, 0.05, 7.8, 19.2, mat.acoustic, false);                 // fabric panels: west, east, back
+      box(B, 25.72, 4.4, 8.2, 0.05, 7.8, 15.6, mat.acoustic, false);
+      box(B, 18.5, 4.8, 19.57, 8.2, 7.6, 0.05, mat.acoustic, false);
+      for (let z = 1.6; z <= 18.8; z += 1.55) box(B, 14.5, 4.4, z, 0.12, 7.8, 0.18, mat.teak);
+      for (let z = 1.6; z <= 15.2; z += 1.55) box(B, 25.65, 4.4, z, 0.12, 7.8, 0.18, mat.teak);
+      box(B, 14.7, 4.4, 0.7, 0.6, 8.6, 0.6, mat.acoustic);                            // bass trap, front-left corner
+      box(B, 18.7, 4.5, 0.48, 7.7, 4.5, 0.04, mat.charcoal, false);                   // velvet border
+      box(B, 18.7, 4.5, 0.51, 7.26, 4.08, 0.02, mat.screen, false);                   // 100" acoustically transparent screen, L/C/R speakers behind
+      box(B, 15.4, 0.83, 1.8, 1.3, 1.5, 1.3, mat.charcoal);                           // subwoofer
+      for (const [sx, sz] of [[14.62, 9.4], [14.62, 15.4], [25.53, 9.4]]) box(B, sx, 4.7, sz, 0.3, 0.9, 0.6, mat.charcoal);   // side surrounds
+      for (const sx of [16.6, 20.6]) box(B, sx, 5.6, 19.45, 0.6, 0.9, 0.25, mat.charcoal);                                     // rear surrounds
+      box(B, 24.4, 7.3, 0.46, 1.2, 0.35, 0.04, std(0x16a34a, 0.4, { emissive: 0x16a34a, emissiveIntensity: 0.6 }), false);   // EXIT sign
+      // Six leather recliners, two rows of three; the back row sits on the riser.
+      const recl = (x, y, z) => {
+        box(B, x, y + 0.3, z, 2.2, 0.5, 2.6, mat.charcoal);
+        box(B, x, y + 1.0, z - 0.15, 2.0, 0.55, 2.0, mat.recliner);
+        box(B, x, y + 2.1, z + 1.05, 2.0, 2.4, 0.5, mat.recliner);
+        box(B, x, y + 3.05, z + 1.12, 1.7, 0.5, 0.45, mat.recliner);
+        box(B, x, y + 0.75, z - 1.15, 1.9, 0.5, 0.4, mat.recliner);
+      };
+      for (const [ry, rz] of [[0.08, 9.2], [0.83, 15.6]]) {
+        for (const rx of [16.1, 18.7, 21.3]) recl(rx, ry, rz);
+        for (const ax of [14.8, 17.4, 20.0, 22.35]) box(B, ax, ry + 1.15, rz, 0.45, 1.3, 2.6, mat.recliner);   // armrests with cup holders
+      }
+      // Ceiling layer: acoustic ceiling with a fibre-optic star field, cove lights, slot diffusers, return grille, projector, height speakers.
+      box(C, 18.5, AC + 0.05, 10.0, 8.2, 0.1, 19.2, mat.theatreCeil, false);
+      box(C, 24.175, AC + 0.05, 8.3, 3.15, 0.1, 15.8, mat.theatreCeil, false);
+      let sd = 11; const rnd = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
+      for (let i = 0; i < 110; i++) {
+        const sx = 14.7 + rnd() * 10.8, sz = 0.7 + rnd() * 18.6;
+        if (sx > 22.5 && sz > 15.9) continue;
+        box(C, sx, AC - 0.01, sz, 0.05, 0.02, 0.05, mat.star, false);
+      }
+      box(C, 14.55, AC - 0.15, 10.0, 0.08, 0.06, 19.0, mat.cove, false);
+      box(C, 25.6, AC - 0.15, 8.2, 0.08, 0.06, 15.4, mat.cove, false);
+      for (const sx of [15.3, 24.9]) box(C, sx, AC - 0.01, 9.0, 0.25, 0.02, 12.0, mat.charcoal, false);   // supply slots
+      box(C, 18.5, 7.9, 19.52, 3.0, 0.9, 0.06, mat.charcoal, false);                  // return grille
+      box(C, 18.7, AC - 0.35, 13.2, 1.3, 0.5, 1.4, mat.charcoal);                     // projector
+      for (const [sx, sz] of [[16.5, 6.0], [21.0, 6.0], [16.5, 13.0], [21.0, 13.0]]) {
+        const m = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.35, 0.03, 16), mat.charcoal); m.position.set(sx, AC - 0.01, sz); C.add(m);
+      }
+      // ERV supply + return ducts: plant room → over the landing and the lobby (exposed, black) → the theatre's ceiling plenum.
+      for (const dz of [17.6, 18.9]) {
+        const duct = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.42, 16.0, 16), mat.charcoal);
+        duct.rotation.z = Math.PI / 2; duct.position.set(30.6, 9.1, dz); duct.castShadow = true; C.add(duct);
+      }
+      addWarmLight(B, 19.5, 7.8, 10.0, 8, 16);
+      addCeilingLight(B, 30.0, BC, 16.0, 6, 10);
+      // Dim, always-on glow (the basement gets no daylight); short range so it doesn't light the floor above.
+      for (const [lx, ly, lz, li] of [[19.4, 7.4, 9.5, 5], [29.8, 6.5, 15.0, 3]]) {
+        const glow = new THREE.PointLight(0xffd6a8, li, 13, 1.4); glow.position.set(lx, ly, lz); B.add(glow);
+      }
+
+      // ---------- Plant + AV room: ERV fresh-air unit (heat recovery), dehumidifier, AV rack, sump ----------
+      box(B, 35.8, 0.04, 13.8, 7.6, 0.08, 11.6, mat.concrete, false);
+      box(B, 38.2, 7.6, 17.8, 2.6, 1.6, 3.4, mat.porcelain);                          // ERV, ceiling-hung
+      box(B, 39.25, 8.9, 15.25, 0.7, 0.8, 1.7, mat.steel);                            // fresh-air intake collar → plinth louvre
+      box(B, 37.3, 8.9, 12.7, 0.7, 0.7, 6.8, mat.steel);                              // exhaust duct → plinth louvre
+      box(B, 38.45, 8.9, 9.35, 2.3, 0.7, 0.7, mat.steel);
+      for (const lz of [9.35, 15.15]) {                                               // louvres in the east plinth band, above the garden
+        box(B, 40.13, 8.98, lz, 0.04, 1.0, 1.5, mat.winFrame);
+        for (const ly of [8.68, 8.98, 9.28]) box(B, 40.17, ly, lz, 0.05, 0.06, 1.42, mat.steel, false);
+      }
+      box(B, 33.2, 1.3, 18.6, 1.4, 2.4, 1.2, mat.porcelain);                          // dehumidifier
+      box(B, 33.4, 3.2, 9.4, 1.9, 6.2, 2.0, mat.charcoal);                            // AV rack
+      for (let i = 0; i < 6; i++) box(B, 34.37, 1.2 + i * 0.9, 9.0 + (i % 2) * 0.5, 0.03, 0.05, 0.05, mat.cove, false);
+      box(B, 38.6, 0.09, 9.4, 1.6, 0.02, 1.6, mat.winFrame, false);                   // sump pit grating
+      addCeilingLight(B, 35.8, BC, 12.5, 6, 12);
+
+      // ---------- Emergency escape: aisle → escape door → egress well with a steel ladder → grating in the north garden ----------
+      for (const [x0, z0, x1, z1] of [[23.0, -2.0, 23.3, 0.0], [25.5, -2.0, 25.8, 0.0], [23.0, -2.0, 25.8, -1.7]]) box(B, (x0 + x1) / 2, 4.3, (z0 + z1) / 2, x1 - x0, 8.6, z1 - z0, mat.concrete);
+      box(B, 24.4, 0.04, -0.85, 2.2, 0.08, 1.7, mat.concrete, false);
+      for (let ry = 0.8; ry <= 8.0; ry += 0.9) box(B, 24.4, ry, -1.62, 1.4, 0.06, 0.06, mat.steel);
+      for (const lx of [23.7, 25.1]) box(B, lx, 4.6, -1.62, 0.08, 8.6, 0.08, mat.steel);
+      for (let gx = 23.15; gx <= 25.66; gx += 0.25) box(B, gx, 8.62, -1.0, 0.04, 0.08, 2.0, mat.winFrame);
+    }
 
     // =========================================================================
     // 2. FIRST FLOOR
@@ -1659,31 +1983,43 @@
     addBush(treesGrp, 17.3, 10.8, 31.4, 0.6);
     for (let rx = open ? 33.5 : 31.5; rx <= 40.5; rx += 2.2) addBush(treesGrp, rx, 20.6, 4.9, 0.72);
     for (let rz = 7.0; rz <= 18.0; rz += 2.6) addBush(treesGrp, 41.0, 20.6, rz, 0.75);
+    if (open) for (const t of treesGrp.children) {   // courtyard + upper-floor planters rise with the house, garden planting with the plot, street trees stay
+      const { x, y, z } = t.position;
+      t.position.y += (x > 3.5 && x < 43.5 && z > 2.5 && z < 22.5) || y > 5 ? HOUSE_RISE : x >= 0 ? PLOT_RISE : 0;
+    }
 
     const zonesOpen = [
       [[3.3, 12.2, 9.8, 15.8, 'Common bath'], [0, 12, 10, 20, 'Staircase'], [0, 0, 14, 12, 'Bedroom'], [10, 12, 14, 20, 'Lobby'],
         [14, 6, 26, 14, 'Courtyard (under skylight)'], [14, 0, 26, 20, 'Living hall'],
-        [33.4, 0, 40, 5.6, 'Pooja niche'], [26, 0, 40, 20, 'Kitchen & dining'], [0, 20, 16, 31, 'Carport'], [24, 20, 40, 24.2, 'Veranda'], [40, 10.4, 43.3, 19.6, 'Utility'], [-60, -30, -3.5, 70, 'Street']],
+        [33.4, 0, 40, 5.7, 'Pooja alcove'], [35.6, 5.7, 40, 11.6, 'Store room'], [28.4, 4.4, 31.6, 16.4, 'Secret stair'], [26, 0, 40, 20, 'Kitchen & dining'], [0, 20, 16, 31, 'Carport'],
+        [37, 20, 43.3, 24.2, 'Wash court'], [40, 16.4, 43.3, 20, 'Wash court'], [24, 20, 37, 24.2, 'Veranda'], [-60, -30, -3.5, 70, 'Street']],
       [[0, 12, 9.8, 20, 'Staircase'], [0, 0, 14, 12, 'Master bedroom'], [9.8, 12, 14.1, 20, 'Landing'], [14, 0, 20, 6, 'Master bath'],
         [20, 0, 26, 6, 'Bath (east bedroom)'], [26, 0, 40, 12, 'East bedroom'], [26, 12, 40, 20, 'Study · library'], [14, 14, 26, 20, 'Gallery'], [0, 20, 16.3, 30.3, 'SW balcony'], [16.3, 20, 40, 24.2, 'L-balcony']],
       [[0, 12, 13.8, 20, 'Stair room (mumty)'], [26, 0, 40, 20, 'Terrace garden & lounge'], [0, 0, 14, 12, 'Solar pergola'], [-1, -1, 41, 21, 'Open terrace']],
+      [[28.4, 4.4, 31.6, 16.4, 'Secret stair'], [28.4, 16.4, 31.6, 19.6, 'Stair landing'], [23.0, 16.4, 28.0, 19.6, 'Sound lock'],
+        [32.0, 8.0, 39.6, 19.6, 'Plant + AV room'], [23.0, -2.0, 25.8, 0.4, 'Escape well'], [14.4, 0.4, 25.75, 19.6, 'Home theatre']],
     ];
     const measuresOpen = [
       [0, 'Bedroom', 0.3, 0.3, 13.75, 11.75], [0, 'Lobby', 10.0, 12.25, 14.0, 19.7, true], [0, 'Stair', 0.3, 12.25, 9.8, 19.7],
       [0, 'Common bath (WC · shower · basin)', 3.475, 12.425, 9.625, 15.625], [0, 'Living hall · courtyard centre', 14.25, 0.3, 26.0, 19.7, true],
-      [0, 'Kitchen + dining (open)', 26.0, 0.3, 39.7, 19.7, true], [0, 'Carport', 0.9, 20.3, 15.1, 29.1], [0, 'Veranda', 24.0, 20.3, 40.0, 24.0], [0, 'Utility', 40.3, 10.5, 43.2, 19.5],
+      [0, 'Kitchen + dining (open)', 26.0, 0.3, 39.7, 19.7, true, [31.4, 11.2]], [0, 'Store room', 35.93, 6.03, 39.7, 11.27], [0, 'Pooja · idols face west', 33.4, 0.3, 39.7, 5.7, true],
+      [0, 'Carport', 0.9, 20.3, 15.1, 29.1], [0, 'Veranda', 24.0, 20.3, 36.9, 24.0], [0, 'Wash court · utility', 37.1, 20.3, 43.0, 23.75],
       [1, 'Master bedroom', 0.3, 0.3, 13.775, 11.775], [1, 'Bath', 14.225, 0.3, 19.775, 5.75], [1, 'Bath', 20.225, 0.3, 25.775, 5.75],
       [1, 'East bedroom', 26.225, 0.3, 39.7, 11.775], [1, 'Study · library (open)', 26.0, 12.225, 39.7, 19.7, true], [1, 'Landing', 9.8, 12.225, 14.1, 19.7, true],
       [1, 'Gallery', 14.1, 14.0, 26.0, 19.7, true], [1, 'Double-height courtyard', 14.225, 6.25, 25.775, 13.9, true],
       [1, 'Balcony', 0.2, 20.3, 15.8, 29.8], [1, 'L-balcony strip', 16.2, 20.3, 40.0, 23.8],
       [2, 'Stair room', 0.25, 12.25, 13.55, 19.75], [2, 'Terrace garden', 26.0, 0.25, 39.75, 19.75], [2, 'Solar area', 0.25, 0.25, 14.0, 11.75],
+      [3, 'Home theatre', 14.4, 0.4, 25.75, 19.6, false, [19.4, 10.4]], [3, 'Sound lock', 23.0, 16.4, 28.0, 19.6, true], [3, 'Secret stair (island above)', 28.4, 4.4, 31.6, 19.6, true, [30.0, 7.4]],
+      [3, 'Plant + AV room', 32.0, 8.0, 39.6, 19.6, false, [36.2, 13.6]], [3, 'Escape well', 23.3, -1.7, 25.5, 0.0, true],
     ];
     const result = {
       key: open ? 'open' : 'v2', name: open ? 'Open plan · same layout' : 'Original layout (v2)',
-      root, siteGrp, house, groundGrp, upperGrp, terraceGrp, furnGround, furnUpper, treesGrp,
-      upperY: 10.0, terraceY: 19.0, finish: [0.08, 10.04, 19.5], breaks: [7, 17.5], envelope: [0, 0, 40, 20], ceil: [9.42, 8.96, 0],
+      root, siteGrp, house, groundGrp, upperGrp, terraceGrp, furnGround, furnUpper, treesGrp, basementGrp, basementCeil, plotRise: PLOT_RISE, houseRise: HOUSE_RISE,
+      upperY: 10.0, terraceY: 19.0, breaks: [7, 17.5], envelope: [0, 0, 40, 20],
+      // Floor index 3 = the open design's basement (finish house-local -10.0, theatre clear height 8'-7").
+      finish: open ? [0.08, 10.04, 19.5, -10.0] : [0.08, 10.04, 19.5], ceil: open ? [9.42, 8.96, 0, 8.62] : [9.42, 8.96, 0],
       spawns: [
-        { name: 'Gate', x: -7.5, y: -0.3, z: 26.5, yaw: -1.34 },
+        { name: 'Gate', x: -7.5, y: -0.3 - HOUSE_RISE, z: 26.5, yaw: -1.34 },
         { name: 'Foyer', x: 20.3, y: 0.08, z: 17.6, yaw: 0 },
         { name: 'Living', x: 24.8, y: 0.08, z: 10.0, yaw: 0.72 },
         { name: 'Kitchen', x: 35.6, y: 0.08, z: 16.6, yaw: 0.6 },
@@ -1692,6 +2028,7 @@
         { name: 'Master 1F', x: 11.0, y: 10.04, z: 3.2, yaw: 2.33 },
         { name: 'Balcony', x: 8.0, y: 10.0, z: 23.0, yaw: Math.PI },
         { name: 'Terrace', x: 25.2, y: 19.5, z: 17.8, yaw: -0.75 },
+        ...(open ? [{ name: 'Theatre', x: 24.2, y: -10.0, z: 14.6, yaw: 0.3 }] : []),
       ],
       zones: [
         [[5.0, 12.2, 9.8, 15.8, 'Under-stair WC'], [0, 12, 10, 20, 'Staircase'], [0, 0, 14, 12, 'Bedroom'], [10, 12, 14, 20, 'Lobby'],
@@ -1719,9 +2056,11 @@
       result.zones = zonesOpen; result.measures = measuresOpen;
       // Key fixtures named on the dimensioned plan
       result.fixtures = [
-        [0, 'Fridge', 38.6, 7.3], [0, 'Hob + chimney', 38.65, 9.8], [0, 'Sink + RO', 38.6, 17.0], [0, 'Utility sink', 41.6, 16.15],
-        [0, 'Washer under counter', 41.6, 18.3], [0, 'Pooja · idols face west', 37.4, 3.0], [0, 'Island · seats 6', 32.0, 13.5],
+        [0, 'Fridge', 28.8, 18.6], [0, 'Sink + dishwasher', 33.6, 18.7], [0, 'Hob + chimney', 38.65, 14.1], [0, 'Kitchen door', 38.6, 18.1],
+        [0, 'Island · hides the basement stair', 30.0, 5.4], [0, 'Utility sink', 38.4, 20.9], [0, 'Washer', 42.0, 23.1],
         [0, 'Buddha fountain', 36.0, 27.2], [1, 'Bookshelf wall', 34.4, 12.8], [1, 'Study table', 32.5, 16.3], [1, 'Low shelves', 32.75, 19.4],
+        [3, '100″ screen · speakers behind it', 18.7, 1.7], [3, 'Recliners · 2 rows × 3', 18.7, 6.8], [3, '9″ riser', 18.5, 18.7],
+        [3, 'ERV fresh air + dehumidifier', 36.0, 18.6], [3, 'Louvres in the plinth', 37.6, 9.2],
       ];
     }
     return result;
@@ -1751,6 +2090,7 @@
       const floors = { '-1': new THREE.Group(), 0: new THREE.Group(), 1: new THREE.Group(), 2: new THREE.Group() };
       for (const k in floors) floors[k].userData.dynamic = true;
       d.house.add(floors[-1], floors[0]);
+      floors[-1].position.y = d.plotRise - d.houseRise;   // underground items keep their depth below the (raised) garden, not the house
       floors[1].position.y = -d.upperY; d.upperGrp.add(floors[1]);
       floors[2].position.y = -d.terraceY; d.terraceGrp.add(floors[2]);
       const items = [], labels = [], ghostMats = [], buckets = new Map();
@@ -1797,14 +2137,14 @@
         floors[fl].add(o);
         labels.push({ obj: o, sys, fl });
       }
-      const GL = -0.3, CH = 0x57534e, DEV = 0x334155;
+      const GL = -0.3, GL0 = GL + d.plotRise - d.houseRise, CH = 0x57534e, DEV = 0x334155;   // GL: ground in the (offset) underground group; GL0: the same ground for floor-0 runs
 
       // ---------------- WATER: one sump, one pump, one overhead tank, three short downtakes ----------------
-      pipe('main', -1, [[-4.2, -0.6, 17.0], [-2.3, -0.6, 17.0], [-2.3, -0.6, 20.9], [31.0, -0.6, 20.9], [31.0, -0.6, 25.4], [31.7, -0.6, 25.4]]);   // municipal → sump (kept above the drains)
-      pipe('main', -1, [[39.0, -0.25, 25.2], [39.0, -1.0, 25.2], [39.9, -1.0, 25.2], [39.9, -1.0, 20.7], [40.75, -1.0, 20.7], [40.75, -1.0, 18.85], [40.75, GL, 18.85]]);   // pump → rising main
-      pipe('main', 0, [[40.75, GL, 18.85], [40.75, 10.0, 18.85]]);
-      pipe('main', 1, [[40.75, 10.0, 18.85], [40.75, 20.0, 18.85]]);
-      pipe('main', 2, [[40.75, 20.0, 18.85], [39.3, 20.0, 18.85], [39.3, 20.0, 0.75], [22.5, 20.0, 0.75], [22.5, 29.6, 0.75], [22.5, 29.6, 2.0], [21.2, 29.6, 2.0], [21.2, 29.2, 2.0]]);
+      pipe('main', -1, [[-4.2, -2.5, 17.0], [-2.3, -2.5, 17.0], [-2.3, -2.5, 20.9], [31.0, -2.5, 20.9], [31.0, -2.5, 25.4], [31.7, -2.5, 25.4]]);   // municipal → sump, under the sunken driveway (drains run below it)
+      pipe('main', -1, [[39.0, -0.25, 25.2], [39.0, -1.0, 25.2], [39.9, -1.0, 25.2], [39.9, -1.0, 20.7], [40.5, -1.0, 20.7], [40.5, GL, 20.7]]);   // pump → rising main (SE corner, inside the wash court)
+      pipe('main', 0, [[40.5, GL0, 20.7], [40.5, 10.0, 20.7]]);
+      pipe('main', 1, [[40.5, 10.0, 20.7], [40.5, 20.0, 20.7]]);
+      pipe('main', 2, [[40.5, 20.0, 20.7], [40.5, 20.0, 19.6], [39.3, 20.0, 19.6], [39.3, 20.0, 0.75], [22.5, 20.0, 0.75], [22.5, 29.6, 0.75], [22.5, 29.6, 2.0], [21.2, 29.6, 2.0], [21.2, 29.2, 2.0]]);
       pipe('cold', 2, [[20.0, 25.0, 2.6], [20.0, 19.75, 2.6]]);                                                        // tank outlet → manifold
       pipe('cold', 2, [[20.0, 19.75, 2.6], [20.0, 19.75, 1.0], [20.0, 19.0, 1.0]]);                                   // (a) bath core: straight down
       pipe('cold', 1, [[20.0, 19.0, 1.0], [20.0, 11.0, 1.0], [20.0, 11.0, 5.45]]);
@@ -1820,49 +2160,53 @@
       pipe('cold', 0, [[9.3, 2.6, 12.32], [9.3, 6.6, 12.32]]);
       pipe('hot', 0, [[8.7, 6.6, 12.36], [8.7, 3.05, 12.36], [7.45, 3.05, 12.36], [7.45, 3.6, 12.36]]);
       pipe('hot', 0, [[8.7, 3.05, 12.36], [9.15, 3.05, 12.36]]);
-      pipe('cold', 2, [[20.0, 19.75, 2.6], [22.8, 19.75, 2.6], [22.8, 19.75, 0.45], [39.55, 19.75, 0.45], [39.55, 19.75, 19.3], [40.42, 19.75, 19.3], [40.42, 19.0, 19.3]]);   // (c) kitchen line
-      pipe('cold', 1, [[40.42, 19.0, 19.3], [40.42, 10.0, 19.3]]);
-      pipe('cold', 0, [[40.42, 10.0, 19.3], [40.42, 2.4, 19.3]]);
-      pipe('cold', 0, [[40.42, 3.3, 19.3], [40.42, 3.3, 15.9]]);
-      pipe('cold', 0, [[40.42, 3.3, 17.0], [39.45, 3.3, 17.0], [39.45, 3.75, 17.0]]);
+      pipe('cold', 2, [[20.0, 19.75, 2.6], [22.8, 19.75, 2.6], [22.8, 19.75, 0.45], [39.55, 19.75, 0.45], [39.55, 19.75, 19.85], [39.55, 19.0, 19.85]]);   // (c) kitchen line: one drop in the SE corner of the south wall
+      pipe('cold', 1, [[39.55, 19.0, 19.85], [39.55, 10.0, 19.85]]);
+      pipe('cold', 0, [[39.55, 10.0, 19.85], [39.55, 2.2, 19.85]]);
+      pipe('cold', 0, [[39.55, 3.3, 19.85], [39.55, 3.3, 20.45], [38.45, 3.3, 20.45], [38.45, 3.6, 20.45]]);          // through the wall → utility sink
+      pipe('cold', 0, [[39.55, 2.8, 19.85], [39.55, 2.8, 20.45]]);                                                     // washer tap, inside the sink cabinet
+      pipe('cold', 0, [[39.55, 2.2, 19.85], [33.6, 2.2, 19.85], [33.6, 3.6, 19.85]]);                                  // kitchen sink, behind the counter
+      pipe('cold', 0, [[36.95, 2.2, 19.85], [36.95, 4.05, 19.85]]);                                                    // RO purifier
       pipe('hot', 2, [[23.6, 22.4, 1.4], [23.6, 19.9, 1.4], [20.3, 19.9, 1.4], [20.3, 19.0, 1.4]]);                   // solar hot water → bath core
       pipe('hot', 1, [[20.3, 19.0, 1.4], [20.3, 11.3, 1.4], [20.3, 11.3, 5.3]]);
       pipe('hot', 1, [[20.3, 13.6, 1.4], [20.3, 13.6, 1.6]]);
       pipe('hot', 1, [[15.9, 12.8, 5.3], [15.9, 11.3, 5.3], [24.1, 11.3, 5.3], [24.1, 12.8, 5.3]]);
       const TAP = 0x60a5fa;
-      for (const [fl, x, y, z] of [[1, 10.05, 12.2, 20.6], [0, 40.5, 2.4, 19.45], [0, 40.6, 3.3, 18.2], [0, 40.6, 3.6, 16.1], [0, 39.45, 3.85, 17.0]]) solid('water', fl, TAP, x, y, z, 0.3, 0.3, 0.3);
+      for (const [fl, x, y, z] of [[1, 10.05, 12.2, 20.6], [0, 38.45, 3.6, 20.45], [0, 39.55, 2.8, 20.45], [0, 33.6, 3.6, 19.75], [0, 36.95, 4.05, 19.75]]) solid('water', fl, TAP, x, y, z, 0.3, 0.3, 0.3);
       solid('water', -1, 0x0e7490, 39.0, 0.1, 25.4, 0.9, 0.8, 0.7);      // pump on the sump slab
       solid('water', -1, DEV, -3.0, 0.4, 17.0, 0.6, 0.5, 0.6);           // water meter
       tank(['water', 'rain'], -1, 0x0891b2, 35.5, -3.4, 27.05, 8.0, 6.0, 4.5);   // sump + rainwater tank, 6,000 L
 
       // ---------------- DRAINAGE: soil → NW biogas digester; grey water → street sewer ----------------
       pipe('soil', 1, [[21.4, 9.45, 4.55], [14.6, 9.45, 4.55], [14.6, 9.45, -0.75]]);                                  // both first-floor WCs (sunken slab)
-      pipe('soil', 0, [[14.6, -0.9, -0.75], [14.6, 10.0, -0.75]]);                                                     // soil stack, outside the north wall
+      pipe('soil', 0, [[14.6, GL0 - 0.6, -0.75], [14.6, 10.0, -0.75]]);                                               // soil stack, outside the north wall (from its chamber)
       pipe('soil', 1, [[14.6, 10.0, -0.75], [14.6, 19.3, -0.75]]);
       pipe('soil', 2, [[14.6, 19.3, -0.75], [14.6, 26.0, -0.75]]);                                                     // vent 6.5' above the used terrace
       pipe('grey', 1, [[24.4, 9.85, 5.0], [24.4, 9.85, 1.6], [15.5, 9.85, 1.6], [15.5, 9.85, -0.75]]);                 // showers + basins
       pipe('grey', 1, [[15.6, 9.85, 5.0], [15.5, 9.85, 5.0], [15.5, 9.85, 1.6]]);
-      pipe('grey', 0, [[15.5, -0.6, -0.75], [15.5, 10.0, -0.75]]);                                                     // waste stack
+      pipe('grey', 0, [[15.5, GL0 - 0.3, -0.75], [15.5, 10.0, -0.75]]);                                               // waste stack
       pipe('grey', 1, [[15.5, 10.0, -0.75], [15.5, 19.3, -0.75]]);
       pipe('grey', 2, [[15.5, 19.3, -0.75], [15.5, 20.2, -0.75], [14.6, 21.0, -0.75]]);                                // joins the one vent
       pipe('soil', -1, [[13.9, -1.6, -1.3], [-1.15, -1.95, -1.3]]);                                                    // north strip → digester inlet
-      pipe('soil', 0, [[4.0, -0.25, 14.0], [-0.5, -0.45, 14.0]]);                                                      // common bath WC → west strip
+      pipe('soil', 0, [[4.0, -0.25, 14.0], [0.1, -0.4, 14.0], [0.1, GL0 - 0.3, 14.0], [-0.5, GL0 - 0.32, 14.0]]);    // common bath WC → down inside the plinth → west strip
       pipe('soil', -1, [[-1.0, -0.6, 13.7], [-1.0, -1.1, -0.3], [-1.0, -1.1, -1.0], [-1.15, -1.1, -1.0]]);             // runs above the buried digester to the inlet
       pipe('soil', -1, [[-1.8, -2.0, -0.65], [-1.8, -2.4, 0.2]]);                                                      // inlet chamber → digester
-      pipe('grey', 0, [[9.0, -0.2, 12.9], [9.0, -0.25, 13.1], [-0.3, -0.5, 13.1]]);                                    // common bath basin + shower
+      pipe('grey', 0, [[9.0, -0.2, 12.9], [9.0, -0.25, 13.1], [0.1, -0.45, 13.1], [0.1, GL0 - 0.2, 13.1], [-0.3, GL0 - 0.2, 13.1]]);   // common bath basin + shower
       pipe('grey', 0, [[7.3, -0.2, 13.5], [7.3, -0.3, 13.1]]);
       pipe('grey', -1, [[-0.3, -0.5, 13.1], [-0.6, -0.95, 13.1], [-2.35, -1.2, 13.1]]);                                // → gully trap on the grey main
       // No street sewer: the digester overflow goes to a soak pit under the driveway (front, far from the SE tank).
-      pipe('soil', -1, [[-1.8, -1.5, 10.1], [-1.8, -1.9, 20.6], [1.6, -2.0, 20.6], [1.6, -2.1, 24.6]]);
-      pipe('grey', 0, [[39.0, 2.3, 17.0], [39.0, -0.2, 17.0], [40.6, -0.6, 17.0], [41.3, -0.6, 15.45]]);               // kitchen sink → grease trap
-      pipe('grey', 0, [[41.6, 2.0, 16.15], [41.6, -0.4, 16.15], [41.3, -0.5, 15.45]]);                                 // utility sink
-      pipe('grey', 0, [[41.0, -0.2, 19.2], [41.0, -0.5, 19.2], [41.0, -0.55, 15.45]]);                                 // washer floor trap
+      pipe('soil', -1, [[-1.8, -1.5, 10.1], [-1.8, -2.6, 20.4], [1.6, -2.9, 20.4], [1.6, -3.0, 24.6]]);
+      pipe('grey', 0, [[33.6, 2.3, 19.3], [33.6, -0.3, 19.3], [33.6, -0.45, 20.7], [41.0, -0.65, 20.7]]);               // kitchen sink → out under the deck
+      pipe('grey', 0, [[38.45, 2.3, 21.1], [38.45, -0.45, 21.1], [38.45, -0.5, 20.7]]);                                // utility sink, back to back with it
+      pipe('grey', 0, [[40.6, 0.1, 23.3], [40.6, -0.45, 23.3], [41.0, -0.6, 22.0], [41.0, -0.65, 20.7]]);              // washer floor trap
+      pipe('grey', 0, [[41.0, -0.65, 20.7], [41.3, -0.8, 16.3], [41.3, -1.95, 15.45]]);                                // under the landing → grease trap
+      if (d.basementGrp) pipe('grey', 0, [[38.6, -9.8, 9.4], [39.35, -9.8, 9.4], [39.35, -1.0, 9.4], [41.3, -1.2, 9.4], [41.3, -1.9, 14.55]]);   // basement sump pump → grey line
       // Grey main: north strip → NW corner → south along the compound wall (above the buried digester)
-      // → sand filter + garden-reuse tank at the gate → overflow to the soak pit.
-      pipe('grey', -1, [[41.3, -0.9, 14.55], [41.3, -1.15, -0.5], [-0.3, -1.75, -0.5], [-2.75, -1.8, -0.5], [-2.75, -2.05, 21.1]]);
-      pipe('grey', -1, [[-0.3, -1.3, 22.4], [0.9, -1.4, 22.4], [0.9, -1.5, 24.6]]);                                    // reuse-tank overflow → soak pit
-      pipe('gas', -1, [[-1.8, -2.0, 1.2], [-1.8, 0.6, 1.2]]);
-      pipe('gas', 0, [[-1.8, 0.6, 1.2], [-1.8, 0.6, -0.4], [40.36, 0.6, -0.4], [40.36, 0.6, 9.4], [39.5, 0.6, 9.4], [39.5, 3.1, 9.4]]);   // biogas → kitchen stove
+      // → sand filter + garden-reuse tank in the west strip → overflow to the soak pit.
+      pipe('grey', -1, [[41.3, -0.9, 14.55], [41.3, -1.15, -0.5], [-0.3, -1.75, -0.5], [-2.75, -1.8, -0.5], [-2.75, -2.05, 17.7]]);
+      pipe('grey', -1, [[-0.3, -2.8, 18.8], [0.9, -2.9, 18.8], [0.9, -3.0, 24.6]]);                                    // reuse-tank overflow → soak pit
+      pipe('gas', -1, [[-1.8, -2.0, 1.2], [-1.8, 2.2, 1.2]]);
+      pipe('gas', 0, [[-1.8, 0.6, 1.2], [-1.8, 0.6, -0.4], [40.36, 0.6, -0.4], [40.36, 0.6, 14.1], [39.5, 0.6, 14.1], [39.5, 3.1, 14.1]]);   // biogas → kitchen stove (east wall)
       solid('drain', -1, CH, 14.6, -1.15, -1.325, 1.4, 1.7, 1.25);   // inspection chamber at the soil stack
       solid('drain', -1, CH, 15.95, -0.85, -1.15, 1.0, 1.1, 1.0);    // gully trap at the waste stack
       solid('drain', -1, CH, -1.8, -1.3, -1.3, 1.3, 2.0, 1.3);       // digester inlet chamber + kitchen-scrap feed
@@ -1873,22 +2217,22 @@
       solid('drain', 0, 0xa16207, -1.8, 0.1, 1.2, 0.35, 0.35, 0.35); // gas valve + moisture trap
       tank('drain', -1, 0x92400e, -1.8, -4.3, 4.3, 2.3, 4.0, 9.0);    // biogas digester
       tank('drain', -1, 0xb45309, -1.8, -2.1, 1.2, 1.5, 0.45, 1.5, true);   // gas holder dome
-      tank('drain', -1, 0x64748b, -1.6, -2.3, 22.4, 2.6, 4.0, 2.6);  // sand filter + 700 L garden-reuse tank (hand pump)
-      solid('drain', 0, 0x475569, -1.0, 1.4, 22.9, 0.3, 2.8, 0.3);   // hand pump for watering
-      tank('drain', -1, 0x78716c, 2.4, -6.3, 26.5, 4.0, 12.0, 4.0, true);   // soak pit 4' Ø × 12' deep, heavy-duty cover
+      tank('drain', -1, 0x64748b, -1.6, -2.3, 18.8, 2.6, 4.0, 2.6);  // sand filter + 700 L garden-reuse tank (hand pump), west strip
+      solid('drain', 0, 0x475569, -1.0, GL0 + 1.4, 17.1, 0.3, 2.8, 0.3);   // hand pump for watering
+      tank('drain', -1, 0x78716c, 2.4, -7.7, 26.5, 4.0, 12.0, 4.0, true);   // soak pit 4' Ø × 12' deep, heavy-duty cover flush with the driveway
 
       // ---------------- RAIN: terrace + balcony → filter → SE tank → recharge pit ----------------
       for (const z of [0.6, 19.65]) {
         pipe('rain', 2, [[39.4, 19.55, z], [40.75, 19.55, z]]);
         pipe('rain', 1, [[40.75, 19.55, z], [40.75, 10.0, z]]);
-        pipe('rain', 0, [[40.75, 10.0, z], [40.75, GL, z]]);
+        pipe('rain', 0, [[40.75, 10.0, z], [40.75, GL0, z]]);
         disc('rain', 2, 0x16a34a, 39.2, 19.53, z, 0.35);
       }
       pipe('rain', -1, [[40.75, GL, 0.6], [40.75, -0.7, 0.6], [42.5, -0.75, 0.6], [42.5, -1.25, 20.6]]);                // collector along the east strip
       pipe('rain', -1, [[40.75, GL, 19.65], [40.75, -0.6, 19.65], [41.7, -0.65, 19.65], [41.7, -0.7, 20.6]]);
       pipe('rain', -1, [[42.5, -1.4, 22.2], [42.5, -1.5, 25.6], [39.5, -1.6, 25.6]]);                                  // filter → tank
       pipe('rain', 1, [[15.5, 10.15, 29.5], [16.45, 10.15, 29.5], [16.45, 9.5, 29.5]]);                               // balcony (carport roof)
-      pipe('rain', 0, [[16.45, 9.5, 29.5], [16.45, GL, 29.5]]);
+      pipe('rain', 0, [[16.45, 9.5, 29.5], [16.45, GL0, 29.5]]);
       pipe('rain', -1, [[16.45, GL, 29.5], [16.45, -1.0, 30.0], [31.0, -1.3, 30.0], [31.0, -1.35, 28.9], [31.6, -1.4, 28.9]]);
       pipe('rain', -1, [[39.5, -1.0, 27.6], [39.9, -1.0, 27.6]]);                                                      // overflow
       solid('rain', -1, CH, 42.5, -1.1, 21.4, 1.6, 1.6, 1.6);       // first-flush + filter chamber
@@ -1917,22 +2261,22 @@
         solid('power', fl, SB, sbx, sby, sbz, 0.4, 0.55, 0.12);
       };
       const mdb = [23.7, 6.1, 19.5], fdb = [23.7, 15.95, 19.5];
-      for (const [x, y, z] of [[10.0, 4.2, 11.7], [18.2, 4.2, 19.6], [39.6, 4.2, 11.3], [10.05, 4.2, 15.5], [10.05, 4.2, 12.45], [24.9, 4.2, 19.6]]) homeRun(0, mdb, x, y, z);   // bedroom switch on the latch side
+      for (const [x, y, z] of [[10.0, 4.2, 11.7], [18.2, 4.2, 19.6], [35.5, 4.2, 11.25], [10.05, 4.2, 15.5], [10.05, 4.2, 12.45], [24.9, 4.2, 19.6]]) homeRun(0, mdb, x, y, z);   // bedroom switch on the latch side
       pipe('power', 0, [[23.7, 9.25, 19.5], [2.6, 9.25, 19.5], [2.6, 9.25, 20.4], [2.6, 4.2, 20.4]]);                // carport: light + EV/bike charger (beside the new stair window)
       solid('power', 0, SB, 2.6, 4.2, 20.45, 0.4, 0.55, 0.12);
-      pipe('power', 0, [[39.6, 9.25, 11.3], [39.6, 9.25, 11.0], [39.6, 7.5, 11.0], [40.45, 7.5, 11.0], [40.45, 4.4, 11.0]]);   // utility + pump controller
-      solid('power', 0, SB, 40.45, 4.4, 11.0, 0.12, 0.55, 0.4);
+      pipe('power', 0, [[38.0, 9.25, 19.4], [39.4, 9.25, 19.4], [39.4, 6.0, 19.4], [39.4, 6.0, 20.45], [39.85, 6.0, 20.45], [39.85, 5.4, 20.45]]);   // wash court: washer + pump controller
+      solid('power', 0, SB, 39.85, 5.4, 20.45, 0.4, 0.55, 0.12);
       for (const [x, y, z] of [[10.0, 14.2, 11.7], [13.7, 14.2, 4.6], [29.3, 14.2, 11.7], [26.3, 14.2, 4.4], [27.3, 14.2, 19.65], [13.85, 14.2, 12.35], [14.3, 14.2, 19.65]]) homeRun(1, fdb, x, y, z);
-      for (const [fl, x, y, z] of [[0, 5.5, 9.4, 6.5], [0, 19.5, 9.4, 3.0], [0, 19.5, 9.4, 17.0], [0, 30.0, 9.4, 10.6], [0, 33.0, 9.4, 12.0], [0, 12.0, 9.4, 16.0],
-        [0, 8.0, 7.6, 14.0], [0, 41.6, 8.6, 15.0], [0, 8.0, 9.35, 25.0], [0, 32.0, 9.1, 22.0], [1, 6.0, 18.9, 6.0], [1, 33.0, 18.9, 6.0], [1, 32.5, 18.9, 16.0],
+      for (const [fl, x, y, z] of [[0, 5.5, 9.4, 6.5], [0, 19.5, 9.4, 3.0], [0, 19.5, 9.4, 17.0], [0, 30.0, 9.4, 9.2], [0, 33.0, 9.4, 12.0], [0, 12.0, 9.4, 16.0],
+        [0, 8.0, 7.6, 14.0], [0, 41.7, 9.4, 20.2], [0, 37.8, 9.4, 8.65], [0, 8.0, 9.35, 25.0], [0, 32.0, 9.1, 22.0], [1, 6.0, 18.9, 6.0], [1, 33.0, 18.9, 6.0], [1, 32.5, 18.9, 16.0],
         [1, 12.0, 18.9, 16.0], [1, 20.0, 18.9, 17.0], [1, 17.0, 18.9, 4.0], [1, 23.0, 18.9, 4.0], [1, 8.0, 17.6, 25.0]]) disc('power', fl, LT, x, y, z, 0.3);
       for (const [fl, x, y, z] of [[0, 1.9, 1.0, 11.7], [0, 9.1, 1.0, 11.7], [0, 15.8, 1.0, 0.35], [0, 23.2, 1.0, 0.35], [0, 27.0, 1.0, 0.35], [0, 14.5, 1.0, 19.65],
-        [0, 39.65, 4.4, 18.6], [1, 1.9, 11.0, 11.7], [1, 9.1, 11.0, 11.7], [1, 29.6, 11.0, 11.7], [1, 36.8, 11.0, 11.7], [1, 32.5, 13.0, 0.35], [1, 27.0, 11.0, 19.65],
+        [0, 36.95, 3.6, 19.6], [1, 1.9, 11.0, 11.7], [1, 9.1, 11.0, 11.7], [1, 29.6, 11.0, 11.7], [1, 36.8, 11.0, 11.7], [1, 32.5, 13.0, 0.35], [1, 27.0, 11.0, 19.65],
         [1, 37.6, 11.0, 19.65], [1, 13.95, 11.5, 20.4]]) solid('power', fl, S6, x, y, z, 0.28, 0.28, 0.28);
-      for (const [fl, x, y, z] of [[0, 39.65, 1.0, 7.3], [0, 39.65, 3.4, 9.0], [0, 39.65, 3.4, 15.4], [0, 40.45, 3.6, 18.1], [0, 40.45, 4.4, 11.6], [0, 9.0, 6.0, 12.3],
-        [0, 2.0, 3.0, 20.45]]) solid('power', fl, S16, x, y, z, 0.38, 0.38, 0.38);
+      for (const [fl, x, y, z] of [[0, 28.8, 1.0, 19.6], [0, 35.6, 1.0, 19.6], [0, 39.6, 3.4, 12.3], [0, 39.6, 3.4, 16.0], [0, 39.85, 3.4, 20.45], [0, 39.85, 4.4, 20.45], [0, 9.0, 6.0, 12.3],
+        [0, 2.0, 3.0, 20.45]]) solid('power', fl, S16, x, y, z, 0.38, 0.38, 0.38);   // fridge, dishwasher, 2 counter, washer, pump, geyser, EV
       for (const [fl, x, y, z, rot] of [[0, 11.5, 7.4, 0.55, 0], [1, 11.5, 17.4, 0.55, 0], [1, 39.45, 17.4, 9.5, 1]]) solid('power', fl, AC, x, y, z, rot ? 0.6 : 2.6, 0.9, rot ? 2.6 : 0.6);
-      for (const [fl, x, y, z] of [[1, 19.0, 17.6, 0.4], [1, 21.0, 17.6, 0.4], [0, 39.65, 7.0, 9.8]]) solid('power', fl, 0x94a3b8, x, y, z, 0.6, 0.6, 0.2);
+      for (const [fl, x, y, z] of [[1, 19.0, 17.6, 0.4], [1, 21.0, 17.6, 0.4], [0, 39.6, 7.0, 14.1]]) solid('power', fl, 0x94a3b8, x, y, z, 0.6, 0.6, 0.2);
 
       // ---------------- labels ----------------
       label(2, 'water', 0x2563eb, '<b>Overhead tank 1,500 L</b> <span>on a 5′-6″ stand → ~8′ head at the showers</span>', 20.0, 30.6, 2.6);
@@ -1940,14 +2284,14 @@
       label(1, 'water', 0x2563eb, '<b>Bath core</b> <span>one drop from the tank, no horizontal run</span>', 20.0, 16.6, 0.9);
       label(1, 'water', 0x2563eb, '<b>Balcony tap</b>', 10.05, 13.0, 20.6);
       label(0, 'water', 0x2563eb, '<b>West line</b> <span>common bath wet wall + geyser</span>', 8.0, 7.2, 12.3);
-      label(0, 'water', 0x2563eb, '<b>Kitchen line</b> <span>washer · utility · kitchen sink + RO · garden tap</span>', 40.6, 5.6, 17.0);
-      label(0, 'water', 0x0891b2, '<b>Rising main</b> <span>pump → overhead tank</span>', 40.9, 7.6, 18.85);
+      label(0, 'water', 0x2563eb, '<b>Kitchen line</b> <span>one drop at the SE corner: kitchen sink + RO inside, utility sink + washer outside</span>', 39.4, 6.6, 20.6);
+      label(0, 'water', 0x0891b2, '<b>Rising main</b> <span>pump → overhead tank</span>', 40.6, 8.0, 21.2);
       label(-1, ['water', 'rain'], 0x0891b2, '<b>Sump + rainwater tank ~6,000 L</b> <span>municipal + filtered roof rain · pump with auto level control</span>', 35.5, 0.8, 24.2);
       label(-1, 'water', 0x0891b2, '<b>Municipal water + meter</b>', -7.5, 1.4, 18.2);
       label(-1, 'drain', 0x92400e, '<b>Biogas digester ~2 m³</b> <span>toilets + kitchen scraps</span>', -1.8, 1.4, 5.0);
       label(-1, 'drain', 0x57534e, '<b>Inlet chamber</b> <span>+ kitchen-scrap feed</span>', -1.8, 0.9, -3.4);
       label(-1, 'drain', 0x64748b, '<b>Grey water</b> <span>→ filter + garden reuse</span>', -6.5, 0.6, 4.0);
-      label(-1, 'drain', 0x64748b, '<b>Filter + 700 L garden-reuse tank</b> <span>hand pump · overflow → soak pit</span>', -1.6, 1.4, 22.4);
+      label(-1, 'drain', 0x64748b, '<b>Filter + 700 L garden-reuse tank</b> <span>hand pump · overflow → soak pit</span>', -1.6, 1.4, 18.8);
       label(-1, 'drain', 0x78716c, '<b>Soak pit</b> <span>4′ Ø × 12′ deep, under the driveway</span>', 2.4, 0.9, 27.6);
       label(0, 'drain', 0x92400e, '<b>Soil + waste stacks</b> <span>outside the north wall, one vent</span>', 15.0, 5.5, -0.9);
       label(-1, 'drain', 0x64748b, '<b>Grease trap</b>', 41.3, 0.6, 15.0);
@@ -2199,7 +2543,7 @@
       }
       uv.needsUpdate = true;
     }
-    site.traverse((o) => { if (o.isMesh && o.material.map) bakeUVs(o); });
+    site.traverse((o) => { if (o.isMesh && o.material.map && o.material !== mat.screen) bakeUVs(o); });   // the theatre screen keeps its 0–1 image UVs
 
     // =========================================================================
     // 6. STATIC MERGE (one draw call per material per toggle group)
@@ -2245,6 +2589,7 @@
       mergeStatic(d.furnUpper);
       mergeStatic(d.terraceGrp);
       mergeStatic(d.treesGrp);
+      if (d.basementGrp) { mergeStatic(d.basementGrp, new Set([d.basementCeil])); mergeStatic(d.basementCeil); }
     }
 
     // =========================================================================
@@ -2609,7 +2954,7 @@
       for (const d of dynamics) {
         const target = d.open ? 1 : 0;
         if (d.t === target) continue;
-        const sp = d.kind === 'door' ? 1.4 : 1.1;
+        const sp = d.speed ?? (d.kind === 'door' ? 1.4 : 1.1);
         d.t = target > d.t ? Math.min(target, d.t + dt * sp) : Math.max(target, d.t - dt * sp);
         applyDyn(d);
       }
@@ -2652,21 +2997,23 @@
     function sfxDoor() { noiseHit(420, 1.2, 0.5, 0.18, 2); }
 
     // ---------- where am I (floor + room) ----------
-    const floorOf = (y) => (y < D.breaks[0] ? 0 : y < D.breaks[1] ? 1 : 2);
+    const floorOf = (y) => (y < -5 ? 3 : y < D.breaks[0] ? 0 : y < D.breaks[1] ? 1 : 2);   // 3 = basement (open design)
     function whereAmI() {
       const p = house.worldToLocal(_v1.set(player.collider.start.x, feetY(), player.collider.start.z));
       const fl = floorOf(p.y);
-      for (const [x0, z0, x1, z1, name] of D.zones[fl]) if (p.x >= x0 && p.x <= x1 && p.z >= z0 && p.z <= z1) return { fl, name, p };
+      for (const [x0, z0, x1, z1, name] of D.zones[fl] || []) if (p.x >= x0 && p.x <= x1 && p.z >= z0 && p.z <= z1) return { fl, name, p };
       return { fl, name: fl === 0 ? 'Garden' : 'Outside', p };
     }
     function surfaceAt(w) {
-      if (w.name === 'Staircase' || w.name === 'Veranda') return 'wood';
+      if (w.name === 'Staircase' || w.name === 'Veranda' || w.name === 'Secret stair') return 'wood';
       if (w.fl === 2) return 'stone';
+      if (w.fl === 3) return /theatre|sound lock/i.test(w.name) ? 'grass' : 'stone';   // carpet is soft
       if (w.name === 'Garden') return 'grass';
       if (w.name === 'Carport' || w.name === 'Utility' || w.name === 'Street') return 'stone';
+      if (w.name === 'Wash court') return w.p.z > 20.2 ? 'wood' : 'stone';
       return 'tile';
     }
-    const FLOOR_NAMES = ['Ground floor', 'First floor', 'Terrace'];
+    const FLOOR_NAMES = ['Ground floor', 'First floor', 'Terrace', 'Basement'];
 
     // ---------- minimap (second render into a scissor rect) ----------
     const mapCam = new THREE.OrthographicCamera(-24, 24, 24, -24, 0.5, 140);
@@ -2678,10 +3025,11 @@
       const fy = feetY(), c = player.collider.start;
       mapCam.position.set(c.x, fy + 40, c.z);
       mapCam.lookAt(c.x, fy, c.z);
-      const vis = [upperGrp.visible, terraceGrp.visible, treesGrp.visible];
+      const vis = [upperGrp.visible, terraceGrp.visible, treesGrp.visible, groundGrp.visible, D.basementCeil ? D.basementCeil.visible : false];
       const fl = floorOf(fy);
-      if (fl < 1) upperGrp.visible = false;
-      if (fl < 2) terraceGrp.visible = false;
+      if (fl < 1 || fl === 3) upperGrp.visible = false;
+      if (fl < 2 || fl === 3) terraceGrp.visible = false;
+      if (fl === 3) { groundGrp.visible = false; if (D.basementCeil) D.basementCeil.visible = false; }   // see the basement from above
       treesGrp.visible = false; sky.visible = false;
       renderer.setScissorTest(true);
       renderer.setScissor(x, y, size, size);
@@ -2692,7 +3040,8 @@
       renderer.autoClear = true;
       renderer.setScissorTest(false);
       renderer.setViewport(0, 0, innerWidth, innerHeight);
-      [upperGrp.visible, terraceGrp.visible, treesGrp.visible] = vis;
+      [upperGrp.visible, terraceGrp.visible, treesGrp.visible, groundGrp.visible] = vis;
+      if (D.basementCeil) D.basementCeil.visible = vis[4];
       sky.visible = true;
       el('mapArrow').style.transform = `rotate(${-state.yaw}rad)`;
     }
@@ -3092,6 +3441,7 @@
       for (const d of DESIGNS) {
         d.upperGrp.position.y = d.upperY + v;
         d.terraceGrp.position.y = d.terraceY + v * 2;
+        if (d.basementGrp) d.basementGrp.position.y = -10.08 - v;
       }
     }
     el('explode').oninput = (e) => setExplode(parseFloat(e.target.value));
@@ -3105,6 +3455,9 @@
       ({ house, groundGrp, upperGrp, terraceGrp, furnGround, furnUpper, treesGrp } = D);
       SPAWNS = D.spawns;
       renderSpawns();
+      el('planBasement').hidden = !D.basementGrp;
+      el('panelBasement').hidden = !D.basementGrp;
+      if (!D.basementGrp && typeof planFloor !== 'undefined' && planFloor === 3) planFloor = 0;
       el('design').value = D.key;
       document.querySelectorAll('.dnote').forEach((n) => { n.hidden = n.dataset.d !== D.key; });
       markCollisionDirty();
@@ -3161,12 +3514,12 @@
       const mg = new THREE.Group();
       mg.userData.dynamic = true;
       d.house.add(mg);
-      for (const [fl, name, x0, z0, x1, z1, open] of d.measures) {
+      for (const [fl, name, x0, z0, x1, z1, open, at] of d.measures) {
         const w = x1 - x0, dep = z1 - z0, area = w * dep, y = d.finish[fl] + 0.15;
         mLines(mg, [[x0, y, z0], [x1, y, z0], [x1, y, z1], [x0, y, z1]], d, fl, outlineMat, true);
         const small = area < 32 || Math.min(w, dep) < 3.2;
         mLabel(mg, small ? `<b>${name}</b> ${fmtFt(w)}×${fmtFt(dep)}` : `<b>${name}</b><br>${fmtFt(w)} × ${fmtFt(dep)}<br><span>${Math.round(area)} sq ft · ${(area * 0.0929).toFixed(1)} m²</span>`,
-          (x0 + x1) / 2, y, (z0 + z1) / 2, `mlabel${small ? ' small' : ''}${isTight(name, w, dep, open) ? ' tight' : ''}`, d, fl);
+          at ? at[0] : (x0 + x1) / 2, y, at ? at[1] : (z0 + z1) / 2, `mlabel${small ? ' small' : ''}${isTight(name, w, dep, open) ? ' tight' : ''}`, d, fl);
       }
       const [ex0, ez0, ex1, ez1] = d.envelope;
       mDim(mg, ex0, ez0 - 3, ex1, ez0 - 3, 0.5, d, -1);
@@ -3228,14 +3581,18 @@
       applyMeasureVisibility();
       el('planExit').textContent = planFromWalkActive ? '↩ Back to walk' : '✕ Close plan';
       // In plan view hide the floors above the one being shown (and trees); otherwise follow the panel toggles.
+      // The basement plan (3) hides every floor above it and the theatre's ceiling layer.
       for (const d of DESIGNS) {
-        d.upperGrp.visible = el('togUpper').checked && (!plan || planFloor >= 1);
-        d.terraceGrp.visible = el('togTerrace').checked && (!plan || planFloor >= 2);
+        const base = plan && planFloor === 3;
+        d.groundGrp.visible = el('togGround').checked && !base;
+        d.upperGrp.visible = el('togUpper').checked && (!plan || (planFloor >= 1 && !base));
+        d.terraceGrp.visible = el('togTerrace').checked && (!plan || planFloor === 2);
         d.treesGrp.visible = el('togTrees').checked && !plan;
+        if (d.basementCeil) d.basementCeil.visible = !base;
       }
-      const sum = D.measures.filter((m) => m[0] === planFloor && !/walk|courtyard bed|carport|veranda|balcony|garden|solar|utility$/i.test(m[1]))
+      const sum = D.measures.filter((m) => m[0] === planFloor && !/walk|courtyard bed|carport|veranda|balcony|garden|solar|utility$|store room|pooja ·|sound lock|escape/i.test(m[1]))
         .reduce((s, m) => s + (m[4] - m[2]) * (m[5] - m[3]), 0);
-      el('planLegend').innerHTML = `<b>${D.name}</b> · ${['Ground', 'First', 'Terrace'][planFloor]} floor` +
+      el('planLegend').innerHTML = `<b>${D.name}</b> · ${['Ground floor', 'First floor', 'Terrace floor', 'Basement (secret)'][planFloor]}` +
         (D.ceil[planFloor] ? ` · clear ceiling <b>${fmtFt(D.ceil[planFloor])}</b>` : '') +
         `<br>Rooms shown: ${Math.round(sum)} sq ft carpet · <span style="color:#fca5a5">red = tighter than comfortable</span>` +
         (svc.on && D.services && planFloor === 0 ? ' · services: underground shown too' : '');
@@ -3455,8 +3812,9 @@
     const setCam = (px, py, pz, tx = 0, ty = 8, tz = 0) => {
       if (state.mode === 'walk') exitWalk();
       if (state.mode === 'plan') exitPlan();
-      camera.position.set(px, py, pz);
-      controls.target.set(tx, ty, tz);
+      const lift = (D.houseRise || 0) * 0.8;   // the open design's house sits higher
+      camera.position.set(px, py + lift, pz);
+      controls.target.set(tx, ty + lift, tz);
       controls.update();
     };
     el('camHero').onclick = () => setCam(-26, 26, 54, 0, 8, 0);
@@ -3522,14 +3880,14 @@
       if (qs.has('yaw')) state.yaw = parseFloat(qs.get('yaw'));
       if (qs.has('pitch')) state.pitch = parseFloat(qs.get('pitch'));
     }
-    if (qs.has('plan')) enterPlan(clamp(parseInt(qs.get('plan'), 10) || 0, 0, 2));
+    if (qs.has('plan')) enterPlan(clamp(parseInt(qs.get('plan'), 10) || 0, 0, D.basementGrp ? 3 : 2));
     if (qs.get('menu') === '0') { state.panelOpen = false; updateUI(); }
     if (qs.get('video') === '1') showVideo(true);
     const VIEWS = { hero: 'camHero', lawn: 'camLawn', terrace: 'camTerrace', stairs: 'camStairs', east: 'camEast', svc: 'svcView' };
     if (VIEWS[qs.get('view')]) el(VIEWS[qs.get('view')]).click();
     if (qs.has('shot')) for (let i = 0; i < 40; i++) frame(1 / 60);
     window.walkthrough = {
-      THREE, scene, camera, renderer, site, dynamics, state, player, keys, DESIGNS, frame, setTime, enterWalk, exitWalk, spawnAt, whereAmI, pickFromScreen, toggleDyn, feetY, rayStatic, useDesign, exportProps,
+      THREE, scene, camera, renderer, site, dynamics, state, player, keys, DESIGNS, frame, setTime, enterWalk, exitWalk, spawnAt, whereAmI, pickFromScreen, toggleDyn, feetY, rayStatic, useDesign, exportProps, setCam,
       get D() { return D; }, get house() { return house; }, get groundGrp() { return groundGrp; }, get upperGrp() { return upperGrp; }, get terraceGrp() { return terraceGrp; }, get SPAWNS() { return SPAWNS; },
     };
   </script>
