@@ -12,6 +12,7 @@ permissions:
 
 jobs:
   validate:
+    name: Design + source validation
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
@@ -20,5 +21,39 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-      - name: Validate HTML and interaction invariants
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Semantic design validation (plot, structure, stair, rooms, doors, airflow, drainage, safety)
         run: node scripts/validate.mjs
+      - name: Validator mutation tests (known regressions must be rejected)
+        run: node --test tests/validator.test.mjs
+
+  browser:
+    name: Browser tests (desktop + touch phone)
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Run Playwright tests
+        run: npx playwright test
+      - name: Upload test report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7

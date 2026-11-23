@@ -2,6 +2,14 @@
 
 This file tracks the conceptual 3D model. It is not a construction drawing or structural approval.
 
+> **Status (Pass 6, 2026-11-23):** the model has been re-fitted to the real plot geometry and rebuilt from one design-data file.
+>
+> **Data and consumers:** `src/design.js` holds the design data. The 3D model, plans, walk collision and an automated validator all read from it.
+>
+> **History:** Passes 1–5 below are kept as history. Items in them that refer to the old 16.7 × 11.2 m envelope (the east service-wall tiles, the SE recharge garden and the stair-landing column) are superseded by Pass 6.
+>
+> **Where to look:** the handoff record is `CONTEXT.md`.
+
 ## Clover cycle
 
 Each pass follows **Context → Direction → Action → Success → Growth**. Repeat until the model is internally consistent, then perform one final whole-house review.
@@ -69,32 +77,90 @@ Each pass follows **Context → Direction → Action → Success → Growth**. R
 - [x] Identify and flag the definite conceptual clash at the ground-floor stair landing: the centre column at (X=0, Z=4.85) intersects the landing footprint. Keep the column as an unresolved warning marker; do not move or remove it without a coordinated structural redesign.
 - [ ] Obtain architect/structural/civil review before treating the model as buildable.
 
+### Pass 6 — Re-fit to the real plot and single-source rebuild (2026-11-23)
+- [x] Reconciled the plot.
+  - No four-sided plot with sides N 51, S 46, W 33 and E 33 ft can reach 1,620 sq ft; the maximum is 1,595.9 sq ft.
+  - The model keeps all four sides exact as a trapezoid with N parallel to S, which is also the maximum-area case.
+  - The UI and plans disclose this and label the corner angles as unsurveyed.
+- [x] Removed the invented land.
+  - The compound wall now follows the real boundary.
+  - The first floor is re-fitted to 12.30 × 8.80 m (108 m²) with 0.6–1.9 m margins.
+- [x] Resolved the structure.
+  - There are 12 columns on a 4 × 3 grid (spans ≤ 4.8 m).
+  - The columns are sized 230 × 450 mm to hide inside the walls.
+  - No column stands in the court or stair.
+  - No beam crosses either opening; trimmers frame both.
+  - The old stair-landing column clash and the beam crossing the stairwell are gone, and the validator now rejects both regressions.
+- [x] Rebuilt the stair: a dog-leg of 18 × 178 mm risers, 270 mm treads (2R+T 626 mm) and 0.90 m flights, with a 1.35 m mid landing.
+  - Computed headroom is ≥ 2.45 m on every flight and landing.
+  - A terracotta jaali spine carries the handrails.
+- [x] Rooms meet common minimum sizes.
+  - The library becomes an alcove, because the real plot cannot hold a separate room.
+  - Bath doors open outward. Bedroom doors open inward and rest against a wall.
+  - The main door opens outward.
+  - Furniture keeps every doorway approach clear, and every room is reachable (checked by flood-fill with body clearance).
+- [x] Airflow is now data-driven.
+  - Low SW jaali inlets (with rain hoods) feed five paths. Each passes only through real openings and exits high: the court sky, the stair-head jaali, and the high E jaalis of the parents' room and pooja.
+- [x] Rain is now data-driven.
+  - The terrace falls to the court; eight scuppers drop rain into the court rain garden.
+  - The overflow weir feeds a stone channel and silt trap, ending at a recharge pit in the NW yard.
+  - A grated intercept inside the gate means no water reaches the road. All channels fall at 1:96 to 1:121.
+- [x] Child safety:
+  - 1.0 m guards with balusters less than 100 mm apart
+  - planters kept ≥ 0.6 m from guards
+  - a 1.8 m jaali screen where the washer stands against the parapet
+  - safety bars on low windows
+- [x] The validator was replaced. The old one pinned exact source coordinates. The new `scripts/checks.mjs` checks every earlier intent semantically, plus many new ones. Mutation tests (`tests/validator.test.mjs`) prove it rejects 18 known regressions.
+- [x] Browser tests: Playwright drives the real UI in desktop and phone emulation. They cover:
+  - loading
+  - the gate → stair → first floor → terrace walk
+  - doors
+  - plans
+  - overlays
+  - keyboard and touch walking
+- [x] three.js is vendored, so the site has no CDN dependency.
+- [x] Inspected orbit, walk and plan modes at ground, first-floor and terrace levels in a real browser, and fixed the issues found:
+  - missing furniture
+  - a clipped sky
+  - overlapping plan labels
+  - a frame-rate-dependent walking speed
+- [ ] Professional review (unchanged): site survey or FMB sketch, setbacks, soil and percolation tests, structural design, drainage sizing and approvals.
+
 ## Critical dimension check before any build-ready review
 
-The UI labels the plot as **W33 · S46 · E33 · N51 ft** and **1,620 sq ft**, while the current 3D compound-wall envelope is approximately **16.7 m × 11.2 m** (about **2,020 sq ft** as a bounding rectangle). The model footprint and room proportions therefore must not be treated as dimensionally validated. Reconcile the actual four boundary lengths, corner angles/setbacks and surveyed plot area before resizing or issuing plans; do not distort the current room layout by guessing.
+**Resolved in Pass 6.** Before, the compound wall was 16.7 × 11.2 m (about 2,020 sq ft), larger than the plot.
+
+**Now:** the boundary is drawn from the four supplied side lengths. It is a trapezoid of 1,595.9 sq ft with N parallel to S, and the house fits inside it with margins.
+
+**Still unknown:** the supplied area (1,620 sq ft) cannot coexist with those sides. Confirm the actual side lengths, corner angles and surveyed area before any build-ready drawings. The design data has one place to change the boundary: `PLOT` in `src/design.js`. The validator then re-checks fit, margins, drainage and circulation.
 
 ## Current conceptual material map
 
 | Zone | Proposed finish |
 |---|---|
-| Compound wall | Locally sourced rough rubble stone with simple coping |
-| Main interior floors | Kadappa / Kota-type natural stone |
-| Wet and selected balcony zones | Shahabad or another suitable slip-resistant natural stone |
-| Walls | Lime-finish plaster |
-| Exposed service-wall tops | Individual terracotta clay tiles on short holders directly above the wall |
-| Jaali and screens | Terracotta; reclaimed timber where suitable |
-| Terrace | Weatherproof sloped finish with accessible drainage and planted beds |
+| Compound wall | Local rubble stone with individual clay coping tiles; granite gate piers; reclaimed-teak batten gate |
+| Stilt level and stair | Kota stone paving and treads; kaavi (red-ochre) lime on the stair-hall walls; granite column bases |
+| Rooms | Red-oxide floors (bedrooms, library, kitchen); Athangudi tiles (living, verandahs, pooja); ceramic tiles in baths |
+| Walls and ceilings | Lime plaster |
+| Jaali and screens | Terracotta jaali (exterior, stair spine, wash screen); teak jaali (stair screen, pooja door, transoms) |
+| Terrace | Terracotta pavers falling to the court; clay coping tiles on parapets |
+| Joinery | Reclaimed teak doors, shutters and frames; iron window bars |
 
 ## Current rainwater concept
 
-1. Individual clay tiles sit directly on short holders at the top of the exposed east service wall; there is no continuous roof deck, long rafter frame, fascia, overhead gutter or tall downpipe.
-2. Tile holders now sit at the terrace parapet top (0.95 m above terrace level). Rain falls directly from the outward-sloping tile edges onto the exterior splash apron and shallow east surface channel.
-3. The north collector falls east into the east-side channel; the east channel falls south into a short branch to the south-east recharge garden. The courtyard overflow has a separate shallow fall toward the same garden.
-4. First-floor balcony and courtyard sill channels remain illustrative local surface drains; their actual discharge and separation from greywater must be designed from surveyed levels.
-5. Final falls, channel cross-sections, splash control, overflow route and recharge capacity must be verified with site levels and local rainfall data.
+1. The terrace finish rises 60 mm from the court guard to the parapets (≥ 1:100), so rain runs to the open court.
+2. Eight clay scuppers in the court guard drop rain into the court rain garden, a permeable planted basin 0.10 m below grade.
+3. Overflow passes a weir on the west kerb. It then runs through a shallow stone channel west (1:121), north through the grated intercept, then the silt trap, then the recharge pit in the NW yard.
+4. A grated channel inside the west gate intercepts yard runoff before the road. No water discharges to the road. There are no downpipes or gutters.
+5. Channel sections, pit size and its distance from footings (currently ≥ 1.0 m from column centres) must be confirmed with rainfall data and soil percolation tests.
 
 ## Important limitations
 
-- Model dimensions and structure are conceptual; no structural calculations, soil data, foundation design or approval drawings are included.
-- Surface channels are illustrative. A 3D blue strip does not prove a workable gradient or hydraulic capacity.
-- Confirm setbacks, FSI, height, stilt use, fire access, rainwater-harvesting requirements and local planning rules for the actual site before construction.
+- Model dimensions and structure are conceptual. There are no structural calculations, soil data, foundation design or approval drawings.
+- The validator checks design consistency and common good-practice rules. It does not check code compliance or engineering adequacy.
+- Airflow paths are illustrative, not CFD. Drainage falls are shown, but hydraulic capacity is not designed.
+- Confirm the following for the actual site before construction:
+  - setbacks, FSI and height
+  - stilt use and fire access
+  - rainwater-harvesting requirements
+  - local planning rules
