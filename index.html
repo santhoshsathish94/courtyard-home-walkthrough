@@ -147,7 +147,7 @@
       <div class="card main-card">
         <h1>Traditional Courtyard <span class="badge">Thinnai · Water Point · Stone Floors · Nadumuttam</span></h1>
         <div class="sub hide-mobile">
-          <b>W33·S46·E33·N51</b> · 1,620 sq ft plot (West Road) · 12-column concept · Reclaimed timber · Natural stone floors · Clay-tile roof concept · Rainwater-led landscape
+          <b>W33·S46·E33·N51</b> · 1,620 sq ft plot (West Road) · 12-column concept · Reclaimed timber · Natural stone floors · Selective east service eave · Rainwater-led landscape
         </div>
         <div class="pill-row">
           <button id="btn-orbit" class="active">Orbit</button>
@@ -156,7 +156,7 @@
           <button id="btn-wind" class="active">Breeze paths</button>
         </div>
         <div class="room-readout" id="location-label">Overview · Drag to orbit, pinch to zoom</div>
-        <div class="sub">Kadappa / Kota / Shahabad stone · reclaimed timber rafters · pitched terracotta tile wings · terracotta jaali. Open central sky court retained. Roof structure and drainage require engineering.</div>
+        <div class="sub">Kadappa / Kota / Shahabad stone · reclaimed timber rafters · selective terracotta tile eave · terracotta jaali. Open central sky court retained. Roof structure and drainage require engineering.</div>
       </div>
 
       <div class="card controls-panel" id="controls-panel">
@@ -920,32 +920,30 @@
       color: 0xffffff, map: TEX.terracotta, roughness: 0.92,
       side: THREE.DoubleSide
     });
-    function addPitchedTileWing(x0, x1, z0, z1, slopeSign) {
+    function addEastServiceEave(x0, x1, z0, z1) {
       const width = x1 - x0, depth = z1 - z0;
       const panel = new THREE.Mesh(new THREE.BoxGeometry(width, 0.16, depth), roofWingMat);
       panel.position.set((x0 + x1) / 2, roofY + 0.36, (z0 + z1) / 2);
-      panel.rotation.z = slopeSign * 0.13;
+      // Fall the tile plane toward the east collection gutter.
+      panel.rotation.z = -0.13;
       panel.castShadow = true; panel.receiveShadow = true; grpTF.add(panel);
       // Reclaimed timber rafters visible below the tile plane.
       for (let z = z0 + 0.18; z < z1; z += 0.72) {
         const rafter = new THREE.Mesh(new THREE.BoxGeometry(width + 0.18, 0.12, 0.10), MAT.darkWood);
         rafter.position.set((x0 + x1) / 2, roofY + 0.18, z);
-        rafter.rotation.z = slopeSign * 0.13;
+        rafter.rotation.z = -0.13;
         rafter.castShadow = true; grpTF.add(rafter);
       }
-      // Deep eaves and visible timber fascia.
+      // Fascia and gutter sit on the east low edge, aligned with the service downpipe.
       const fascia = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.22, depth + 0.24), MAT.teak);
-      fascia.position.set(slopeSign < 0 ? x0 - 0.12 : x1 + 0.12, roofY - 0.02, (z0 + z1) / 2);
+      fascia.position.set(x1 + 0.12, roofY - 0.02, (z0 + z1) / 2);
       fascia.castShadow = true; grpTF.add(fascia);
-      // Continuous gutter at the low outer edge.
-      addBox(grpTF,
-        slopeSign < 0 ? x0 - 0.22 : x1 + 0.08,
-        slopeSign < 0 ? x0 - 0.08 : x1 + 0.22,
-        roofY - 0.20, roofY - 0.08, z0 - 0.12, z1 + 0.12, MAT.granite, false);
+      addBox(grpTF, x1 + 0.02, x1 + 0.18, roofY - 0.20, roofY - 0.08,
+        z0 - 0.12, z1 + 0.12, MAT.granite, false);
     }
-    // Narrow eaves only along the outer wall lines; terrace remains open.
-    addPitchedTileWing(-7.45, -6.45, -5.45, 5.45, -1);
-    addPitchedTileWing(6.45, 7.45, -5.45, 5.45, 1);
+    // One selective eave protects the east service wall and feeds its rainwater downpipe.
+    // The west roof strip is intentionally omitted to keep the solar array unshaded.
+    addEastServiceEave(6.45, 7.45, -5.45, 5.45);
 
     // Terracotta jaali screens at the terrace's west/east edges:
     // filter low-angle sun and wind while retaining open views and ventilation.
@@ -1013,8 +1011,10 @@
     // Rainwater downpipe on the east service edge links upper collection to
     // the ground-level inspection/recharge point. It is deliberately visible.
     const rainPipeMat = new THREE.MeshStandardMaterial({ color: 0x8c9b8d, roughness: 0.72, metalness: 0.18 });
-    const rainPipe = new THREE.Mesh(new THREE.CylinderGeometry(0.075, 0.075, H_TF + 0.35, 12), rainPipeMat);
-    rainPipe.position.set(7.42, (H_TF + 0.35) / 2, 4.55);
+    // Continue the service downpipe up to the east eave gutter (not just to first-floor level).
+    const rainPipeHeight = roofY - 0.08;
+    const rainPipe = new THREE.Mesh(new THREE.CylinderGeometry(0.075, 0.075, rainPipeHeight, 12), rainPipeMat);
+    rainPipe.position.set(7.42, rainPipeHeight / 2, 4.55);
     rainPipe.castShadow = true;
     grpGF.add(rainPipe);
     const pipeClips = [0.55, 2.0, 3.55, 5.1, 6.55];
