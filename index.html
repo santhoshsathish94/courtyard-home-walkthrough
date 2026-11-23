@@ -769,7 +769,8 @@
     addWallX(grpFF, -5.0, -7.3, 7.3, H_1F, WALL_H, 0.2, MAT.wall, [
       { start: -6.4, end: -4.2, sill: 0.75, head: 2.25, glass: true, louver: true, louverDir: -1 }, // Library N Window
       { start: -2.7, end: 2.7, sill: 0.0, head: 2.45, glass: true },                                // Living -> N Balcony
-      { start: 4.5, end: 6.7, sill: 0.55, head: 2.35, glass: true, louver: true, louverDir: -1 }    // NE Pooja Window
+      { start: 4.5, end: 6.7, sill: 0.55, head: 2.35, glass: true, louver: true, louverDir: -1 }, // NE Pooja Window
+      { start: 2.95, end: 3.85, sill: 2.18, head: 2.88, jaali: true, cols: 5, rows: 3 } // High-level leeward exhaust
     ]);
     addChajjaX(grpFF, -5.0, -6.7, -3.9, H_1F + 2.45, -1);
     addChajjaX(grpFF, -5.0, -3.0, 3.0, H_1F + 2.65, -1, 0.75);
@@ -779,7 +780,8 @@
     addWallX(grpFF, 5.0, -7.3, 7.3, H_1F, WALL_H, 0.2, MAT.wall, [
       { start: -6.3, end: -4.3, sill: 0.8, head: 2.2, glass: true, louver: true, louverDir: 1 }, // Master S Window
       { start: -1.3, end: 1.3, sill: 0.7, head: 2.75, jaali: true, cols: 8, rows: 6 },           // Stairwell Jaali
-      { start: 4.2, end: 6.4, sill: 0.95, head: 2.25, glass: true }                              // Kitchen S Window
+      { start: 4.2, end: 6.4, sill: 0.95, head: 2.25, glass: true }, // Kitchen S Window
+      { start: -0.72, end: 0.72, sill: 2.18, head: 2.88, jaali: true, cols: 6, rows: 3 } // Stairwell high-level stack outlet
     ]);
     addChajjaX(grpFF, 5.0, -6.6, -4.0, H_1F + 2.4, 1);
     addChajjaX(grpFF, 5.0, -1.5, 1.5, H_1F + 2.88, 1, 0.7);
@@ -790,7 +792,8 @@
       { start: -4.65, end: -3.45, sill: 0.85, head: 2.35, glass: true, louver: true, louverDir: -1 }, // Library
       { start: -2.35, end: -1.05, sill: 0.85, head: 2.35, glass: true, louver: true, louverDir: -1 }, // Kids
       { start: 0.15, end: 1.15, sill: 1.45, head: 2.4, jaali: true, cols: 4, rows: 3 },               // Ensuite Jaali Vent
-      { start: 2.35, end: 3.65, sill: 0.9, head: 2.35, glass: true, louver: true, louverDir: -1 }     // Master W Window
+      { start: 2.35, end: 3.65, sill: 0.9, head: 2.35, glass: true, louver: true, louverDir: -1 }, // Master W Window
+      { start: 4.02, end: 4.78, sill: 0.34, head: 1.02, jaali: true, cols: 5, rows: 4 } // SW low-level breeze inlet
     ]);
     addChajjaZ(grpFF, -7.3, -4.8, -3.3, H_1F + 2.55, -1);
     addChajjaZ(grpFF, -7.3, -2.5, -0.9, H_1F + 2.55, -1);
@@ -1077,22 +1080,37 @@
         const u = p.t;
         let x = 0, y = H_1F + 1.4, z = 0;
         if (p.lane === 0) {
-          if (u < 0.65) {
-            const k = u / 0.65; x = -8.5 + k * 8.3; z = 0.7 + Math.sin(k * Math.PI * 2) * 0.3; y = H_1F + 1.3 + k * 0.6;
+          // SW low inlet crosses the occupied zone before rising to a north high outlet.
+          if (u < 0.62) {
+            const k = u / 0.62;
+            x = -7.3 + k * 10.8; z = 4.35 - k * 8.0;
+            y = H_1F + 0.72 + k * 0.38;
           } else {
-            const k = (u - 0.65) / 0.35; x = -0.2 + Math.sin(k * 4) * 0.25; z = 0.2; y = H_1F + 1.9 + k * 4.9;
+            const k = (u - 0.62) / 0.38;
+            x = 3.5 + k * 0.2; z = -3.65;
+            y = H_1F + 1.1 + k * 1.55;
           }
         } else if (p.lane === 1) {
-          if (u < 0.65) {
-            const k = u / 0.65; x = -0.2 + Math.sin(k * 3) * 0.4; z = -6.5 + k * 6.3; y = H_1F + 1.5 + k * 0.5;
+          // A second low-level path feeds the central court before warm air leaves high.
+          if (u < 0.58) {
+            const k = u / 0.58;
+            x = -7.3 + k * 7.2; z = 4.45 - k * 3.7;
+            y = H_1F + 0.62 + k * 0.45;
           } else {
-            const k = (u - 0.65) / 0.35; x = -0.1; z = -0.2 + Math.cos(k * 4) * 0.25; y = H_1F + 2.0 + k * 4.8;
+            const k = (u - 0.58) / 0.42;
+            x = 0.0; z = 0.75 - k * 1.2;
+            y = H_1F + 1.07 + k * 1.85;
           }
         } else {
-          if (u < 0.5) {
-            const k = u / 0.5; x = -7.5 + k * 7.2; z = 0.2; y = 1.4 + k * 0.8;
+          // Ground-level breeze enters at the SW edge of the open stilt garden.
+          if (u < 0.58) {
+            const k = u / 0.58;
+            x = -8.0 + k * 7.0; z = 4.8 - k * 4.2;
+            y = 0.72 + k * 0.32;
           } else {
-            const k = (u - 0.5) / 0.5; x = -0.3 + Math.sin(k * 5) * 0.3; z = 0.2 + Math.cos(k * 5) * 0.3; y = 2.2 + k * 6.3;
+            const k = (u - 0.58) / 0.42;
+            x = -1.0 + k * 1.0; z = 0.6 - k * 0.4;
+            y = 1.04 + k * 2.0;
           }
         }
         p.mesh.position.set(x, y, z);
