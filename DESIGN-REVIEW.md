@@ -43,6 +43,7 @@ Each pass follows **Context → Direction → Action → Success → Growth**. R
 - [x] Restore desktop mouse-look when the user clicks the canvas after Escape releases pointer lock; clear held movement on window blur.
 - [x] Restore browser pinch-zoom accessibility by removing the restrictive viewport scale lock.
 - [x] Add a GitHub Actions workflow to run source validation on pushes and pull requests.
+- [x] Execute the automated GitHub Actions source-validation workflow successfully on the corrected validator revision.
 - [x] Add a Node-based source validator for duplicate IDs, DOM references, module syntax and key design/interaction invariants.
 - [x] Prevent Walk-mode keyboard controls from hijacking focused buttons and form controls; prevent movement keys from scrolling the page.
 - [x] Make the Layers & Sun control a semantic button with an announced expanded/collapsed state.
