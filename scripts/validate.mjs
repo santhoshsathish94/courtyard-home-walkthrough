@@ -23,4 +23,4 @@ assert.match(html, /requestPointerLock\?\.\(\)/, 'Desktop Walk mode must support
 assert.match(html, /width=device-width, initial-scale=1\.0/, 'Mobile zoom must remain enabled');
 
 console.log('Courtyard walkthrough validation passed.');
-console.log(\`Checked \${ids.length} unique IDs, \${new Set(referencedIds).size} DOM references, module syntax and key interaction invariants.\`);
+console.log('Checked ' + ids.length + ' unique IDs, ' + new Set(referencedIds).size + ' DOM references, module syntax and key interaction invariants.');
