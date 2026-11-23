@@ -1054,13 +1054,15 @@
     addSlopedWaterRun(grpGF, 7.76, 7.86, -5.12, 4.58, 0.128, 0.078, drainWater);
     // East service branch receives the first-floor balcony outlet and enters the inspection chamber.
     addBox(grpGF, 6.72, 7.92, 0.035, 0.115, 4.58, 4.82, drainStone, false, false, true);
-    addSlopedWaterRunX(grpGF, 6.78, 7.86, 4.64, 4.76, 0.060, 0.078, drainWater);
+    // Overlap the east collector slightly so the SE recharge branch has no open gap.
+    addSlopedWaterRunX(grpGF, 6.78, 7.86, 4.54, 4.76, 0.060, 0.078, drainWater);
     // Courtyard-tree basin overflow to the same planted edge channel.
     addBox(grpGF, 1.22, 1.42, 0.025, 0.105, -0.15, 3.55, drainStone, false, false, true);
     addSlopedWaterRun(grpGF, 1.275, 1.365, -0.08, 3.48, 0.118, 0.108, drainWater);
     // Link courtyard overflow to the planted recharge garden with a serviceable surface channel.
     addBox(grpGF, 1.32, 5.82, 0.025, 0.105, 3.42, 3.62, drainStone, false, false, true);
-    addSlopedWaterRunX(grpGF, 1.38, 5.76, 3.48, 3.56, 0.124, 0.094, drainWater);
+    // Match the courtyard overflow outlet level at the branch junction, then fall toward recharge.
+    addSlopedWaterRunX(grpGF, 1.38, 5.76, 3.48, 3.56, 0.108, 0.094, drainWater);
     // Recharge garden / inspection sump at the east-south corner.
     addBox(grpGF, 5.45, 7.15, 0.025, 0.16, 3.65, 5.05, MAT.soil, false, false, true);
     addBox(grpGF, 5.65, 6.95, 0.16, 0.20, 3.85, 4.85, drainStone, false, false, true);
