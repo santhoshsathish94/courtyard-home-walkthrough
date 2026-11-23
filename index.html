@@ -220,7 +220,7 @@
       </div>
     </div>
     <canvas id="plan-canvas" width="590" height="440"></canvas>
-    <div class="sub">West road at left · Entrance thinnai + drinking-water point · natural-stone floor zones · open-to-sky nadumuttam · drainage paths are indicative</div>
+    <div class="sub">Plot sides shown as N 51 ft · S 46 ft · W/E 33 ft; boundary shape is schematic, not a survey · west road at left · open-to-sky nadumuttam · drainage paths are indicative</div>
   </div>
 
   <script type="module">
@@ -1334,6 +1334,8 @@
       ctx.fillStyle = '#91a196'; ctx.font = '12px sans-serif'; ctx.textAlign = 'center';
       ctx.fillText('NORTH (51 ft)', W / 2, 16);
       ctx.fillText('SOUTH (46 ft)', W / 2, H - 6);
+      ctx.fillText('WEST (33 ft)', 58, H / 2);
+      ctx.fillText('EAST (33 ft)', W - 58, H / 2);
 
       if (planLevel === 0) {
         rect(-8.4, 8.2, -5.5, 5.5, 'rgba(83,122,67,0.35)', '#6ea862', 'Open Stilt Garden');
