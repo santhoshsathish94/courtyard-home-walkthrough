@@ -16,8 +16,10 @@ Each pass follows **Context → Direction → Action → Success → Growth**. R
 - [x] Replace broad terrace roof wings with one selective east service eave.
 - [x] Set the eave fall toward its east collection gutter.
 - [x] Align gutter, downpipe and first-floor south-east balcony channel.
+- [x] Connect the terrace east collector into the eave gutter at the downpipe drop.
 - [x] Extend the downpipe to the ground-level inspection chamber and recharge garden.
 - [x] Keep the central open-to-sky courtyard unobstructed.
+- [x] Connect the courtyard-tree basin overflow to the planted recharge garden with a visible surface channel.
 - [ ] Confirm real roof catchments, gradients, gutter/downpipe sizing, overflow and recharge capacity with a local engineer after site levels and rainfall design data are known.
 
 ### Pass 3 — Compound wall and materials
@@ -35,6 +37,8 @@ Each pass follows **Context → Direction → Action → Success → Growth**. R
 
 ### Pass 5 — Final review and release
 - [x] Run source-level review of the roof/eave, solar, compound wall, balcony drain, downpipe and recharge geometry references.
+- [x] Add compass-plan indicators for the east eave, ground collector channels and recharge garden.
+- [x] Display all four stated boundary side lengths and label the boundary geometry as schematic, not surveyed.
 - [x] Compile-check the module script after removing its three import declarations; JavaScript syntax passed.
 - [ ] Inspect orbit, walk and plan modes at ground, first-floor and terrace levels in a real browser.
 - [ ] Check rendered geometry for clashes, gaps, floating objects and incorrect labels.
@@ -60,12 +64,13 @@ The UI labels the plot as **W33 · S46 · E33 · N51 ft** and **1,620 sq ft**, w
 
 ## Current rainwater concept
 
-1. Selective east eave drains to the east gutter.
-2. Gutter discharges to the east service downpipe.
+1. Selective east eave drains to the east gutter and terrace east collector.
+2. Terrace collector joins the gutter at the east service downpipe.
 3. South-east first-floor balcony channel joins the same downpipe.
 4. Downpipe discharges into a covered ground-level inspection chamber.
 5. Chamber is adjacent to the planted recharge garden and connected ground channel.
-6. Ground channels and the open courtyard basin remain separate conceptual collection paths; their final interconnection and overflow must be designed from actual levels.
+6. The open courtyard-tree basin overflow now has a separate visible surface channel to the recharge garden.
+7. North perimeter collector turns down the east edge; final gradients, separation of clean roof water from greywater, and overflow must be designed from actual levels.
 
 ## Important limitations
 
