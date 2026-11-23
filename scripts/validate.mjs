@@ -29,6 +29,10 @@ assert.match(html, /Rain hoods specifically protect the low SW inlet/, 'Low and 
 assert.match(html, /z = -3\.65 - k \* 1\.25/, 'Northbound airflow must reach the north high-level exhaust');
 assert.match(html, /z = 0\.75 \+ k \* 4\.15/, 'Courtyard stack airflow must reach the south stairwell exhaust');
 assert.match(html, /12 columns · centreline positions need stair \/ court coordination/, 'Ground plan must expose structural coordination points');
+assert.match(html, /rect\(-7\.55, 7\.92, -5\.18, -4\.98/, 'Ground plan north drain must reach the east collector');
+assert.match(html, /SE Recharge Branch/, 'Ground plan must show the SE recharge branch');
+assert.match(html, /Courtyard Overflow/, 'Ground plan must show courtyard overflow route');
+assert.match(html, /Open Terrace \+ Wall-top Clay Tiles/, 'Terrace plan label must match wall-top tile detail');
 assert.match(html, /SW low inlet → cross-flow → high exhaust/, 'Ventilation must be visible on the first-floor plan');
 assert.doesNotMatch(html, /addNorthRoofWing|addWestRoofWing|addSouthRoofWing/, 'Removed broad roof wings must not return');
 assert.match(html, /aria-controls="controls-body"/, 'Controls toggle must expose its controlled panel');
