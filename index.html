@@ -943,8 +943,9 @@
         slopeSign < 0 ? x0 - 0.08 : x1 + 0.22,
         roofY - 0.20, roofY - 0.08, z0 - 0.12, z1 + 0.12, MAT.granite, false);
     }
-    addPitchedTileWing(-7.45, -1.85, -5.45, 5.45, -1);
-    addPitchedTileWing(1.85, 7.45, -5.45, 5.45, 1);
+    // Narrow eaves only along the outer wall lines; terrace remains open.
+    addPitchedTileWing(-7.45, -6.45, -5.45, 5.45, -1);
+    addPitchedTileWing(6.45, 7.45, -5.45, 5.45, 1);
 
     // Terracotta jaali screens at the terrace's west/east edges:
     // filter low-angle sun and wind while retaining open views and ventilation.
@@ -1321,7 +1322,7 @@
         rect(1.5, 7.3, 2.0, 5.0, 'rgba(181,99,69,0.35)', '#d98a6c', 'Open Kitchen (SE)');
         rect(-1.5, 1.5, 1.8, 4.9, 'rgba(233,196,106,0.25)', '#e9c46a', 'Stairs + Jaali');
       } else {
-        rect(-7.3, 7.3, -5.0, 5.0, 'rgba(83,122,67,0.28)', '#8abf7c', 'Terrace Garden + Pitched Clay-Tile Wings');
+        rect(-7.3, 7.3, -5.0, 5.0, 'rgba(83,122,67,0.28)', '#8abf7c', 'Open Terrace + Selective Clay-Tile Wall Eaves');
         rect(-6.9, -3.3, 1.7, 4.7, 'rgba(29,43,68,0.65)', '#6f8ab8', 'Solar Canopy');
         rect(-1.5, 1.2, -1.6, 1.4, 'rgba(116,198,157,0.25)', '#74c69d', 'Open Void');
         rect(-1.5, 1.5, 1.8, 4.9, 'rgba(233,196,106,0.32)', '#e9c46a', 'Stair Head');
