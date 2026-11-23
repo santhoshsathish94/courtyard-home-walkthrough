@@ -35,7 +35,7 @@ export function drawPlan(canvas, level, opts = {}) {
   if (level === 'ground') drawGround(T, overlays);
   if (level === 'first') drawFirst(T, overlays);
   if (level === 'terrace') drawTerrace(T, overlays);
-  if (!compact) { drawGridBubbles(T); drawNorth(T, P(bx1 - 0.7, bz0 + 0.9)); drawScale(T, P(bx0 + 4.4, bz1 - 0.45)); }
+  if (!compact) { drawGridBubbles(T); drawNorth(T, P(bx1 - 0.7, bz0 + 0.9)); drawScale(T, P(bx0 + 0.5, bz1 - 0.45)); }
   if (opts.walker && opts.walker.level === level) drawWalker(T, opts.walker);
   if (!compact) drawLegend(T, level, side, side ? [planW, 0, legend, H] : [0, planH, W, legend], overlays);
   ctx.restore();
@@ -127,9 +127,14 @@ function drawFurniture(T, level) {
 function roomLabel(T, r) {
   const a = D.roomArea(r), cx = (r.x0 + r.x1) / 2, cz = (r.z0 + r.z1) / 2, small = Math.min(r.x1 - r.x0, r.z1 - r.z0) < 1.9;
   const dims = `${D.fmtFtIn(r.x1 - r.x0)} × ${D.fmtFtIn(r.z1 - r.z0)}`;
-  text(T, small ? r.name.replace(' alcove', '') : r.name, cx, cz - 0.17, { size: small ? 0.11 : 0.15, bg: 'rgba(247,242,231,0.8)' });
-  if (!T.compact) text(T, small ? `${a.toFixed(1)} m²` : `${a.toFixed(1)} m² · ${sqft(a)} ft²`, cx, cz + 0.06, { size: small ? 0.095 : 0.105, weight: '500', color: C.soft });
-  if (!T.compact && !small) text(T, dims, cx, cz + 0.25, { size: 0.095, weight: '500', color: C.soft });
+  const name = small ? r.name.replace(' alcove', '') : r.name, words = name.split(' ');
+  // Narrow rooms: break two-word names onto two lines so neighbours do not collide.
+  if (small && words.length === 2 && r.x1 - r.x0 < 1.9) {
+    text(T, words[0], cx, cz - 0.3, { size: 0.11, bg: 'rgba(247,242,231,0.8)' });
+    text(T, words[1], cx, cz - 0.1, { size: 0.11, bg: 'rgba(247,242,231,0.8)' });
+  } else text(T, name, cx, cz - 0.17, { size: small ? 0.11 : 0.15, bg: 'rgba(247,242,231,0.8)' });
+  if (!T.compact) text(T, small ? `${a.toFixed(1)} m²` : `${a.toFixed(1)} m² · ${sqft(a)} ft²`, cx, cz + 0.1, { size: small ? 0.095 : 0.105, weight: '500', color: C.soft });
+  if (!T.compact && !small) text(T, dims, cx, cz + 0.28, { size: 0.095, weight: '500', color: C.soft });
 }
 
 // ------------------------------------------------------------------ site ----

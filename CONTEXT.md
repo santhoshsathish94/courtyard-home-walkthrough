@@ -174,7 +174,12 @@ Cycle 1 numbers were revised once the validator and the browser walk exposed con
   - The resume overlay hid "Exit walk".
   - Walking speed depended on frame rate: at 2 fps it was 10× slow.
 - **Playwright** (Chromium with SwiftShader, desktop 1280×800 + Pixel 7 touch): 18/18 pass. Covered: load with no console errors, a real image, a full-screen canvas, the walk route road → gate → stair → first floor → terrace, every viewpoint at eye height, doors blocking and passing, a gate toggled by a real click or tap, plans via UI clicks, overlay and level controls, the about dialog, keyboard walking with blur stopping it, and joystick walking.
-- **Pending in this cycle:** a green GitHub Actions run, the Pages deployment, and a check of the live site.
+- **CI** (eb4ba6d): GitHub Actions "Validate courtyard walkthrough" passed. Design and source validation took 13 s; browser tests (desktop + touch phone) took 300 s on ubuntu-latest. "pages build and deployment" passed.
+- **Live site** (?v=eb4ba6d), verified in a real browser:
+  - The new build loads in about 5.5 s with no console errors (263 meshes, 35.7k triangles, 9 doors).
+  - Vendored three.js is served.
+  - Walk mode, the minimap and the plans work.
+- **Follow-up fix:** the plans had overlapping labels (two-word names in narrow rooms, and the scale bar against the airflow caption). The fix is pushed as a separate commit and verified the same way.
 
 ## Growth (carry forward)
 - **Prove a replaced check independently.** When a verification control is replaced, prove it with mutation tests. A validator that imports the subject's helpers can share its blind spots.
