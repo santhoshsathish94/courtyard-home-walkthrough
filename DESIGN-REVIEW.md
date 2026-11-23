@@ -29,10 +29,13 @@ Each pass follows **Context → Direction → Action → Success → Growth**. R
 - [ ] Confirm locally available stone type, block sizes, reclaimed timber condition and final floor finish samples before procurement.
 
 ### Pass 4 — Openings, comfort and usability
-- [x] Retain north, south, west and east window/jaali openings already represented in the model.
-- [x] Retain chajjas above exposed first-floor openings.
-- [x] Retain terrace jaali screens and open courtyard ventilation.
-- [ ] Review daylight, privacy, cross-ventilation and wind-driven rain on site with actual orientation, neighboring buildings and seasonal wind data.
+- [x] Add a dedicated low-level terracotta-jaali inlet at the south-west corner of the first-floor plan.
+- [x] Add high-level jaali exhaust openings at the north side and stairwell to express warm-air escape above occupied level.
+- [x] Rework breeze-path particles to show low SW entry, cross-room movement and rising exhaust; keep this as a conceptual airflow illustration, not CFD.
+- [x] Keep existing shaded window openings and courtyard void; preserve daylight and cross-ventilation paths.
+- [x] Add two visibly hinged inward-opening timber gate leaves and stone gate piers at the west-road compound entrance.
+- [ ] Check inlet/outlet free area, insect screens, rain protection, privacy and actual prevailing wind with an architect on site.
+- [ ] Review daylight, privacy, cross-ventilation and wind-driven rain with actual neighbouring buildings and seasonal wind data.
 - [ ] Walk through every room and verify door swings, furniture clearances, stair comfort, child safety and maintenance access against measured dimensions.
 
 ### Pass 5 — Final review and release
