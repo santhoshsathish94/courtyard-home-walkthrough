@@ -45,6 +45,7 @@ Each pass follows **Context → Direction → Action → Success → Growth**. R
 - [ ] Check inlet/outlet free area, insect screens, rain protection, privacy and actual prevailing wind with an architect on site.
 - [ ] Review daylight, privacy, cross-ventilation and wind-driven rain with actual neighbouring buildings and seasonal wind data.
 - [ ] Walk through every room and verify door swings, furniture clearances, stair comfort, child safety and maintenance access against measured dimensions.
+- [ ] Check stair riser/tread dimensions, landing headroom, handrails/guards and the full circulation route in a browser walkthrough; current stair geometry is conceptual only.
 
 ### Pass 5 — Final review and release
 - [x] Run source-level review of the wall-top tile caps, SW low-level inlets, high-level exhausts, entrance gate, surface drains and recharge geometry.
@@ -65,6 +66,7 @@ Each pass follows **Context → Direction → Action → Success → Growth**. R
 - [ ] Verify the published GitHub Pages build after the final commit; automated page access was unavailable during this review.
 - [x] Show the 3 × 4 conceptual column grid on the ground plan, highlighting the centreline positions for review.
 - [ ] Resolve structural coordination: the 12-column grid places centreline columns at the courtyard edge and stair opening; verify these against actual slab openings and stair geometry before accepting the beam layout.
+- [x] Identify and flag the definite conceptual clash at the ground-floor stair landing: the centre column at (X=0, Z=4.85) intersects the landing footprint. Keep the column as an unresolved warning marker; do not move or remove it without a coordinated structural redesign.
 - [ ] Obtain architect/structural/civil review before treating the model as buildable.
 
 ## Critical dimension check before any build-ready review
