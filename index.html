@@ -937,8 +937,8 @@
 
     // =========================================================================
     // 7B. CLAY-TILE ROOF + RECLAIMED TIMBER + JAALI — ARCHITECTURAL PASS
-    // Two pitched roof wings shade the terrace edges while preserving the
-    // open-to-sky nadumuttam. This is a visual concept, not a roof framing design.
+    // One selective east service eave shades the exposed wall and preserves the
+    // open terrace and nadumuttam. This is a visual concept, not a roof framing design.
     // =========================================================================
     const roofY = H_TF + 3.05;
     const roofWingMat = new THREE.MeshStandardMaterial({
@@ -961,9 +961,9 @@
       }
       // Fascia and gutter sit on the east low edge, aligned with the service downpipe.
       const fascia = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.22, depth + 0.24), MAT.teak);
-      fascia.position.set(x1 + 0.12, roofY - 0.02, (z0 + z1) / 2);
+      fascia.position.set(x1 + 0.12, roofY + 0.12, (z0 + z1) / 2);
       fascia.castShadow = true; grpTF.add(fascia);
-      addBox(grpTF, x1 + 0.02, x1 + 0.18, roofY - 0.20, roofY - 0.08,
+      addBox(grpTF, x1 + 0.02, x1 + 0.18, roofY + 0.12, roofY + 0.24,
         z0 - 0.12, z1 + 0.12, MAT.granite, false);
     }
     // One selective eave protects the east service wall and feeds its rainwater downpipe.
@@ -1037,7 +1037,7 @@
     // the ground-level inspection/recharge point. It is deliberately visible.
     const rainPipeMat = new THREE.MeshStandardMaterial({ color: 0x8c9b8d, roughness: 0.72, metalness: 0.18 });
     // Continue the service downpipe up to the east eave gutter (not just to first-floor level).
-    const rainPipeHeight = roofY - 0.08;
+    const rainPipeHeight = roofY + 0.24;
     const rainPipe = new THREE.Mesh(new THREE.CylinderGeometry(0.075, 0.075, rainPipeHeight, 12), rainPipeMat);
     // Pipe centre is aligned directly below the east gutter collection line.
     rainPipe.position.set(7.55, rainPipeHeight / 2, 4.55);
