@@ -160,11 +160,11 @@
       </div>
 
       <div class="card controls-panel" id="controls-panel">
-        <div class="panel-toggle" id="controls-toggle">
+        <button class="panel-toggle" id="controls-toggle" type="button" aria-expanded="true" aria-controls="controls-body">
           <span>Layers & Sun</span>
-          <span id="controls-arrow">▾</span>
-        </div>
-        <div class="controls-body">
+          <span id="controls-arrow" aria-hidden="true">▾</span>
+        </button>
+        <div class="controls-body" id="controls-body">
           <div class="pill-row">
             <button class="lvl-btn active" data-lvl="all">All</button>
             <button class="lvl-btn" data-lvl="gf">Ground</button>
@@ -236,6 +236,7 @@
     function setControlsCollapsed(collapsed) {
       controlsPanel.classList.toggle('collapsed', collapsed);
       controlsArrow.textContent = collapsed ? '▸' : '▾';
+      document.getElementById('controls-toggle').setAttribute('aria-expanded', String(!collapsed));
     }
     document.getElementById('controls-toggle').addEventListener('click', () => {
       setControlsCollapsed(!controlsPanel.classList.contains('collapsed'));
@@ -1193,6 +1194,14 @@
     });
 
     window.addEventListener('keydown', (e) => {
+      const target = e.target;
+      const isInteractive = target instanceof HTMLElement &&
+        (target.matches('button, input, textarea, select, [contenteditable="true"]') ||
+         target.closest('button, input, textarea, select, [contenteditable="true"]'));
+      if (isInteractive) return;
+
+      const movementKey = ['KeyW', 'KeyA', 'KeyS', 'KeyD', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space'];
+      if (walkMode && movementKey.includes(e.code)) e.preventDefault();
       keys[e.code] = true;
       if (e.code === 'KeyF') setWalkMode(!walkMode);
       if (e.code === 'KeyP') togglePlan();
