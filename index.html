@@ -1012,6 +1012,9 @@
     // Courtyard-tree basin overflow to the same planted edge channel.
     addBox(grpGF, 1.22, 1.42, 0.025, 0.105, -0.15, 3.55, drainStone, false, false, true);
     addBox(grpGF, 1.275, 1.365, 0.106, 0.124, -0.08, 3.48, drainWater, false, false, false);
+    // Link courtyard overflow to the planted recharge garden with a serviceable surface channel.
+    addBox(grpGF, 1.32, 5.82, 0.025, 0.105, 3.42, 3.62, drainStone, false, false, true);
+    addBox(grpGF, 1.38, 5.76, 0.106, 0.124, 3.48, 3.56, drainWater, false, false, false);
     // Recharge garden / inspection sump at the east-south corner.
     addBox(grpGF, 5.45, 7.15, 0.025, 0.16, 3.65, 5.05, MAT.soil, false, false, true);
     addBox(grpGF, 5.65, 6.95, 0.16, 0.20, 3.85, 4.85, drainStone, false, false, true);
@@ -1033,6 +1036,9 @@
     addBox(grpTF, -7.12, 7.12, H_TF + 0.096, H_TF + 0.112, -4.98, -4.90, drainWater, false, false, false);
     addBox(grpTF, 7.02, 7.22, H_TF + 0.012, H_TF + 0.095, -4.82, 4.78, drainStone, false, false, true);
     addBox(grpTF, 7.08, 7.16, H_TF + 0.096, H_TF + 0.112, -4.76, 4.70, drainWater, false, false, false);
+    // Join the east terrace collector to the eave gutter at the downpipe drop.
+    addBox(grpTF, 7.08, 7.64, H_TF + 0.012, H_TF + 0.095, 4.76, 5.02, drainStone, false, false, true);
+    addBox(grpTF, 7.14, 7.58, H_TF + 0.096, H_TF + 0.112, 4.82, 4.96, drainWater, false, false, false);
     addBox(grpTF, -1.42, 1.12, H_TF + 0.012, H_TF + 0.080, -1.50, -1.34, drainStone, false, false, true);
     addBox(grpTF, -1.36, 1.06, H_TF + 0.081, H_TF + 0.096, -1.455, -1.385, drainWater, false, false, false);
 
