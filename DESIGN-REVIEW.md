@@ -34,10 +34,12 @@ Each pass follows **Context → Direction → Action → Success → Growth**. R
 - [ ] Walk through every room and verify door swings, furniture clearances, stair comfort, child safety and maintenance access against measured dimensions.
 
 ### Pass 5 — Final review and release
-- [ ] Inspect orbit, walk and plan modes at ground, first-floor and terrace levels.
-- [ ] Check all geometry for clashes, gaps, floating objects and incorrect labels.
-- [ ] Verify all drainage paths visually and confirm no ponding or road discharge is implied.
-- [ ] Verify the published GitHub Pages build after the final commit.
+- [x] Run source-level review of the roof/eave, solar, compound wall, balcony drain, downpipe and recharge geometry references.
+- [x] Compile-check the module script after removing its three import declarations; JavaScript syntax passed.
+- [ ] Inspect orbit, walk and plan modes at ground, first-floor and terrace levels in a real browser.
+- [ ] Check rendered geometry for clashes, gaps, floating objects and incorrect labels.
+- [ ] Verify drainage visually and confirm no ponding or road discharge is implied.
+- [ ] Verify the published GitHub Pages build after the final commit; automated page access was unavailable during this review.
 - [ ] Obtain architect/structural/civil review before treating the model as buildable.
 
 ## Critical dimension check before any build-ready review
