@@ -49,6 +49,7 @@ Each pass follows **Context → Direction → Action → Success → Growth**. R
 ### Pass 5 — Final review and release
 - [x] Run source-level review of the wall-top tile caps, SW low-level inlets, high-level exhausts, entrance gate, surface drains and recharge geometry.
 - [x] Add compass-plan indicators for wall-top tile caps, ground surface channels and recharge garden.
+- [x] Align ground-plan north/east channel extents with the 3D geometry and show the SE branch plus courtyard overflow/recharge link.
 - [x] Display all four stated boundary side lengths and label the boundary geometry as schematic, not surveyed.
 - [x] Compile-check the module script after removing its three import declarations; JavaScript syntax passed.
 - [x] Restore desktop mouse-look when the user clicks the canvas after Escape releases pointer lock; clear held movement on window blur.
