@@ -13,13 +13,13 @@ Each pass follows **Context → Direction → Action → Success → Growth**. R
 - [x] Use a restrained natural palette: local rubble stone, lime finish, natural stone floors, terracotta and reclaimed timber.
 
 ### Pass 2 — Roof and rainwater
-- [x] Replace broad terrace roof wings with one selective east service eave.
-- [x] Set the eave fall toward its east collection gutter.
-- [x] Align gutter, downpipe and first-floor south-east balcony channel.
-- [x] Connect the terrace east collector into the eave gutter at the downpipe drop.
-- [x] Extend the downpipe to the ground-level inspection chamber and recharge garden.
-- [x] Keep the central open-to-sky courtyard unobstructed.
-- [x] Connect the courtyard-tree basin overflow to the planted recharge garden with a visible surface channel.
+- [x] Remove the continuous east roof deck, long rafters, fascia, overhead gutter and tall downpipe.
+- [x] Replace them with individual clay-tile rain caps resting directly on the exposed east service wall, supported by short local holders.
+- [x] Keep the terrace predominantly open and the central nadumuttam unobstructed.
+- [x] Route rain from the wall-top tile edge directly outward to a shallow exterior stone drip channel and splash apron.
+- [x] Remove the redundant terrace perimeter gutter run; retain only the small open-courtyard sill channel.
+- [x] Add subtle visible falls to surface-water runs so water is not represented as a flat stagnant strip.
+- [x] Connect the courtyard-tree basin overflow to the planted recharge garden with a shallow surface channel.
 - [ ] Confirm real roof catchments, gradients, gutter/downpipe sizing, overflow and recharge capacity with a local engineer after site levels and rainfall design data are known.
 
 ### Pass 3 — Compound wall and materials
@@ -74,13 +74,11 @@ The UI labels the plot as **W33 · S46 · E33 · N51 ft** and **1,620 sq ft**, w
 
 ## Current rainwater concept
 
-1. Selective east eave drains to the east gutter and terrace east collector.
-2. Terrace collector joins the gutter at the east service downpipe.
-3. South-east first-floor balcony channel joins the same downpipe.
-4. Downpipe discharges into a covered ground-level inspection chamber.
-5. Chamber is adjacent to the planted recharge garden and connected ground channel.
-6. The open courtyard-tree basin overflow now has a separate visible surface channel to the recharge garden.
-7. North perimeter collector turns down the east edge; final gradients, separation of clean roof water from greywater, and overflow must be designed from actual levels.
+1. Individual clay tiles sit directly on short holders at the top of the exposed east service wall; there is no continuous roof deck or long rafter frame.
+2. Rain falls directly from the outward-sloping tile edges onto the exterior splash apron and shallow east surface channel.
+3. The east surface channel has a small conceptual fall toward the south-east planted recharge area; the courtyard overflow has a separate shallow fall toward the same garden.
+4. First-floor balcony and courtyard sill channels remain illustrative local surface drains; their actual discharge and separation from greywater must be designed from surveyed levels.
+5. Final falls, channel cross-sections, splash control, overflow route and recharge capacity must be verified with site levels and local rainfall data.
 
 ## Important limitations
 
