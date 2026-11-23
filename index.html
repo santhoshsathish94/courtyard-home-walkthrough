@@ -1414,6 +1414,14 @@
         rect(7.72, 7.92, -5.0, 4.65, 'rgba(72,159,181,0.25)', '#489fb5', 'East-to-Recharge Falling Channel');
         rect(5.45, 7.15, 3.65, 5.05, 'rgba(93,161,73,0.30)', '#74c69d', 'Recharge Garden');
         rect(-1.5, 1.5, 1.8, 4.9, 'rgba(233,196,106,0.28)', '#e9c46a', 'Stairs ↑');
+        // Show the conceptual 3 × 4 column grid so stair/courtyard coordination is visible.
+        for (const cx of [-7.15, 0, 7.15]) for (const cz of [-4.85, -1.6, 1.5, 4.85]) {
+          ctx.beginPath(); ctx.arc(sx(cx), sz(cz), 5, 0, Math.PI * 2);
+          ctx.fillStyle = cx === 0 ? '#e9c46a' : '#d7ded8'; ctx.fill();
+          ctx.strokeStyle = '#27342e'; ctx.lineWidth = 1; ctx.stroke();
+        }
+        ctx.fillStyle = '#e9c46a'; ctx.font = 'bold 11px sans-serif'; ctx.textAlign = 'left';
+        ctx.fillText('12 columns · centreline positions need stair / court coordination', 18, H - 26);
       } else if (planLevel === 1) {
         rect(-7.3, -3.3, -5.0, -3.0, 'rgba(160,135,100,0.30)', '#b79a70', 'Library (NW)');
         rect(-7.3, -3.3, -3.0, -0.3, 'rgba(85,117,130,0.36)', '#9bb5bf', 'Kids (W)');
