@@ -40,6 +40,10 @@ Each pass follows **Context → Direction → Action → Success → Growth**. R
 - [ ] Verify the published GitHub Pages build after the final commit.
 - [ ] Obtain architect/structural/civil review before treating the model as buildable.
 
+## Critical dimension check before any build-ready review
+
+The UI labels the plot as **W33 · S46 · E33 · N51 ft** and **1,620 sq ft**, while the current 3D compound-wall envelope is approximately **16.7 m × 11.2 m** (about **2,020 sq ft** as a bounding rectangle). The model footprint and room proportions therefore must not be treated as dimensionally validated. Reconcile the actual four boundary lengths, corner angles/setbacks and surveyed plot area before resizing or issuing plans; do not distort the current room layout by guessing.
+
 ## Current conceptual material map
 
 | Zone | Proposed finish |
