@@ -15,10 +15,14 @@ Each pass follows **Context → Direction → Action → Success → Growth**. R
 ### Pass 2 — Roof and rainwater
 - [x] Remove the continuous east roof deck, long rafters, fascia, overhead gutter and tall downpipe.
 - [x] Replace them with individual clay-tile rain caps resting directly on the exposed east service wall, supported by short local holders.
+- [x] Set tile-holder elevation to the actual 0.95 m terrace parapet top rather than the erroneous first-floor wall height.
 - [x] Keep the terrace predominantly open and the central nadumuttam unobstructed.
 - [x] Route rain from the wall-top tile edge directly outward to a shallow exterior stone drip channel and splash apron.
 - [x] Remove the redundant terrace perimeter gutter run; retain only the small open-courtyard sill channel.
 - [x] Add subtle visible falls to surface-water runs so water is not represented as a flat stagnant strip.
+- [x] Correct drainage fall orientation: north collector falls east, east collector falls south, and courtyard overflow falls toward the recharge garden.
+- [x] Join the north and east surface channels at the north-east corner and add a falling branch into the recharge garden.
+- [x] Remove a duplicated terrace courtyard channel and replace flat blue strips with sloped water surfaces where the run has a defined direction.
 - [x] Connect the courtyard-tree basin overflow to the planted recharge garden with a shallow surface channel.
 - [ ] Confirm exposed wall locations, tile projection, surface-channel falls, splash control, overflow and recharge capacity with a local engineer after site levels and rainfall design data are known.
 
@@ -33,8 +37,10 @@ Each pass follows **Context → Direction → Action → Success → Growth**. R
 - [x] Add high-level jaali exhaust openings at the north side and stairwell to express warm-air escape above occupied level.
 - [x] Rework breeze-path particles to show low SW entry, cross-room movement and rising exhaust; keep this as a conceptual airflow illustration, not CFD.
 - [x] Add matching low-inlet and high-exhaust markers and airflow direction note to the first-floor compass plan.
+- [x] Add rain hoods above the low SW inlet and high-level exhausts without closing the jaali openings.
 - [x] Keep existing shaded window openings and courtyard void; preserve daylight and cross-ventilation paths.
 - [x] Add two visibly hinged inward-opening timber gate leaves and stone gate piers at the west-road compound entrance.
+- [x] Add small projecting rain hoods directly above the SW low-level inlet and both high-level exhaust openings.
 - [ ] Check inlet/outlet free area, insect screens, rain protection, privacy and actual prevailing wind with an architect on site.
 - [ ] Review daylight, privacy, cross-ventilation and wind-driven rain with actual neighbouring buildings and seasonal wind data.
 - [ ] Walk through every room and verify door swings, furniture clearances, stair comfort, child safety and maintenance access against measured dimensions.
@@ -52,9 +58,10 @@ Each pass follows **Context → Direction → Action → Success → Growth**. R
 - [x] Prevent Walk-mode keyboard controls from hijacking focused buttons and form controls; prevent movement keys from scrolling the page.
 - [x] Make the Layers & Sun control a semantic button with an announced expanded/collapsed state.
 - [ ] Inspect orbit, walk and plan modes at ground, first-floor and terrace levels in a real browser.
-- [ ] Check rendered geometry for clashes, gaps, floating objects and incorrect labels.
+- [ ] Check rendered geometry for clashes, gaps, floating objects and incorrect labels, especially the 12-column grid against stair and courtyard openings.
 - [ ] Verify drainage visually and confirm no ponding or road discharge is implied.
 - [ ] Verify the published GitHub Pages build after the final commit; automated page access was unavailable during this review.
+- [ ] Resolve structural coordination: the 12-column grid places centreline columns at the courtyard edge and stair opening; verify these against actual slab openings and stair geometry before accepting the beam layout.
 - [ ] Obtain architect/structural/civil review before treating the model as buildable.
 
 ## Critical dimension check before any build-ready review
@@ -76,8 +83,8 @@ The UI labels the plot as **W33 · S46 · E33 · N51 ft** and **1,620 sq ft**, w
 ## Current rainwater concept
 
 1. Individual clay tiles sit directly on short holders at the top of the exposed east service wall; there is no continuous roof deck, long rafter frame, fascia, overhead gutter or tall downpipe.
-2. Rain falls directly from the outward-sloping tile edges onto the exterior splash apron and shallow east surface channel.
-3. The east surface channel has a small conceptual fall toward the south-east planted recharge area; the courtyard overflow has a separate shallow fall toward the same garden.
+2. Tile holders now sit at the terrace parapet top (0.95 m above terrace level). Rain falls directly from the outward-sloping tile edges onto the exterior splash apron and shallow east surface channel.
+3. The north collector falls east into the east-side channel; the east channel falls south into a short branch to the south-east recharge garden. The courtyard overflow has a separate shallow fall toward the same garden.
 4. First-floor balcony and courtyard sill channels remain illustrative local surface drains; their actual discharge and separation from greywater must be designed from surveyed levels.
 5. Final falls, channel cross-sections, splash control, overflow route and recharge capacity must be verified with site levels and local rainfall data.
 
