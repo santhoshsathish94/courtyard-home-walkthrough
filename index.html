@@ -1011,21 +1011,36 @@
       transparent: true, opacity: 0.72
     });
 
+    function addSlopedWaterRun(parent, x0, x1, z0, z1, yStart, yEnd, mat) {
+      const geometry = new THREE.BufferGeometry();
+      geometry.setAttribute('position', new THREE.Float32BufferAttribute([
+        x0, yStart, z0, x1, yStart, z0,
+        x0, yEnd, z1, x1, yEnd, z1
+      ], 3));
+      geometry.setIndex([0, 2, 1, 1, 2, 3]);
+      geometry.computeVertexNormals();
+      const mesh = new THREE.Mesh(geometry, mat);
+      mesh.material.side = THREE.DoubleSide;
+      mesh.receiveShadow = true;
+      parent.add(mesh);
+      return mesh;
+    }
+
     // Ground: narrow stone-lined channels follow the planted perimeter.
     // A north channel turns down the east edge and terminates at a planted soak zone.
     addBox(grpGF, -7.55, 7.35, 0.035, 0.115, -5.18, -4.98, drainStone, false, false, true);
     addBox(grpGF, -7.55, 7.35, 0.116, 0.135, -5.12, -5.04, drainWater, false, false, false);
-    addBox(grpGF, 7.08, 7.30, 0.035, 0.115, -5.0, 4.65, drainStone, false, false, true);
-    addBox(grpGF, 7.14, 7.24, 0.116, 0.135, -4.92, 4.58, drainWater, false, false, false);
+    addBox(grpGF, 7.70, 7.92, 0.035, 0.115, -5.0, 4.65, drainStone, false, false, true);
+    addSlopedWaterRun(grpGF, 7.76, 7.86, -4.92, 4.58, 0.128, 0.078, drainWater);
     // East service branch receives the first-floor balcony outlet and enters the inspection chamber.
-    addBox(grpGF, 7.08, 7.72, 0.035, 0.115, 4.82, 5.02, drainStone, false, false, true);
-    addBox(grpGF, 7.14, 7.66, 0.116, 0.135, 4.87, 4.97, drainWater, false, false, false);
+    addBox(grpGF, 7.62, 7.92, 0.035, 0.115, 4.82, 5.02, drainStone, false, false, true);
+    addSlopedWaterRun(grpGF, 7.68, 7.86, 4.84, 4.98, 0.078, 0.055, drainWater);
     // Courtyard-tree basin overflow to the same planted edge channel.
     addBox(grpGF, 1.22, 1.42, 0.025, 0.105, -0.15, 3.55, drainStone, false, false, true);
     addBox(grpGF, 1.275, 1.365, 0.106, 0.124, -0.08, 3.48, drainWater, false, false, false);
     // Link courtyard overflow to the planted recharge garden with a serviceable surface channel.
     addBox(grpGF, 1.32, 5.82, 0.025, 0.105, 3.42, 3.62, drainStone, false, false, true);
-    addBox(grpGF, 1.38, 5.76, 0.106, 0.124, 3.48, 3.56, drainWater, false, false, false);
+    addSlopedWaterRun(grpGF, 1.38, 5.76, 3.48, 3.56, 0.124, 0.094, drainWater);
     // Recharge garden / inspection sump at the east-south corner.
     addBox(grpGF, 5.45, 7.15, 0.025, 0.16, 3.65, 5.05, MAT.soil, false, false, true);
     addBox(grpGF, 5.65, 6.95, 0.16, 0.20, 3.85, 4.85, drainStone, false, false, true);
@@ -1055,9 +1070,8 @@
 
     // Rain from the wall-top clay caps falls directly into the shallow exterior stone channel.
     // No tall downpipe or overhead gutter is used in this conceptual detail.
-    // Covered inspection chamber at pipe foot; removable cover is serviceable.
-    addBox(grpGF, 7.05, 7.78, 0.03, 0.22, 4.35, 5.18, drainStone, false, false, true);
-    addBox(grpGF, 7.12, 7.71, 0.22, 0.25, 4.42, 5.10, MAT.granite, false, false, true);
+    // Open stone splash apron at the east wall foot; rain leaves the tile edge directly.
+    addBox(grpGF, 7.58, 8.02, 0.025, 0.09, 4.35, 5.18, drainStone, false, false, true);
 
     // =========================================================================
     // 8. AIRFLOW & SUN
