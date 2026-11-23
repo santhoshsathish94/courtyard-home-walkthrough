@@ -1,0 +1,1305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Courtyard Home — Simplified Structure · Nadumuttam · Verandahs · Terrace Garden · Stone Channels & Rainwater Harvesting</title>
+  <style>
+    :root {
+      --bg: rgba(16, 20, 18, 0.85);
+      --panel: rgba(22, 27, 24, 0.93);
+      --border: rgba(255, 255, 255, 0.15);
+      --text: #eef2ee;
+      --muted: #a6b3aa;
+      --accent: #74c69d;
+      --warm: #e9c46a;
+    }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body {
+      margin: 0; height: 100%; overflow: hidden;
+      background: #101412; color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    #canvas-wrap { position: fixed; inset: 0; }
+    canvas { display: block; width: 100%; height: 100%; touch-action: none; }
+
+    #btn-hide-ui {
+      position: fixed; top: 10px; right: 10px; z-index: 30;
+      background: rgba(16, 20, 18, 0.88); backdrop-filter: blur(10px);
+      border: 1px solid var(--border); color: var(--text);
+      border-radius: 999px; padding: 7px 12px; font-size: 12px; font-weight: 600;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.35);
+    }
+    body.ui-hidden .hud,
+    body.ui-hidden #plan-modal,
+    body.ui-hidden #touch-pad { display: none !important; }
+
+    .hud {
+      position: fixed; z-index: 10; pointer-events: none;
+      inset: 10px; display: flex; flex-direction: column; justify-content: space-between;
+    }
+    .top-stack {
+      display: flex; gap: 8px; align-items: flex-start; justify-content: space-between;
+      flex-wrap: wrap; padding-right: 92px;
+    }
+    .card {
+      pointer-events: auto; background: var(--bg); backdrop-filter: blur(10px);
+      border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+    }
+    h1 { margin: 0; font-size: 14px; font-weight: 650; display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
+    .sub { font-size: 11.5px; color: var(--muted); line-height: 1.35; margin-top: 4px; }
+    .pill-row { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 7px; }
+    button {
+      cursor: pointer; border: 1px solid var(--border); background: rgba(255,255,255,0.07);
+      color: var(--text); border-radius: 8px; padding: 6px 9px; font-size: 11.5px;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    button:hover { background: rgba(255,255,255,0.14); }
+    button.active {
+      background: rgba(116, 198, 157, 0.24); border-color: var(--accent); color: #dff7ea; font-weight: 600;
+    }
+
+    .controls-panel { max-width: 330px; }
+    .controls-panel.collapsed .controls-body { display: none; }
+    .panel-toggle {
+      display: flex; align-items: center; justify-content: space-between; gap: 10px;
+      font-size: 12px; font-weight: 600; cursor: pointer;
+    }
+    .slider-row { display: grid; grid-template-columns: 68px 1fr 42px; align-items: center; gap: 6px; margin-top: 8px; font-size: 11.5px; }
+    input[type="range"] { width: 100%; accent-color: var(--accent); }
+
+    .jumps-wrap { width: 100%; display: flex; justify-content: center; }
+    .jumps {
+      display: flex; gap: 5px; overflow-x: auto; max-width: 100%;
+      padding: 7px 9px; scrollbar-width: none; -webkit-overflow-scrolling: touch;
+    }
+    .jumps::-webkit-scrollbar { display: none; }
+    .jumps button { white-space: nowrap; flex: 0 0 auto; padding: 6px 9px; font-size: 11.5px; }
+
+    .badge {
+      display: inline-block; padding: 1px 7px; border-radius: 999px; font-size: 10.5px;
+      background: rgba(233, 196, 106, 0.18); color: var(--warm); border: 1px solid rgba(233, 196, 106, 0.35);
+    }
+    .room-readout { font-size: 11.5px; color: var(--accent); margin-top: 5px; font-weight: 600; }
+
+    #crosshair {
+      position: fixed; left: 50%; top: 50%; width: 10px; height: 10px;
+      margin: -5px 0 0 -5px; border-radius: 50%; border: 1.5px solid rgba(255,255,255,0.8);
+      pointer-events: none; z-index: 9; display: none;
+    }
+
+    #touch-pad {
+      position: fixed; left: 12px; bottom: 66px; z-index: 15;
+      display: none; grid-template-columns: repeat(3, 40px); grid-template-rows: repeat(2, 40px); gap: 4px;
+    }
+    #touch-pad.show { display: grid; }
+    #touch-pad button {
+      background: rgba(16, 20, 18, 0.8); border: 1px solid var(--border);
+      font-size: 14px; padding: 0; border-radius: 10px; user-select: none;
+    }
+
+    #plan-modal {
+      position: fixed; right: 10px; bottom: 66px; z-index: 16; width: min(92vw, 320px);
+      background: var(--panel); border: 1px solid var(--border); border-radius: 12px;
+      padding: 10px; backdrop-filter: blur(12px); display: none;
+      box-shadow: 0 14px 36px rgba(0,0,0,0.45);
+    }
+    #plan-modal.open { display: block; }
+    #plan-canvas { width: 100%; height: 210px; border-radius: 8px; background: #141916; display: block; }
+    .plan-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 12px; font-weight: 600; }
+
+    @media (max-width: 768px) {
+      .sub.hide-mobile { display: none; }
+      .main-card { padding: 8px 10px; max-width: calc(100vw - 110px); }
+      .main-card h1 { font-size: 13px; }
+      .controls-panel { width: auto; max-width: calc(100vw - 110px); padding: 7px 10px; }
+      #plan-modal { left: 50%; right: auto; transform: translateX(-50%); bottom: 64px; }
+    }
+  
+    #material-legend { position:fixed; left:12px; bottom:12px; z-index:8; max-width:270px; padding:10px 12px; border:1px solid rgba(255,255,255,.18); border-radius:12px; background:rgba(18,23,20,.88); color:#f2eee4; font-size:11px; line-height:1.5; backdrop-filter:blur(10px); pointer-events:none; }
+    #material-legend strong { display:block; color:#e9c46a; font-size:12px; margin-bottom:3px; }
+    @media(max-width:600px){ #material-legend{max-width:205px;font-size:10px;bottom:8px;left:8px;padding:8px 9px;} }
+
+</style>
+
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+      }
+    }
+  </script>
+</head>
+<body>
+  <div id="canvas-wrap"></div>
+<div id="material-legend">
+  <strong>Natural material palette</strong>
+  Kadappa stone floors · Shahabad limestone · rough granite compound wall<br>
+  Terracotta clay tiles · lime-finish walls · reclaimed timber
+</div>
+  <div id="crosshair"></div>
+  <button id="btn-hide-ui">Hide UI</button>
+
+  <div class="hud">
+    <div class="top-stack">
+      <div class="card main-card">
+        <h1>Traditional Courtyard <span class="badge">Thinnai · Water Point · Stone Floors · Nadumuttam</span></h1>
+        <div class="sub hide-mobile">
+          <b>W33·S46·E33·N51</b> · 1,620 sq ft plot (West Road) · 12-column concept · Reclaimed timber · Natural stone floors · Clay-tile roof concept · Rainwater-led landscape
+        </div>
+        <div class="pill-row">
+          <button id="btn-orbit" class="active">Orbit</button>
+          <button id="btn-walk">Walk</button>
+          <button id="btn-plan">Plan</button>
+          <button id="btn-wind" class="active">Breeze paths</button>
+        </div>
+        <div class="room-readout" id="location-label">Overview · Drag to orbit, pinch to zoom</div>
+        <div class="sub">Natural Kadappa / Kota / Shahabad stone palette · reclaimed timber · terracotta jaali · clay roof tiles. Water paths are conceptual; levels and outlets require site survey.</div>
+      </div>
+
+      <div class="card controls-panel" id="controls-panel">
+        <div class="panel-toggle" id="controls-toggle">
+          <span>Layers & Sun</span>
+          <span id="controls-arrow">▾</span>
+        </div>
+        <div class="controls-body">
+          <div class="pill-row">
+            <button class="lvl-btn active" data-lvl="all">All</button>
+            <button class="lvl-btn" data-lvl="gf">Ground</button>
+            <button class="lvl-btn" data-lvl="ff">1F Living</button>
+            <button class="lvl-btn" data-lvl="tf">Terrace</button>
+            <button id="btn-explode">Explode</button>
+          </div>
+          <div class="slider-row">
+            <span>Sun Time</span>
+            <input id="sun-time" type="range" min="6" max="18.5" step="0.25" value="9.25" />
+            <span id="sun-readout">09:15</span>
+          </div>
+          <div class="slider-row">
+            <span>Season</span>
+            <input id="sun-season" type="range" min="-1" max="1" step="0.1" value="0.2" />
+            <span id="season-readout">Equinox</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="jumps-wrap">
+      <div class="card jumps" id="jump-bar">
+        <button data-jump="overview">Overview</button>
+        <button data-jump="gf_garden">1 Ground Garden</button>
+        <button data-jump="thinnai">Entrance Thinnai & Water</button>
+        <button data-jump="courtyard">2 Courtyard</button>
+        <button data-jump="living">3 Living (N)</button>
+        <button data-jump="kitchen">4 Kitchen (SE)</button>
+        <button data-jump="pooja">5 Pooja (NE)</button>
+        <button data-jump="master">6 Master (SW · N Entry)</button>
+        <button data-jump="parents">7 Parents (E)</button>
+        <button data-jump="kids">8 Kids (W)</button>
+        <button data-jump="study">9 Library (NW)</button>
+        <button data-jump="common_bath">10 Common Bath</button>
+        <button data-jump="terrace">11 Terrace</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="touch-pad">
+    <div></div><button data-move="fwd">▲</button><div></div>
+    <button data-move="left">◀</button><button data-move="back">▼</button><button data-move="right">▶</button>
+  </div>
+
+  <div id="plan-modal">
+    <div class="plan-head">
+      <span>Compass Plan (West Road = Left)</span>
+      <div style="display:flex; gap:4px;">
+        <button class="plan-lvl" data-pl="0">G</button>
+        <button class="plan-lvl active" data-pl="1">1F</button>
+        <button class="plan-lvl" data-pl="2">T</button>
+      </div>
+    </div>
+    <canvas id="plan-canvas" width="590" height="440"></canvas>
+    <div class="sub">West road at left · Entrance thinnai + drinking-water point · natural-stone floor zones · open-to-sky nadumuttam · drainage paths are indicative</div>
+  </div>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+
+    // =========================================================================
+    // 1. UI COLLAPSE & MOBILE DEFAULTS
+    // =========================================================================
+    const controlsPanel = document.getElementById('controls-panel');
+    const controlsArrow = document.getElementById('controls-arrow');
+    function setControlsCollapsed(collapsed) {
+      controlsPanel.classList.toggle('collapsed', collapsed);
+      controlsArrow.textContent = collapsed ? '▸' : '▾';
+    }
+    document.getElementById('controls-toggle').addEventListener('click', () => {
+      setControlsCollapsed(!controlsPanel.classList.contains('collapsed'));
+    });
+    if (window.innerWidth <= 768) setControlsCollapsed(true);
+
+    const btnHideUI = document.getElementById('btn-hide-ui');
+    btnHideUI.addEventListener('click', () => {
+      const hidden = document.body.classList.toggle('ui-hidden');
+      btnHideUI.textContent = hidden ? 'Show UI' : 'Hide UI';
+    });
+
+    // =========================================================================
+    // 2. SCENE & LIGHTING
+    // =========================================================================
+    const H_GF = 0.0, H_1F = 3.20, H_TF = 6.40, SLAB_T = 0.16, WALL_H = 3.04;
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0xcfe4ee);
+    scene.fog = new THREE.FogExp2(0xcfe4ee, 0.011);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.04;
+    document.getElementById('canvas-wrap').appendChild(renderer.domElement);
+
+    const pmrem = new THREE.PMREMGenerator(renderer);
+    scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+    scene.environmentIntensity = 0.42;
+
+    const camera = new THREE.PerspectiveCamera(window.innerWidth <= 768 ? 64 : 58, window.innerWidth / window.innerHeight, 0.1, 160);
+    camera.position.set(-16.5, 11.8, 14.5);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.target.set(0, 3.6, 0);
+    controls.maxPolarAngle = Math.PI * 0.49;
+
+    scene.add(new THREE.HemisphereLight(0xeef7ff, 0x4b5d44, 0.55));
+    const sun = new THREE.DirectionalLight(0xfff4df, 2.3);
+    sun.castShadow = true;
+    sun.shadow.mapSize.set(2048, 2048);
+    sun.shadow.camera.near = 2; sun.shadow.camera.far = 65;
+    sun.shadow.camera.left = -16; sun.shadow.camera.right = 16;
+    sun.shadow.camera.top = 16; sun.shadow.camera.bottom = -16;
+    sun.shadow.bias = -0.0005;
+    scene.add(sun);
+
+    // =========================================================================
+    // 3. TRADITIONAL MATERIALS
+    // =========================================================================
+
+    // Procedural natural-material textures: visible stone grain, lime and terracotta.
+    function makeMaterialTexture(base, fleck, seed = 1, scale = 1) {
+      const c = document.createElement('canvas'); c.width = c.height = 512;
+      const ctx = c.getContext('2d');
+      ctx.fillStyle = base; ctx.fillRect(0, 0, 512, 512);
+      let n = seed;
+      const rand = () => { n = (n * 1664525 + 1013904223) >>> 0; return n / 4294967296; };
+      for (let i = 0; i < 6200; i++) {
+        const x = rand() * 512, y = rand() * 512;
+        const r = 0.35 + rand() * (scale * 2.2);
+        ctx.globalAlpha = 0.10 + rand() * 0.24;
+        ctx.fillStyle = fleck;
+        ctx.beginPath(); ctx.ellipse(x, y, r * 1.8, r, rand() * Math.PI, 0, Math.PI * 2); ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+      const tex = new THREE.CanvasTexture(c);
+      tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+      tex.repeat.set(2.5, 2.5);
+      tex.colorSpace = THREE.SRGBColorSpace;
+      return tex;
+    }
+    const TEX = {
+      kadappa: makeMaterialTexture('#343a38', '#a5aaa0', 11, 1.2),
+      shahabad: makeMaterialTexture('#77766b', '#d5cbb5', 21, 1.1),
+      granite: makeMaterialTexture('#555650', '#d1c9b8', 31, 1.4),
+      lime: makeMaterialTexture('#d8cfbb', '#fff8e9', 41, 0.9),
+      terracotta: makeMaterialTexture('#a94e32', '#e6a078', 51, 1.5),
+      stone: makeMaterialTexture('#625f55', '#b7ad98', 61, 1.6)
+    };
+
+    const MAT = {
+      wall: new THREE.MeshStandardMaterial({ color: 0xf1e8d6, map: TEX.lime, roughness: 0.96 }),
+      wallWarm: new THREE.MeshStandardMaterial({ color: 0xe7dcc7, map: TEX.lime, roughness: 0.96 }),
+      concrete: new THREE.MeshStandardMaterial({ color: 0xc5c0b5, roughness: 0.9 }),
+      kota: new THREE.MeshStandardMaterial({ color: 0xffffff, map: TEX.kadappa, roughness: 0.88 }),
+      kadappa: new THREE.MeshStandardMaterial({ color: 0xffffff, map: TEX.kadappa, roughness: 0.9 }),
+      shahabad: new THREE.MeshStandardMaterial({ color: 0xffffff, map: TEX.shahabad, roughness: 0.88 }),
+      granite: new THREE.MeshStandardMaterial({ color: 0xffffff, map: TEX.granite, roughness: 0.92 }),
+      athangudi: new THREE.MeshStandardMaterial({ color: 0xffffff, map: TEX.shahabad, roughness: 0.9 }),
+      tile: new THREE.MeshStandardMaterial({ color: 0xffffff, map: TEX.terracotta, roughness: 0.9 }),
+      terracotta: new THREE.MeshStandardMaterial({ color: 0xbd6b4b, roughness: 0.78 }),
+      teak: new THREE.MeshStandardMaterial({ color: 0x6b4022, roughness: 0.58 }),
+      darkWood: new THREE.MeshStandardMaterial({ color: 0x3b2314, roughness: 0.54 }),
+      stone: new THREE.MeshStandardMaterial({ color: 0xffffff, map: TEX.stone, roughness: 0.94 }),
+      ceramic: new THREE.MeshStandardMaterial({ color: 0xf4f6f7, roughness: 0.25 }),
+      grass: new THREE.MeshStandardMaterial({ color: 0x537a43, roughness: 0.95 }),
+      soil: new THREE.MeshStandardMaterial({ color: 0x4f3a28, roughness: 0.98 }),
+      foliage: new THREE.MeshStandardMaterial({ color: 0x3b7a3e, roughness: 0.8 }),
+      foliageBright: new THREE.MeshStandardMaterial({ color: 0x5da149, roughness: 0.75 }),
+      water: new THREE.MeshPhysicalMaterial({ color: 0x489fb5, roughness: 0.12, transmission: 0.45, opacity: 0.85, transparent: true }),
+      glass: new THREE.MeshPhysicalMaterial({ color: 0xd9eef5, roughness: 0.08, transparent: true, opacity: 0.32, metalness: 0.05 }),
+      brass: new THREE.MeshStandardMaterial({ color: 0xd9aa4c, metalness: 0.78, roughness: 0.28 }),
+      fabric: new THREE.MeshStandardMaterial({ color: 0xdcd5c5, roughness: 0.9 }),
+      fabricBlue: new THREE.MeshStandardMaterial({ color: 0x547481, roughness: 0.88 }),
+      solar: new THREE.MeshStandardMaterial({ color: 0x1d2b44, metalness: 0.55, roughness: 0.25 }),
+      road: new THREE.MeshStandardMaterial({ color: 0x3a3d40, roughness: 0.92 }),
+    };
+
+    const grpSite = new THREE.Group(), grpGF = new THREE.Group(), grpFF = new THREE.Group(), grpTF = new THREE.Group(), grpWind = new THREE.Group();
+    scene.add(grpSite, grpGF, grpFF, grpTF, grpWind);
+    const colliders = [];
+
+    function addBox(parent, x0, x1, y0, y1, z0, z1, mat, collide = false, cast = true, recv = true) {
+      const w = Math.abs(x1 - x0), h = Math.abs(y1 - y0), d = Math.abs(z1 - z0);
+      if (w < 0.004 || h < 0.004 || d < 0.004) return null;
+      const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
+      mesh.position.set((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2);
+      mesh.castShadow = cast; mesh.receiveShadow = recv;
+      parent.add(mesh);
+      if (collide) {
+        colliders.push({ x0: Math.min(x0, x1), x1: Math.max(x0, x1), y0: Math.min(y0, y1), y1: Math.max(y0, y1), z0: Math.min(z0, z1), z1: Math.max(z0, z1) });
+      }
+      return mesh;
+    }
+
+    function addWallX(parent, z, x0, x1, yBase, height, thick, mat, openings = [], collide = true) {
+      const z0 = z - thick / 2, z1 = z + thick / 2;
+      const ops = [...openings].sort((a, b) => a.start - b.start);
+      let cursor = x0;
+      for (const op of ops) {
+        if (op.start > cursor) addBox(parent, cursor, op.start, yBase, yBase + height, z0, z1, mat, collide);
+        if (op.sill > 0) addBox(parent, op.start, op.end, yBase, yBase + op.sill, z0, z1, mat, collide);
+        // Reserve extra 0.34 m above op.head for door transom louvers so solid wall doesn't bury it
+        const topCut = op.door ? Math.min(height, op.head + 0.34) : op.head;
+        if (topCut < height) addBox(parent, op.start, op.end, yBase + topCut, yBase + height, z0, z1, mat, collide);
+        if (op.glass) addWindowDetailX(parent, z, op.start, op.end, yBase + op.sill, yBase + op.head, op.louver, op.louverDir ?? -1);
+        if (op.jaali) {
+          addJaaliX(parent, z, op.start, op.end, yBase + op.sill, yBase + op.head, op.jaaliMat || MAT.terracotta, op.cols || 6, op.rows || 5);
+          if (collide && op.sill < 1.0) {
+            colliders.push({ x0: op.start, x1: op.end, y0: yBase + op.sill, y1: yBase + op.head, z0, z1 });
+          }
+        }
+        if (op.door) addHingedDoorX(parent, z, op.start, op.end, yBase, yBase + op.head, op.swingDir || 1, op.openAngle || 0.9, op.jaliDoor);
+        cursor = Math.max(cursor, op.end);
+      }
+      if (cursor < x1) addBox(parent, cursor, x1, yBase, yBase + height, z0, z1, mat, collide);
+    }
+
+    function addWallZ(parent, x, z0, z1, yBase, height, thick, mat, openings = [], collide = true) {
+      const x0 = x - thick / 2, x1 = x + thick / 2;
+      const ops = [...openings].sort((a, b) => a.start - b.start);
+      let cursor = z0;
+      for (const op of ops) {
+        if (op.start > cursor) addBox(parent, x0, x1, yBase, yBase + height, cursor, op.start, mat, collide);
+        if (op.sill > 0) addBox(parent, x0, x1, yBase, yBase + op.sill, op.start, op.end, mat, collide);
+        const topCut = op.door ? Math.min(height, op.head + 0.34) : op.head;
+        if (topCut < height) addBox(parent, x0, x1, yBase + topCut, yBase + height, op.start, op.end, mat, collide);
+        if (op.glass) addWindowDetailZ(parent, x, op.start, op.end, yBase + op.sill, yBase + op.head, op.louver, op.louverDir ?? 1);
+        if (op.jaali) {
+          addJaaliZ(parent, x, op.start, op.end, yBase + op.sill, yBase + op.head, op.jaaliMat || MAT.terracotta, op.cols || 5, op.rows || 4);
+          if (collide && op.sill < 1.0) {
+            colliders.push({ x0, x1, y0: yBase + op.sill, y1: yBase + op.head, z0: op.start, z1: op.end });
+          }
+        }
+        if (op.door) addHingedDoorZ(parent, x, op.start, op.end, yBase, yBase + op.head, op.swingDir || 1, op.openAngle || 0.9, op.jaliDoor);
+        cursor = Math.max(cursor, op.end);
+      }
+      if (cursor < z1) addBox(parent, x0, x1, yBase, yBase + height, cursor, z1, mat, collide);
+    }
+
+    function addWindowDetailX(parent, z, x0, x1, y0, y1, louver = false, dirZ = -1) {
+      addBox(parent, x0, x1, y0, y0 + 0.05, z - 0.09, z + 0.09, MAT.darkWood, false);
+      addBox(parent, x0, x1, y1 - 0.05, y1, z - 0.09, z + 0.09, MAT.darkWood, false);
+      addBox(parent, x0, x0 + 0.05, y0, y1, z - 0.09, z + 0.09, MAT.darkWood, false);
+      addBox(parent, x1 - 0.05, x1, y0, y1, z - 0.09, z + 0.09, MAT.darkWood, false);
+      const count = Math.max(2, Math.round((x1 - x0) / 0.65));
+      for (let i = 1; i < count; i++) {
+        const mx = x0 + ((x1 - x0) * i) / count;
+        addBox(parent, mx - 0.02, mx + 0.02, y0, y1, z - 0.04, z + 0.04, MAT.teak, false);
+      }
+      addBox(parent, x0, x1, y0, y1, z - 0.01, z + 0.01, MAT.glass, false, false, false);
+      if (louver) {
+        addBox(parent, x0 + 0.05, x0 + 0.42, y0 + 0.05, y1 - 0.05, z + dirZ * 0.10 - 0.02, z + dirZ * 0.10 + 0.02, MAT.teak, false);
+      }
+    }
+
+    function addWindowDetailZ(parent, x, z0, z1, y0, y1, louver = false, dirX = 1) {
+      addBox(parent, x - 0.09, x + 0.09, y0, y0 + 0.05, z0, z1, MAT.darkWood, false);
+      addBox(parent, x - 0.09, x + 0.09, y1 - 0.05, y1, z0, z1, MAT.darkWood, false);
+      addBox(parent, x - 0.09, x + 0.09, y0, y1, z0, z0 + 0.05, MAT.darkWood, false);
+      addBox(parent, x - 0.09, x + 0.09, y0, y1, z1 - 0.05, z1, MAT.darkWood, false);
+      const count = Math.max(2, Math.round((z1 - z0) / 0.65));
+      for (let i = 1; i < count; i++) {
+        const mz = z0 + ((z1 - z0) * i) / count;
+        addBox(parent, x - 0.04, x + 0.04, y0, y1, mz - 0.02, mz + 0.02, MAT.teak, false);
+      }
+      addBox(parent, x - 0.01, x + 0.01, y0, y1, z0, z1, MAT.glass, false, false, false);
+      if (louver) {
+        addBox(parent, x + dirX * 0.10 - 0.02, x + dirX * 0.10 + 0.02, y0 + 0.05, y1 - 0.05, z0 + 0.05, z0 + 0.42, MAT.teak, false);
+      }
+    }
+
+    function addJaaliX(parent, z, x0, x1, y0, y1, mat, cols = 6, rows = 5) {
+      addBox(parent, x0, x1, y0, y0 + 0.05, z - 0.08, z + 0.08, MAT.darkWood, false);
+      addBox(parent, x0, x1, y1 - 0.05, y1, z - 0.08, z + 0.08, MAT.darkWood, false);
+      for (let c = 0; c <= cols; c++) {        const x = x0 + ((x1 - x0) * c) / cols;
+        addBox(parent, x - 0.028, x + 0.028, y0, y1, z - 0.05, z + 0.05, mat, false);
+      }
+      for (let r = 1; r < rows; r++) {
+        const y = y0 + ((y1 - y0) * r) / rows;
+        addBox(parent, x0, x1, y - 0.028, y + 0.028, z - 0.05, z + 0.05, mat, false);
+      }
+    }
+
+    function addJaaliZ(parent, x, z0, z1, y0, y1, mat, cols = 5, rows = 4) {
+      addBox(parent, x - 0.08, x + 0.08, y0, y0 + 0.05, z0, z1, MAT.darkWood, false);
+      addBox(parent, x - 0.08, x + 0.08, y1 - 0.05, y1, z0, z1, MAT.darkWood, false);
+      for (let c = 0; c <= cols; c++) {
+        const z = z0 + ((z1 - z0) * c) / cols;
+        addBox(parent, x - 0.05, x + 0.05, y0, y1, z - 0.028, z + 0.028, mat, false);
+      }
+      for (let r = 1; r < rows; r++) {
+        const y = y0 + ((y1 - y0) * r) / rows;
+        addBox(parent, x - 0.05, x + 0.05, y - 0.028, y + 0.028, z0, z1, mat, false);
+      }
+    }
+
+    function addHingedDoorX(parent, z, x0, x1, y0, y1, swingDir = 1, openAngle = 0.85, jaliDoor = false) {
+      const w = x1 - x0, h = y1 - y0;
+      addBox(parent, x0, x0 + 0.06, y0, y1, z - 0.09, z + 0.09, MAT.darkWood, false);
+      addBox(parent, x1 - 0.06, x1, y0, y1, z - 0.09, z + 0.09, MAT.darkWood, false);
+      addBox(parent, x0, x1, y1 - 0.06, y1, z - 0.09, z + 0.09, MAT.darkWood, false);
+      addJaaliX(parent, z, x0 + 0.06, x1 - 0.06, y1, y1 + 0.34, MAT.teak, 3, 2);
+
+      const leaf = new THREE.Group();
+      leaf.position.set(x0 + 0.06, y0, z);
+      leaf.rotation.y = swingDir * openAngle;
+      const lw = w - 0.12;
+      addBox(leaf, 0, lw, 0.01, h - 0.06, -0.022, 0.022, jaliDoor ? MAT.darkWood : MAT.teak, false);
+      if (!jaliDoor) {
+        addBox(leaf, 0.12, lw - 0.12, 0.18, h * 0.48, -0.03, 0.03, MAT.darkWood, false);
+        addBox(leaf, 0.12, lw - 0.12, h * 0.56, h - 0.18, -0.03, 0.03, MAT.darkWood, false);
+      }
+      const knob = new THREE.Mesh(new THREE.SphereGeometry(0.035, 8, 8), MAT.brass);
+      knob.position.set(lw - 0.1, 0.95, 0.04);
+      leaf.add(knob);
+      parent.add(leaf);
+    }
+
+    function addHingedDoorZ(parent, x, z0, z1, y0, y1, swingDir = 1, openAngle = 0.85, jaliDoor = false) {
+      const w = z1 - z0, h = y1 - y0;
+      addBox(parent, x - 0.09, x + 0.09, y0, y1, z0, z0 + 0.06, MAT.darkWood, false);
+      addBox(parent, x - 0.09, x + 0.09, y0, y1, z1 - 0.06, z1, MAT.darkWood, false);
+      addBox(parent, x - 0.09, x + 0.09, y1 - 0.06, y1, z0, z1, MAT.darkWood, false);
+      addJaaliZ(parent, x, z0 + 0.06, z1 - 0.06, y1, y1 + 0.34, MAT.teak, 3, 2);
+
+      const leaf = new THREE.Group();
+      leaf.position.set(x, y0, z0 + 0.06);
+      leaf.rotation.y = swingDir * openAngle;
+      const lw = w - 0.12;
+      addBox(leaf, -0.022, 0.022, 0.01, h - 0.06, 0, lw, jaliDoor ? MAT.darkWood : MAT.teak, false);
+      if (!jaliDoor) {
+        addBox(leaf, -0.03, 0.03, 0.18, h * 0.48, 0.12, lw - 0.12, MAT.darkWood, false);
+        addBox(leaf, -0.03, 0.03, h * 0.56, h - 0.18, 0.12, lw - 0.12, MAT.darkWood, false);
+      }
+      const knob = new THREE.Mesh(new THREE.SphereGeometry(0.035, 8, 8), MAT.brass);
+      knob.position.set(0.04, 0.95, lw - 0.1);
+      leaf.add(knob);
+      parent.add(leaf);
+    }
+
+    function addChajjaX(parent, z, x0, x1, y, dirZ = -1, depth = 0.62) {
+      const m = new THREE.Mesh(new THREE.BoxGeometry(x1 - x0, 0.07, depth), MAT.tile);
+      m.position.set((x0 + x1) / 2, y, z + dirZ * (depth / 2 + 0.06));
+      m.rotation.x = -dirZ * 0.28;
+      m.castShadow = true; m.receiveShadow = true;
+      parent.add(m);
+    }
+
+    function addChajjaZ(parent, x, z0, z1, y, dirX = -1, depth = 0.62) {
+      const m = new THREE.Mesh(new THREE.BoxGeometry(depth, 0.07, z1 - z0), MAT.tile);
+      m.position.set(x + dirX * (depth / 2 + 0.06), y, (z0 + z1) / 2);
+      m.rotation.z = dirX * 0.28;
+      m.castShadow = true; m.receiveShadow = true;
+      parent.add(m);
+    }
+
+    function addBalusterRail(parent, x0, x1, z0, z1, y0, y1, alongX = true) {
+      addBox(parent, x0, x1, y1 - 0.06, y1, z0, z1, MAT.darkWood, true);
+      addBox(parent, x0, x1, y0, y0 + 0.12, z0, z1, MAT.teak, true);
+      const len = alongX ? (x1 - x0) : (z1 - z0);
+      const n = Math.max(3, Math.round(len / 0.38));
+      for (let i = 0; i <= n; i++) {
+        const t = i / n;
+        if (alongX) {
+          const px = x0 + t * (x1 - x0);
+          addBox(parent, px - 0.025, px + 0.025, y0 + 0.12, y1 - 0.06, (z0 + z1) / 2 - 0.025, (z0 + z1) / 2 + 0.025, MAT.teak, false);
+        } else {
+          const pz = z0 + t * (z1 - z0);
+          addBox(parent, (x0 + x1) / 2 - 0.025, (x0 + x1) / 2 + 0.025, y0 + 0.12, y1 - 0.06, pz - 0.025, pz + 0.025, MAT.teak, false);
+        }
+      }
+    }
+
+    function addPlantCluster(parent, x, y, z, scale = 1, bright = false) {
+      const g = new THREE.Group();
+      g.position.set(x, y, z);
+      for (let i = 0; i < 4; i++) {
+        const s = (0.28 + i * 0.08) * scale;
+        const m = new THREE.Mesh(new THREE.DodecahedronGeometry(s, 0), bright ? MAT.foliageBright : MAT.foliage);
+        m.position.set((Math.sin(i * 2.1) * 0.22) * scale, s * 0.75, (Math.cos(i * 1.7) * 0.22) * scale);
+        m.castShadow = true;
+        g.add(m);
+      }
+      parent.add(g);
+    }
+
+    // =========================================================================
+    // 4. SITE & GROUND FLOOR (100% OPEN STILT GARDEN)
+    // =========================================================================
+    const ground = new THREE.Mesh(new THREE.PlaneGeometry(120, 120), new THREE.MeshStandardMaterial({ color: 0xc2bea8, roughness: 0.96 }));
+    ground.rotation.x = -Math.PI / 2;
+    ground.position.y = -0.02;
+    ground.receiveShadow = true;
+    grpSite.add(ground);
+
+    addBox(grpSite, -16.0, -9.2, -0.01, 0.03, -16, 16, MAT.road, false, false, true);
+    addBox(grpSite, -8.5, 8.2, 0.0, 0.04, -5.6, 5.6, MAT.grass, false, false, true);
+
+    addWallX(grpSite, -5.6, -8.5, 8.2, 0, 1.35, 0.18, MAT.wallWarm, [], true);
+    addWallX(grpSite, 5.6, -8.5, 8.2, 0, 1.35, 0.18, MAT.wallWarm, [], true);
+    addWallZ(grpSite, 8.2, -5.6, 5.6, 0, 1.35, 0.18, MAT.wallWarm, [], true);
+    addWallZ(grpSite, -8.5, -5.6, 5.6, 0, 1.35, 0.18, MAT.wallWarm, [{ start: -2.2, end: 1.6, sill: 0, head: 1.35 }], true);
+    // Rubble-stone compound wall expression: irregular-looking stone base courses and coping.
+    for (let x = -8.35; x <= 8.0; x += 0.82) {
+      const h = 0.38 + ((Math.round((x + 9) * 7) % 3) * 0.035);
+      addBox(grpSite, x, Math.min(x + 0.76, 8.16), 0.06, h, -5.73, -5.48, MAT.granite, false);
+      addBox(grpSite, x, Math.min(x + 0.76, 8.16), 0.06, h, 5.48, 5.73, MAT.granite, false);
+    }
+    for (let z = -5.35; z <= 5.2; z += 0.82) {
+      addBox(grpSite, -8.63, -8.38, 0.06, 0.42, z, Math.min(z + 0.76, 5.45), MAT.granite, false);
+      addBox(grpSite, 8.08, 8.33, 0.06, 0.42, z, Math.min(z + 0.76, 5.45), MAT.granite, false);
+    }
+    // Sloped stone coping caps with drip-edge shadow line.
+    addBox(grpSite, -8.62, 8.34, 1.35, 1.48, -5.76, -5.42, MAT.granite, false);
+    addBox(grpSite, -8.62, 8.34, 1.35, 1.48, 5.42, 5.76, MAT.granite, false);
+
+    addBox(grpGF, -8.4, -3.5, 0.02, 0.06, -4.4, 1.5, MAT.stone, false, false, true);
+    for (let i = 0; i < 6; i++) {
+      addBox(grpGF, -3.4 + i * 0.68, -2.9 + i * 0.68, 0.03, 0.07, 1.55, 2.15, MAT.kota, false, false, true);
+    }
+
+    // Rationalised 12-column grid (3 along X × 4 along Z).
+    // Z = -1.6 and Z = +1.5 align cleanly with the North & South courtyard rims;
+    // beams stop around the Courtyard void & Stairwell so nothing cuts through open sky or stairs.
+    const colXs = [-7.15, 0.0, 7.15];
+    const colZs = [-4.85, -1.6, 1.5, 4.85];
+    for (const cx of colXs) {
+      for (const cz of colZs) {
+        addBox(grpGF, cx - 0.17, cx + 0.17, 0, H_1F, cz - 0.17, cz + 0.17, MAT.concrete, true);
+      }
+    }
+    // Perimeter & continuous beams along Z = -4.85, -1.6, 1.5, 4.85
+    for (const cz of colZs) addBox(grpGF, -7.15, 7.15, H_1F - 0.34, H_1F, cz - 0.13, cz + 0.13, MAT.concrete, false);
+    // Outer West & East beams along X = -7.15 and +7.15
+    for (const cx of [-7.15, 7.15]) addBox(grpGF, cx - 0.13, cx + 0.13, H_1F - 0.34, H_1F, -4.85, 4.85, MAT.concrete, false);
+    // Center X = 0 beam ONLY in Living zone (-4.85 to -1.6), skipping Courtyard (-1.6..1.5) & Stairwell (1.8..4.85)
+    addBox(grpGF, -0.13, 0.13, H_1F - 0.34, H_1F, -4.85, -1.6, MAT.concrete, false);
+    // Courtyard East/West trimmer beams framing the void
+    addBox(grpGF, -1.63, -1.37, H_1F - 0.34, H_1F, -1.6, 1.5, MAT.concrete, false);
+    addBox(grpGF, 1.17, 1.43, H_1F - 0.34, H_1F, -1.6, 1.5, MAT.concrete, false);
+
+    // Ground Floor Sunlit Courtyard Garden + Thinnai Plinth + Lily Basin
+    addBox(grpGF, -1.65, 1.35, 0.02, 0.24, -1.75, 1.55, MAT.terracotta, false);
+    addBox(grpGF, -1.45, 1.15, 0.05, 0.26, -1.55, 1.35, MAT.soil, false);
+    addBox(grpGF, 0.1, 1.1, 0.22, 0.38, -1.2, 0.3, MAT.stone, false);
+    addBox(grpGF, 0.2, 1.0, 0.26, 0.36, -1.1, 0.2, MAT.water, false, false, false);
+
+    const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.19, 4.6, 10), MAT.teak);
+    trunk.position.set(-0.55, 2.5, -0.2);
+    trunk.castShadow = true;
+    grpGF.add(trunk);
+    for (const [dx, dy, dz, r] of [[0, 4.7, 0, 1.05], [-0.55, 4.3, 0.4, 0.78], [0.55, 4.45, -0.35, 0.82], [-0.35, 5.1, -0.4, 0.72], [0.35, 5.0, 0.45, 0.68]]) {
+      const leaf = new THREE.Mesh(new THREE.DodecahedronGeometry(r, 1), MAT.foliageBright);
+      leaf.position.set(-0.55 + dx, dy, -0.2 + dz);
+      leaf.castShadow = true;
+      grpGF.add(leaf);
+    }
+
+    addBox(grpGF, -7.2, 7.2, 0.03, 0.28, -5.4, -4.5, MAT.soil, false);
+    addBox(grpGF, 4.2, 7.8, 0.03, 0.28, -4.4, 4.8, MAT.soil, false);
+    addBox(grpGF, -7.2, -3.5, 0.03, 0.28, 2.2, 5.3, MAT.soil, false);
+    for (let x = -6.5; x <= 6.8; x += 1.6) addPlantCluster(grpGF, x, 0.28, -4.95, 1.0, false);
+    for (let z = -3.8; z <= 4.2; z += 1.5) addPlantCluster(grpGF, 6.2, 0.28, z, 0.95, true);
+    for (let x = -6.6; x <= -4.0; x += 1.3) addPlantCluster(grpGF, x, 0.28, 3.8, 1.1, false);
+    addBox(grpGF, 4.8, 6.9, 0.02, 0.55, 3.2, 4.7, MAT.concrete, true);
+
+
+    // WEST ENTRANCE: shaded THINNAI + public-facing drinking-water point.
+    // Bench is placed just inside the west compound gate, facing the arrival court.
+    addBox(grpGF, -7.95, -5.05, 0.08, 0.34, -4.15, -3.05, MAT.stone, false); // stone plinth
+    addBox(grpGF, -7.82, -5.18, 0.34, 0.82, -4.03, -3.72, MAT.kota, true); // raised sitting slab
+    addBox(grpGF, -7.82, -5.18, 0.78, 0.91, -4.03, -3.92, MAT.teak, false); // reclaimed timber seat edge
+    // Simple reclaimed-wood shade frame with terracotta tile canopy.
+    for (const x of [-7.85, -5.15]) for (const z of [-4.25, -2.85])
+      addBox(grpGF, x - 0.07, x + 0.07, 0.0, 2.45, z - 0.07, z + 0.07, MAT.teak, true);
+    addBox(grpGF, -8.02, -4.98, 2.35, 2.48, -4.38, -2.72, MAT.darkWood, false);
+    // Clay-tile canopy represented as a thin sloped roof plane.
+    const thinnaiRoof = addBox(grpGF, -8.18, -4.82, 2.40, 2.55, -4.52, -2.58, MAT.tile, false);
+    if (thinnaiRoof) thinnaiRoof.rotation.z = -0.055;
+    // Exposed reclaimed rafters and terracotta tile edge make the roof material legible.
+    for (let z = -4.42; z <= -2.62; z += 0.32) {
+      addBox(grpGF, -8.10, -4.90, 2.34, 2.43, z - 0.035, z + 0.035, MAT.teak, false);
+    }
+    addBox(grpGF, -8.22, -4.78, 2.27, 2.36, -4.56, -2.54, MAT.darkWood, false);
+    // Pot stand, terracotta water pot and a brass tap over a small stone wash basin.
+    addBox(grpGF, -7.98, -7.25, 0.04, 0.22, -1.78, -0.82, MAT.stone, false);
+    const pot = new THREE.Mesh(new THREE.SphereGeometry(0.34, 18, 14), MAT.terracotta);
+    pot.scale.set(0.92, 1.08, 0.92); pot.position.set(-7.62, 0.63, -1.28); pot.castShadow = true; grpGF.add(pot);
+    addBox(grpGF, -7.69, -7.55, 0.90, 1.15, -1.33, -1.23, MAT.brass, false);
+    addBox(grpGF, -7.58, -7.15, 0.78, 0.86, -1.32, -1.24, MAT.brass, false);
+    addBox(grpGF, -7.98, -7.08, 0.02, 0.12, -0.68, 0.02, MAT.stone, false); // wash basin
+    // Textured Kadappa-style entry paving, kept flush with the garden path.
+    for (let i = 0; i < 5; i++) {
+      const z0 = -2.35 + i * 0.66;
+      addBox(grpGF, -8.35, -4.45, 0.035, 0.095, z0, z0 + 0.58, MAT.kota, false, false, true);
+    }
+    // Shallow open stone channel at the edge of the arrival paving; leads to planted soak area.
+    addBox(grpGF, -4.55, -4.36, 0.015, 0.07, -2.35, 1.75, MAT.stone, false, false, true);
+    addBox(grpGF, -4.49, -4.42, 0.071, 0.083, -2.25, 1.65, MAT.water, false, false, false);
+    // Small collection sump below the public tap; water is directed to planted soakaway, not the road.
+    addBox(grpGF, -7.98, -7.08, 0.015, 0.045, -0.68, 0.02, MAT.water, false, false, false);
+    addBox(grpGF, -7.12, -6.82, 0.035, 0.075, -1.72, 0.12, MAT.granite, false, false, true);
+    // Rainwater route markers: roof collection is to a screened downpipe, then a planted recharge zone.
+    addBox(grpGF, -8.18, -8.02, 0.0, 2.25, 4.45, 4.62, MAT.teak, false);
+
+    // =========================================================================
+    // 5. STAIRCASE (SOUTH-CENTER)
+    // =========================================================================
+    function buildStairFlight(parent, yBase) {
+      const steps = 10;
+      for (let i = 0; i < steps; i++) {
+        const zA = 1.8 + (i / steps) * 2.3;
+        const zB = 1.8 + ((i + 1) / steps) * 2.3;
+        const yTop = yBase + ((i + 1) / steps) * 1.6;
+        addBox(parent, -1.4, -0.1, yTop - 0.14, yTop, zA, zB, MAT.teak, false);
+      }
+      addBox(parent, -1.45, 1.45, yBase + 1.44, yBase + 1.60, 4.1, 4.9, MAT.kota, false);
+      for (let i = 0; i < steps; i++) {
+        const zB = 4.1 - (i / steps) * 2.3;
+        const zA = 4.1 - ((i + 1) / steps) * 2.3;
+        const yTop = yBase + 1.6 + ((i + 1) / steps) * 1.6;
+        addBox(parent, 0.1, 1.4, yTop - 0.14, yTop, zA, zB, MAT.teak, false);
+      }
+      addBox(parent, -0.04, 0.04, yBase + 0.2, yBase + 2.6, 1.8, 4.1, MAT.darkWood, false);
+    }
+    buildStairFlight(grpGF, H_GF);
+    buildStairFlight(grpFF, H_1F);
+
+    // =========================================================================
+    // 6. FIRST FLOOR LIVING LEVEL (Y = 3.20m)
+    // =========================================================================
+    const yS0 = H_1F - SLAB_T, yS1 = H_1F;
+    addBox(grpFF, -7.3, -1.5, yS0, yS1, -5.0, 5.0, MAT.kota, false);
+    addBox(grpFF, -1.5, 1.2, yS0, yS1, -5.0, -1.6, MAT.kota, false);
+    addBox(grpFF, -1.5, 1.5, yS0, yS1, 1.4, 1.8, MAT.kota, false);
+    addBox(grpFF, 1.2, 7.3, yS0, yS1, -5.0, 1.8, MAT.kota, false);
+    addBox(grpFF, 1.5, 7.3, yS0, yS1, 1.8, 5.0, MAT.shahabad, false);
+
+    // Accessible Balconies only (North Living, NE Pooja, East Parents', SE Kitchen Utility)
+    // West road-facing wall has windows & chajjas only for privacy.
+    function addBalcony(x0, x1, z0, z1, railSides) {
+      addBox(grpFF, x0, x1, yS0, yS1, z0, z1, MAT.athangudi, false);
+      const r0 = H_1F, r1 = H_1F + 0.95;
+      if (railSides.includes('W')) addBalusterRail(grpFF, x0, x0 + 0.08, z0, z1, r0, r1, false);
+      if (railSides.includes('E')) addBalusterRail(grpFF, x1 - 0.08, x1, z0, z1, r0, r1, false);
+      if (railSides.includes('N')) addBalusterRail(grpFF, x0, x1, z0, z0 + 0.08, r0, r1, true);
+      if (railSides.includes('S')) addBalusterRail(grpFF, x0, x1, z1 - 0.08, z1, r0, r1, true);
+    }
+    addBalcony(-3.1, 3.1, -6.0, -5.0, ['N', 'W', 'E']);  // North Living Balcony
+    addBalcony(7.3, 8.3, -4.8, -2.7, ['E', 'N', 'S']);   // NE Pooja Morning Balcony
+    addBalcony(7.3, 8.3, -2.1, 1.5, ['E', 'N', 'S']);    // East Parents' Full Balcony
+    addBalcony(7.3, 8.3, 2.3, 4.7, ['E', 'N', 'S']);     // SE Utility Balcony
+
+    // Central Nadumuttam: Child-safe Balustrade, Charupadi & Sloped Rain Apron
+    addBalusterRail(grpFF, -1.5, 1.2, -1.66, -1.56, H_1F, H_1F + 0.85, true);
+    addBalusterRail(grpFF, -1.5, 1.2, 1.36, 1.46, H_1F, H_1F + 0.85, true);
+    addBalusterRail(grpFF, -1.56, -1.46, -1.6, 1.4, H_1F, H_1F + 0.85, false);
+    addBalusterRail(grpFF, 1.16, 1.26, -1.6, 1.4, H_1F, H_1F + 0.85, false);
+    addBox(grpFF, -1.35, 1.05, H_1F, H_1F + 0.42, -2.05, -1.6, MAT.teak, true);
+
+    addChajjaX(grpFF, -1.6, -1.7, 1.4, H_1F + WALL_H - 0.15, 1, 0.45);
+    addChajjaX(grpFF, 1.4, -1.7, 1.4, H_1F + WALL_H - 0.15, -1, 0.45);
+    addChajjaZ(grpFF, -1.5, -1.7, 1.5, H_1F + WALL_H - 0.15, 1, 0.45);
+    addChajjaZ(grpFF, 1.2, -1.7, 1.5, H_1F + WALL_H - 0.15, -1, 0.45);
+
+    // --- EXTERIOR PERIMETER WALLS ---
+    // North Wall (Z = -5.0)
+    addWallX(grpFF, -5.0, -7.3, 7.3, H_1F, WALL_H, 0.2, MAT.wall, [
+      { start: -6.4, end: -4.2, sill: 0.75, head: 2.25, glass: true, louver: true, louverDir: -1 }, // Library N Window
+      { start: -2.7, end: 2.7, sill: 0.0, head: 2.45, glass: true },                                // Living -> N Balcony
+      { start: 4.5, end: 6.7, sill: 0.55, head: 2.35, glass: true, louver: true, louverDir: -1 }    // NE Pooja Window
+    ]);
+    addChajjaX(grpFF, -5.0, -6.7, -3.9, H_1F + 2.45, -1);
+    addChajjaX(grpFF, -5.0, -3.0, 3.0, H_1F + 2.65, -1, 0.75);
+    addChajjaX(grpFF, -5.0, 4.2, 7.0, H_1F + 2.55, -1);
+
+    // South Wall (Z = +5.0)
+    addWallX(grpFF, 5.0, -7.3, 7.3, H_1F, WALL_H, 0.2, MAT.wall, [
+      { start: -6.3, end: -4.3, sill: 0.8, head: 2.2, glass: true, louver: true, louverDir: 1 }, // Master S Window
+      { start: -1.3, end: 1.3, sill: 0.7, head: 2.75, jaali: true, cols: 8, rows: 6 },           // Stairwell Jaali
+      { start: 4.2, end: 6.4, sill: 0.95, head: 2.25, glass: true }                              // Kitchen S Window
+    ]);
+    addChajjaX(grpFF, 5.0, -6.6, -4.0, H_1F + 2.4, 1);
+    addChajjaX(grpFF, 5.0, -1.5, 1.5, H_1F + 2.88, 1, 0.7);
+    addChajjaX(grpFF, 5.0, 4.0, 6.6, H_1F + 2.45, 1);
+
+    // West Exterior Wall (X = -7.3): Privacy windows & jaali ventilators shaded by chajjas
+    addWallZ(grpFF, -7.3, -5.0, 5.0, H_1F, WALL_H, 0.2, MAT.wall, [
+      { start: -4.65, end: -3.45, sill: 0.85, head: 2.35, glass: true, louver: true, louverDir: -1 }, // Library
+      { start: -2.35, end: -1.05, sill: 0.85, head: 2.35, glass: true, louver: true, louverDir: -1 }, // Kids
+      { start: 0.15, end: 1.15, sill: 1.45, head: 2.4, jaali: true, cols: 4, rows: 3 },               // Ensuite Jaali Vent
+      { start: 2.35, end: 3.65, sill: 0.9, head: 2.35, glass: true, louver: true, louverDir: -1 }     // Master W Window
+    ]);
+    addChajjaZ(grpFF, -7.3, -4.8, -3.3, H_1F + 2.55, -1);
+    addChajjaZ(grpFF, -7.3, -2.5, -0.9, H_1F + 2.55, -1);
+    addChajjaZ(grpFF, -7.3, 0.0, 1.35, H_1F + 2.55, -1);
+    addChajjaZ(grpFF, -7.3, 2.2, 3.8, H_1F + 2.55, -1);
+
+    // East Wall (X = +7.3)
+    addWallZ(grpFF, 7.3, -5.0, 5.0, H_1F, WALL_H, 0.2, MAT.wall, [
+      { start: -4.5, end: -2.9, sill: 0.0, head: 2.35, glass: true },                                // Pooja -> NE Balcony
+      { start: -1.5, end: 0.6, sill: 0.0, head: 2.35, glass: true },                                 // Parents' -> East Balcony
+      { start: 2.8, end: 3.7, sill: 0.0, head: 2.2, door: true, swingDir: -1, openAngle: 0.8 },      // Kitchen -> Utility
+      { start: 3.9, end: 4.7, sill: 1.1, head: 2.35, jaali: true, cols: 4, rows: 4 }                 // SE Utility Jaali
+    ]);
+    addChajjaZ(grpFF, 7.3, -4.7, -2.7, H_1F + 2.55, 1);
+    addChajjaZ(grpFF, 7.3, -1.8, 0.9, H_1F + 2.55, 1);
+    addChajjaZ(grpFF, 7.3, 2.6, 4.8, H_1F + 2.5, 1);
+
+    // --- INTERIOR PARTITIONS & TRADITIONAL HINGED DOORS ---
+    // West Wing Corridor Wall (X = -3.3): Doors for Library, Kids, Common Bath (+ high jaali vent!), Master (North Entry)
+    addWallZ(grpFF, -3.3, -5.0, 5.0, H_1F, WALL_H, 0.15, MAT.wallWarm, [
+      { start: -4.45, end: -3.55, sill: 0, head: 2.15, door: true, swingDir: 1, openAngle: 0.9 },     // Library Door
+      { start: -1.55, end: -0.65, sill: 0, head: 2.15, door: true, swingDir: 1, openAngle: 0.9 },     // Kids' Door
+      { start: 0.1, end: 1.0, sill: 0, head: 2.1, door: true, swingDir: 1, openAngle: 0.85 },        // Common Bath Door
+      { start: 1.1, end: 1.6, sill: 2.1, head: 2.75, jaali: true, cols: 3, rows: 2 },                // Common Bath High Courtyard Vent!
+      { start: 1.95, end: 2.85, sill: 0, head: 2.15, door: true, swingDir: 1, openAngle: 0.9 }       // Master North-Entry Door
+    ]);
+
+    // Library (NW: X -7.3..-3.3, Z -5.0..-3.0)
+    addWallX(grpFF, -3.0, -7.3, -3.3, H_1F, WALL_H, 0.15, MAT.wallWarm, []);
+
+    // Kids' Bedroom (W: X -7.3..-3.3, Z -3.0..-0.3) -> Door to Shared Ensuite clear of fixtures
+    addWallX(grpFF, -0.3, -7.3, -3.3, H_1F, WALL_H, 0.15, MAT.wallWarm, [
+      { start: -5.95, end: -5.15, sill: 0, head: 2.15, door: true, swingDir: -1, openAngle: 0.9 }
+    ]);
+
+    // Shared Bath Block (Z -0.3..+1.7): West Half = Jack-and-Jill Ensuite (-7.3..-4.8), East Half = Common Bath (-4.8..-3.3)
+    addWallX(grpFF, 1.7, -7.3, -3.3, H_1F, WALL_H, 0.15, MAT.wallWarm, [
+      { start: -5.95, end: -5.15, sill: 0, head: 2.15, door: true, swingDir: 1, openAngle: 0.9 }
+    ]);
+    addWallZ(grpFF, -4.8, -0.3, 1.7, H_1F, WALL_H, 0.12, MAT.wallWarm, []);
+
+    // Parents' Bedroom (East: X +3.5..+7.3, Z -2.5..+2.0)
+    addWallX(grpFF, -2.5, 3.5, 7.3, H_1F, WALL_H, 0.15, MAT.wallWarm, []);
+    addWallZ(grpFF, 3.5, -2.5, 2.0, H_1F, WALL_H, 0.15, MAT.wallWarm, [
+      { start: -2.2, end: -1.3, sill: 0, head: 2.15, door: true, swingDir: 1, openAngle: 0.95 }
+    ]);
+    addWallX(grpFF, 2.0, 3.5, 7.3, H_1F, WALL_H, 0.15, MAT.wallWarm, []);
+
+    // NE Pooja Sanctum — Carved Teak Jali Screen + Jali Double Door
+    addWallZ(grpFF, 3.5, -5.0, -2.5, H_1F, WALL_H, 0.12, MAT.teak, [
+      { start: -4.85, end: -4.35, sill: 0.4, head: 2.35, jaali: true, jaaliMat: MAT.teak, cols: 2, rows: 6 },
+      { start: -4.3, end: -3.2, sill: 0, head: 2.2, door: true, swingDir: 1, openAngle: 1.05, jaliDoor: true },
+      { start: -3.15, end: -2.65, sill: 0.4, head: 2.35, jaali: true, jaaliMat: MAT.teak, cols: 2, rows: 6 }
+    ], false);
+    addBox(grpFF, 5.2, 6.7, H_1F, H_1F + 0.42, -4.6, -3.4, MAT.teak, true);
+    const lamp = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.13, 0.55, 10), MAT.brass);
+    lamp.position.set(5.95, H_1F + 0.7, -4.0);
+    grpFF.add(lamp);
+
+    // --- FURNITURE & CLEAN NON-OVERLAPPING BATH FIXTURES ---
+    // Living Hall Sofa & Teak Table
+    addBox(grpFF, -2.2, 0.2, H_1F, H_1F + 0.45, -4.4, -3.55, MAT.fabric, true);
+    addBox(grpFF, -2.2, 0.2, H_1F + 0.45, H_1F + 0.85, -4.4, -4.2, MAT.fabric, false);
+    addBox(grpFF, -1.6, -0.4, H_1F, H_1F + 0.38, -3.2, -2.5, MAT.teak, true);
+
+    // Library (NW): West Bookshelf + Reading Desk
+    addBox(grpFF, -7.1, -6.75, H_1F, H_1F + 1.85, -4.75, -3.25, MAT.teak, true);
+    addBox(grpFF, -5.65, -4.35, H_1F, H_1F + 0.76, -4.65, -3.65, MAT.teak, true);
+
+    // Kids' Bedroom (W: Z -3.0..-0.3): Bed on West-North side, Study/Wardrobe on East-North corner (zero overlap!)
+    addBox(grpFF, -7.1, -5.25, H_1F, H_1F + 0.44, -2.85, -1.55, MAT.fabricBlue, true);
+    addBox(grpFF, -4.5, -3.5, H_1F, H_1F + 1.75, -2.9, -2.35, MAT.teak, true);
+
+    // Common Washroom (East Half: X -4.8..-3.3, Z -0.3..+1.7) — Clean clearance around door (Z 0.1..1.0)
+    addBox(grpFF, -4.65, -4.15, H_1F, H_1F + 0.82, -0.15, 0.55, MAT.teak, true);          // Vanity (NW)
+    addBox(grpFF, -4.6, -4.2, H_1F + 0.82, H_1F + 0.92, -0.1, 0.5, MAT.ceramic, false);
+    addBox(grpFF, -4.65, -4.1, H_1F, H_1F + 0.42, 1.0, 1.55, MAT.ceramic, true);           // WC (SW)
+    addBox(grpFF, -3.95, -3.4, H_1F, H_1F + 0.04, 1.0, 1.6, MAT.stone, false);             // Flush shower tray (SE)
+
+    // Shared Ensuite (West Half: X -7.3..-4.8, Z -0.3..+1.7) — Clear between N & S doors (X -5.95..-5.15)
+    addBox(grpFF, -7.15, -6.35, H_1F, H_1F + 0.04, -0.2, 0.55, MAT.stone, false);          // Flush shower tray (NW)
+    addBox(grpFF, -7.15, -6.45, H_1F, H_1F + 0.82, 0.65, 1.55, MAT.teak, true);            // Vanity (SW)
+    addBox(grpFF, -7.05, -6.5, H_1F + 0.82, H_1F + 0.92, 0.75, 1.45, MAT.ceramic, false);
+    addBox(grpFF, -5.45, -4.9, H_1F, H_1F + 0.42, 0.45, 0.95, MAT.ceramic, true);          // WC (East wall)
+
+    // Master Bedroom (SW: X -7.3..-3.3, Z +1.7..+5.0) — Headboard at South (Z = 4.85), clear 1.2 m walkway at North!
+    addBox(grpFF, -6.75, -4.95, H_1F, H_1F + 0.46, 2.95, 4.85, MAT.fabricBlue, true);
+    addBox(grpFF, -6.75, -4.95, H_1F + 0.46, H_1F + 0.75, 4.75, 4.88, MAT.darkWood, false);
+    addBox(grpFF, -7.18, -6.8, H_1F, H_1F + 0.45, 4.25, 4.8, MAT.teak, true);
+    addBox(grpFF, -4.85, -4.35, H_1F, H_1F + 0.45, 4.25, 4.8, MAT.teak, true);
+
+    // Parents' Bedroom (East) + Dining + Open Kitchen
+    addBox(grpFF, 4.5, 6.5, H_1F, H_1F + 0.46, -1.4, 0.6, MAT.fabric, true);
+    addBox(grpFF, 1.85, 2.95, H_1F + 0.72, H_1F + 0.78, -1.4, 0.4, MAT.teak, true);
+    addBox(grpFF, 2.0, 2.8, H_1F, H_1F + 0.72, -1.1, 0.1, MAT.darkWood, false);
+    addBox(grpFF, 4.4, 7.1, H_1F, H_1F + 0.88, 4.15, 4.85, MAT.stone, true);
+    addBox(grpFF, 6.3, 7.1, H_1F, H_1F + 0.88, 2.2, 4.15, MAT.stone, true);
+    addBox(grpFF, 2.2, 4.2, H_1F, H_1F + 0.90, 2.15, 2.85, MAT.teak, true);
+
+    // =========================================================================
+    // 7. TERRACE GARDEN FLOOR (Y = 6.40m)
+    // =========================================================================
+    const yT0 = H_TF - SLAB_T, yT1 = H_TF;
+    addBox(grpTF, -7.3, -1.5, yT0, yT1, -5.0, 5.0, MAT.concrete, false);
+    addBox(grpTF, -1.5, 1.2, yT0, yT1, -5.0, -1.6, MAT.concrete, false);
+    addBox(grpTF, -1.5, 1.5, yT0, yT1, 1.4, 1.8, MAT.concrete, false);
+    addBox(grpTF, 1.2, 7.3, yT0, yT1, -5.0, 1.8, MAT.concrete, false);
+    addBox(grpTF, 1.5, 7.3, yT0, yT1, 1.8, 5.0, MAT.concrete, false);
+
+    addWallX(grpTF, -5.0, -7.3, 7.3, H_TF, 0.95, 0.16, MAT.wall, [], true);
+    addWallX(grpTF, 5.0, -7.3, 7.3, H_TF, 0.95, 0.16, MAT.wall, [], true);
+    addWallZ(grpTF, -7.3, -5.0, 5.0, H_TF, 0.95, 0.16, MAT.wall, [], true);
+    addWallZ(grpTF, 7.3, -5.0, 5.0, H_TF, 0.95, 0.16, MAT.wall, [], true);
+
+    addBalusterRail(grpTF, -1.56, 1.26, -1.66, -1.54, H_TF, H_TF + 0.9, true);
+    addBalusterRail(grpTF, -1.56, 1.26, 1.34, 1.46, H_TF, H_TF + 0.9, true);
+    addBalusterRail(grpTF, -1.56, -1.44, -1.6, 1.4, H_TF, H_TF + 0.9, false);
+    addBalusterRail(grpTF, 1.14, 1.26, -1.6, 1.4, H_TF, H_TF + 0.9, false);
+
+    addWallZ(grpTF, -1.55, 1.8, 5.0, H_TF, 2.55, 0.15, MAT.wall, [], true);
+    addWallZ(grpTF, 1.55, 1.8, 5.0, H_TF, 2.55, 0.15, MAT.wall, [], true);
+    addWallX(grpTF, 5.0, -1.55, 1.55, H_TF, 2.55, 0.15, MAT.wall, [], true);
+    addWallX(grpTF, 1.8, -1.55, 1.55, H_TF, 2.55, 0.15, MAT.wall, [
+      { start: 0.1, end: 1.25, sill: 0, head: 2.15, door: true, swingDir: -1, openAngle: 0.9 }
+    ], true);
+    addBox(grpTF, -1.75, 1.75, H_TF + 2.55, H_TF + 2.7, 1.65, 5.15, MAT.tile, false);
+
+    function addTerraceBed(x0, x1, z0, z1) {
+      addBox(grpTF, x0, x1, H_TF, H_TF + 0.42, z0, z1, MAT.terracotta, true);
+      addBox(grpTF, x0 + 0.08, x1 - 0.08, H_TF + 0.1, H_TF + 0.44, z0 + 0.08, z1 - 0.08, MAT.soil, false);
+    }
+    addTerraceBed(-6.8, -2.2, -4.7, -3.45);    addTerraceBed(2.0, 6.8, -4.7, -3.45);
+    for (let x = -6.2; x <= -2.6; x += 1.1) addPlantCluster(grpTF, x, H_TF + 0.44, -4.08, 0.72, true);
+    for (let x = 2.5; x <= 6.3; x += 1.1) addPlantCluster(grpTF, x, H_TF + 0.44, -4.08, 0.72, true);
+
+    for (const px of [-6.8, -3.4]) {
+      addBox(grpTF, px - 0.09, px + 0.09, H_TF, H_TF + 2.3, 4.6 - 0.09, 4.6 + 0.09, MAT.darkWood, true);
+    }
+    const solarPanel = addBox(grpTF, -7.0, -3.2, H_TF + 2.35, H_TF + 2.42, 1.6, 4.8, MAT.solar, false);
+    solarPanel.rotation.x = 0.14;
+    const tank = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.55, 1.25, 14), MAT.wallWarm);
+    tank.position.set(5.9, H_TF + 0.65, 4.1);
+    tank.castShadow = true;
+    grpTF.add(tank);
+
+
+    // =========================================================================
+    // 7A. RAINWATER ARCHITECTURE — CONTINUOUS, ACCESSIBLE DRAINAGE ROUTES
+    // Conceptual surface channels only: final falls, pipe sizes, waterproofing,
+    // overflow levels and discharge permissions require site/engineer design.
+    // Water is collected for reuse/recharge; no uncontrolled discharge to road.
+    // =========================================================================
+    const drainStone = new THREE.MeshStandardMaterial({ color: 0x77766c, roughness: 0.94 });
+    const drainWater = new THREE.MeshStandardMaterial({
+      color: 0x4a9eae, roughness: 0.28, metalness: 0.08,
+      transparent: true, opacity: 0.72
+    });
+
+    // Ground: narrow stone-lined channels follow the planted perimeter.
+    // A north channel turns down the east edge and terminates at a planted soak zone.
+    addBox(grpGF, -7.55, 7.35, 0.035, 0.115, -5.18, -4.98, drainStone, false, false, true);
+    addBox(grpGF, -7.55, 7.35, 0.116, 0.135, -5.12, -5.04, drainWater, false, false, false);
+    addBox(grpGF, 7.08, 7.30, 0.035, 0.115, -5.0, 4.65, drainStone, false, false, true);
+    addBox(grpGF, 7.14, 7.24, 0.116, 0.135, -4.92, 4.58, drainWater, false, false, false);
+    // Courtyard-tree basin overflow to the same planted edge channel.
+    addBox(grpGF, 1.22, 1.42, 0.025, 0.105, -0.15, 3.55, drainStone, false, false, true);
+    addBox(grpGF, 1.275, 1.365, 0.106, 0.124, -0.08, 3.48, drainWater, false, false, false);
+    // Recharge garden / inspection sump at the east-south corner.
+    addBox(grpGF, 5.45, 7.15, 0.025, 0.16, 3.65, 5.05, MAT.soil, false, false, true);
+    addBox(grpGF, 5.65, 6.95, 0.16, 0.20, 3.85, 4.85, drainStone, false, false, true);
+    addBox(grpGF, 5.82, 6.78, 0.205, 0.22, 4.02, 4.68, drainWater, false, false, false);
+
+    // First floor: keep living-room stone floor dry. Collect exposed balcony /
+    // courtyard rain at the outside edges, not across the circulation floor.
+    addBox(grpFF, -6.95, -1.65, H_1F + 0.012, H_1F + 0.075, -5.12, -4.94, drainStone, false, false, true);
+    addBox(grpFF, -6.90, -1.70, H_1F + 0.076, H_1F + 0.092, -5.07, -4.99, drainWater, false, false, false);
+    addBox(grpFF, 3.55, 7.12, H_1F + 0.012, H_1F + 0.075, 4.82, 4.98, drainStone, false, false, true);
+    addBox(grpFF, 3.60, 7.06, H_1F + 0.076, H_1F + 0.092, 4.87, 4.93, drainWater, false, false, false);
+    // Open-to-sky nadumuttam: discreet perimeter collection channel.
+    addBox(grpFF, -1.42, 1.12, H_1F + 0.012, H_1F + 0.070, -1.48, -1.34, drainStone, false, false, true);
+    addBox(grpFF, -1.36, 1.06, H_1F + 0.071, H_1F + 0.085, -1.445, -1.385, drainWater, false, false, false);
+    addBox(grpFF, 1.18, 1.32, H_1F + 0.012, H_1F + 0.070, -1.34, 1.35, drainStone, false, false, true);
+
+    // Terrace: visible perimeter gutters plus a courtyard-void collector.
+    addBox(grpTF, -7.18, 7.18, H_TF + 0.012, H_TF + 0.095, -5.04, -4.82, drainStone, false, false, true);
+    addBox(grpTF, -7.12, 7.12, H_TF + 0.096, H_TF + 0.112, -4.98, -4.90, drainWater, false, false, false);
+    addBox(grpTF, 7.02, 7.22, H_TF + 0.012, H_TF + 0.095, -4.82, 4.78, drainStone, false, false, true);
+    addBox(grpTF, 7.08, 7.16, H_TF + 0.096, H_TF + 0.112, -4.76, 4.70, drainWater, false, false, false);
+    addBox(grpTF, -1.42, 1.12, H_TF + 0.012, H_TF + 0.080, -1.50, -1.34, drainStone, false, false, true);
+    addBox(grpTF, -1.36, 1.06, H_TF + 0.081, H_TF + 0.096, -1.455, -1.385, drainWater, false, false, false);
+
+    // Rainwater downpipe on the east service edge links upper collection to
+    // the ground-level inspection/recharge point. It is deliberately visible.
+    const rainPipeMat = new THREE.MeshStandardMaterial({ color: 0x8c9b8d, roughness: 0.72, metalness: 0.18 });
+    const rainPipe = new THREE.Mesh(new THREE.CylinderGeometry(0.075, 0.075, H_TF + 0.35, 12), rainPipeMat);
+    rainPipe.position.set(7.42, (H_TF + 0.35) / 2, 4.55);
+    rainPipe.castShadow = true;
+    grpGF.add(rainPipe);
+    const pipeClips = [0.55, 2.0, 3.55, 5.1, 6.55];
+    for (const y of pipeClips) addBox(grpGF, 7.30, 7.54, y, y + 0.10, 4.43, 4.67, MAT.darkWood, false);
+    // Covered inspection chamber at pipe foot; removable cover is serviceable.
+    addBox(grpGF, 7.05, 7.78, 0.03, 0.22, 4.08, 4.82, drainStone, false, false, true);
+    addBox(grpGF, 7.12, 7.71, 0.22, 0.25, 4.15, 4.75, MAT.granite, false, false, true);
+
+    // =========================================================================
+    // 8. AIRFLOW & SUN
+    // =========================================================================
+    const windParticles = [];
+    const windMat = new THREE.MeshBasicMaterial({ color: 0x74e8c4, transparent: true, opacity: 0.6 });
+    const windGeo = new THREE.SphereGeometry(0.075, 8, 8);
+    for (let i = 0; i < 36; i++) {
+      const m = new THREE.Mesh(windGeo, windMat);
+      grpWind.add(m);
+      windParticles.push({ mesh: m, lane: i % 3, t: (i / 36) });
+    }
+
+    function updateWind(dt) {
+      for (const p of windParticles) {
+        p.t = (p.t + dt * 0.22) % 1;
+        const u = p.t;
+        let x = 0, y = H_1F + 1.4, z = 0;
+        if (p.lane === 0) {
+          if (u < 0.65) {
+            const k = u / 0.65; x = -8.5 + k * 8.3; z = 0.7 + Math.sin(k * Math.PI * 2) * 0.3; y = H_1F + 1.3 + k * 0.6;
+          } else {
+            const k = (u - 0.65) / 0.35; x = -0.2 + Math.sin(k * 4) * 0.25; z = 0.2; y = H_1F + 1.9 + k * 4.9;
+          }
+        } else if (p.lane === 1) {
+          if (u < 0.65) {
+            const k = u / 0.65; x = -0.2 + Math.sin(k * 3) * 0.4; z = -6.5 + k * 6.3; y = H_1F + 1.5 + k * 0.5;
+          } else {
+            const k = (u - 0.65) / 0.35; x = -0.1; z = -0.2 + Math.cos(k * 4) * 0.25; y = H_1F + 2.0 + k * 4.8;
+          }
+        } else {
+          if (u < 0.5) {
+            const k = u / 0.5; x = -7.5 + k * 7.2; z = 0.2; y = 1.4 + k * 0.8;
+          } else {
+            const k = (u - 0.5) / 0.5; x = -0.3 + Math.sin(k * 5) * 0.3; z = 0.2 + Math.cos(k * 5) * 0.3; y = 2.2 + k * 6.3;
+          }
+        }
+        p.mesh.position.set(x, y, z);
+      }
+    }
+
+    const sunTimeEl = document.getElementById('sun-time');
+    const sunSeasonEl = document.getElementById('sun-season');
+    function updateSun() {
+      const hr = parseFloat(sunTimeEl.value);
+      const season = parseFloat(sunSeasonEl.value);
+      const hh = Math.floor(hr), mm = Math.round((hr - hh) * 60);
+      document.getElementById('sun-readout').textContent = `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`;
+      document.getElementById('season-readout').textContent = season > 0.3 ? 'Summer (N)' : season < -0.3 ? 'Winter (S)' : 'Equinox';
+      const dayFrac = (hr - 6) / 12;
+      const elev = Math.max(0.08, Math.sin(dayFrac * Math.PI));
+      sun.position.set(Math.cos(dayFrac * Math.PI) * 24, elev * 26, (-season * 10) + (1 - elev) * 4);
+      sun.intensity = 0.5 + elev * 2.1;
+    }
+    sunTimeEl.addEventListener('input', updateSun);
+    sunSeasonEl.addEventListener('input', updateSun);
+    updateSun();
+
+    // =========================================================================
+    // 9. WALK MODE
+    // =========================================================================
+    let walkMode = false, yaw = 0, pitch = 0, playerFeetY = H_1F;
+    const keys = {}, touchMove = { fwd: false, back: false, left: false, right: false };
+    const EYE_H = 1.62;
+    const btnOrbit = document.getElementById('btn-orbit'), btnWalk = document.getElementById('btn-walk');
+    const crosshair = document.getElementById('crosshair'), touchPad = document.getElementById('touch-pad');
+
+    function setWalkMode(on) {
+      walkMode = on;
+      btnWalk.classList.toggle('active', on);
+      btnOrbit.classList.toggle('active', !on);
+      controls.enabled = !on;
+      crosshair.style.display = on ? 'block' : 'none';
+      touchPad.classList.toggle('show', on);
+      if (on) {
+        if (camera.position.y > H_TF + 0.5) playerFeetY = H_TF;
+        else if (camera.position.y > H_1F + 0.5) playerFeetY = H_1F;
+        else playerFeetY = H_GF;
+        camera.position.y = playerFeetY + EYE_H;
+        const euler = new THREE.Euler().setFromQuaternion(camera.quaternion, 'YXZ');
+        yaw = euler.y; pitch = Math.max(-1.3, Math.min(1.3, euler.x));
+        if (window.innerWidth > 768) renderer.domElement.requestPointerLock?.();
+      } else if (document.pointerLockElement === renderer.domElement) {
+        document.exitPointerLock?.();
+        controls.target.set(camera.position.x - Math.sin(yaw) * 4, camera.position.y - 0.5, camera.position.z - Math.cos(yaw) * 4);
+      }
+    }
+    btnOrbit.addEventListener('click', () => setWalkMode(false));
+    btnWalk.addEventListener('click', () => setWalkMode(true));
+
+    touchPad.querySelectorAll('button[data-move]').forEach(btn => {
+      const dir = btn.dataset.move;
+      const start = (e) => { e.preventDefault(); touchMove[dir] = true; };
+      const end = (e) => { e.preventDefault(); touchMove[dir] = false; };
+      btn.addEventListener('touchstart', start, { passive: false });
+      btn.addEventListener('touchend', end, { passive: false });
+      btn.addEventListener('touchcancel', end, { passive: false });
+      btn.addEventListener('mousedown', start); btn.addEventListener('mouseup', end); btn.addEventListener('mouseleave', end);
+    });
+
+    let lookTouchId = null, lastLookX = 0, lastLookY = 0;
+    renderer.domElement.addEventListener('touchstart', (e) => {
+      if (!walkMode || lookTouchId !== null) return;
+      const t = e.changedTouches[0]; lookTouchId = t.identifier; lastLookX = t.clientX; lastLookY = t.clientY;
+    }, { passive: true });
+    renderer.domElement.addEventListener('touchmove', (e) => {
+      if (!walkMode || lookTouchId === null) return;
+      for (const t of e.changedTouches) {
+        if (t.identifier === lookTouchId) {
+          yaw -= (t.clientX - lastLookX) * 0.005;
+          pitch = Math.max(-1.35, Math.min(1.35, pitch - (t.clientY - lastLookY) * 0.005));
+          camera.quaternion.setFromEuler(new THREE.Euler(pitch, yaw, 0, 'YXZ'));
+          lastLookX = t.clientX; lastLookY = t.clientY;
+        }
+      }
+    }, { passive: true });
+    renderer.domElement.addEventListener('touchend', (e) => {
+      for (const t of e.changedTouches) if (t.identifier === lookTouchId) lookTouchId = null;
+    });
+
+    window.addEventListener('keydown', (e) => {
+      keys[e.code] = true;
+      if (e.code === 'KeyF') setWalkMode(!walkMode);
+      if (e.code === 'KeyP') togglePlan();
+    });
+    window.addEventListener('keyup', (e) => { keys[e.code] = false; });
+    document.addEventListener('mousemove', (e) => {
+      if (!walkMode || document.pointerLockElement !== renderer.domElement) return;
+      yaw -= e.movementX * 0.0022;
+      pitch = Math.max(-1.35, Math.min(1.35, pitch - e.movementY * 0.0022));
+      camera.quaternion.setFromEuler(new THREE.Euler(pitch, yaw, 0, 'YXZ'));
+    });
+
+    function collidesAt(nx, nz, fy) {
+      const r = 0.28;
+      for (const c of colliders) {
+        if (fy + 1.55 <= c.y0 || fy + 0.35 >= c.y1) continue;
+        if (nx + r > c.x0 && nx - r < c.x1 && nz + r > c.z0 && nz - r < c.z1) return true;
+      }
+      return false;
+    }
+
+    function computeTargetFloorY(x, z, curY) {
+      if (x > -1.5 && x < 1.5 && z > 1.8 && z < 4.9) {
+        const k = Math.max(0, Math.min(1, (z - 1.8) / 2.3));
+        if (x < 0) {
+          const c0 = k * 1.6, c1 = H_1F + k * 1.6;
+          return Math.abs(curY - c0) < Math.abs(curY - c1) ? c0 : c1;
+        } else {
+          const c0 = 1.6 + (1 - k) * 1.6, c1 = H_1F + 1.6 + (1 - k) * 1.6;
+          return Math.abs(curY - c0) < Math.abs(curY - c1) ? c0 : c1;
+        }
+      }
+      if (curY > H_TF - 0.9) return H_TF;
+      if (curY > H_1F - 0.9) return H_1F;
+      return H_GF;
+    }
+
+    function updateWalk(dt) {
+      if (!walkMode) return;
+      const speed = (keys['ShiftLeft'] || keys['ShiftRight'] ? 6.0 : 3.4) * dt;
+      let fx = -Math.sin(yaw), fz = -Math.cos(yaw), rx = Math.cos(yaw), rz = -Math.sin(yaw);
+      let mx = 0, mz = 0;
+      if (keys['KeyW'] || keys['ArrowUp'] || touchMove.fwd) { mx += fx; mz += fz; }
+      if (keys['KeyS'] || keys['ArrowDown'] || touchMove.back) { mx -= fx; mz -= fz; }
+      if (keys['KeyD'] || keys['ArrowRight'] || touchMove.right) { mx += rx; mz += rz; }
+      if (keys['KeyA'] || keys['ArrowLeft'] || touchMove.left) { mx -= rx; mz -= rz; }
+      const len = Math.hypot(mx, mz);
+      if (len > 0) {
+        mx = (mx / len) * speed; mz = (mz / len) * speed;
+        const nx = camera.position.x + mx, nz = camera.position.z + mz;
+        if (!collidesAt(nx, camera.position.z, playerFeetY)) camera.position.x = nx;
+        if (!collidesAt(camera.position.x, nz, playerFeetY)) camera.position.z = nz;
+      }
+      const targetY = computeTargetFloorY(camera.position.x, camera.position.z, playerFeetY);
+      playerFeetY += (targetY - playerFeetY) * Math.min(1, dt * 14);
+      camera.position.y = playerFeetY + EYE_H;
+    }
+
+    // =========================================================================
+    // 10. JUMPS, LEVEL FILTERS, EXPLODE & COMPASS PLAN
+    // =========================================================================
+    const JUMPS = {
+      overview:    { pos: [-16.5, 11.8, 14.5], look: [0, 3.6, 0],     label: 'Overview · Traditional Courtyard Home' },
+      gf_garden:   { pos: [-5.5, 1.62, 0.2],   look: [0.5, 1.8, -0.2], label: 'Ground · Open Stilt Garden & Courtyard Tree' },
+      thinnai:     { pos: [-9.2, 1.75, -1.55], look: [-6.65, 0.75, -3.35], label: 'West Entrance · Shaded Thinnai, Reclaimed Timber & Drinking-Water Pot / Tap' },
+      courtyard:   { pos: [-2.4, 4.82, -0.3],  look: [0.2, 4.1, -0.2], label: '1F Courtyard · Open Nadumuttam & Shaded Eaves' },
+      living:      { pos: [-1.2, 4.82, -3.5],  look: [2.5, 4.6, -1.5], label: '1F Living Hall (N) · Charupadi & North Balcony' },
+      kitchen:     { pos: [3.2, 4.82, 3.3],    look: [0.2, 4.5, -0.5], label: '1F Open Kitchen (SE) · Facing Courtyard' },
+      pooja:       { pos: [4.2, 4.82, -3.6],   look: [6.4, 4.5, -4.0], label: '1F Pooja (NE) · Carved Jali Door & Morning Sun' },
+      master:      { pos: [-4.0, 4.82, 2.3],   look: [-6.0, 4.3, 4.0], label: '1F Master Suite (SW · North Entry) · Ensuite Access' },
+      parents:     { pos: [4.9, 4.82, -0.8],   look: [7.6, 4.6, -0.8], label: '1F Parents\' Room (E) · East Balcony' },
+      kids:        { pos: [-4.0, 4.82, -1.2],  look: [-6.4, 4.4, -2.2],label: '1F Kids\' Room (W) · Ensuite & West Breeze' },
+      study:       { pos: [-4.0, 4.82, -4.0],  look: [-6.6, 4.6, -4.0],label: '1F Library (NW) · Quiet West Study Opposite Pooja' },
+      common_bath: { pos: [-3.5, 4.82, 0.55],  look: [-4.6, 4.4, 0.55],label: 'Common Washroom · East Half + Courtyard Jaali Vent' },
+      terrace:     { pos: [-2.6, 8.02, -3.0],  look: [1.5, 7.3, 0.5],  label: 'Terrace Garden · Growing Beds & Open-Sky Courtyard' },
+    };
+
+    function jumpTo(key) {
+      const j = JUMPS[key];
+      if (!j) return;
+      camera.position.set(...j.pos);
+      playerFeetY = j.pos[1] - EYE_H;
+      if (walkMode) {
+        const m = new THREE.Matrix4().lookAt(camera.position, new THREE.Vector3(...j.look), new THREE.Vector3(0, 1, 0));
+        const e = new THREE.Euler().setFromRotationMatrix(m, 'YXZ');
+        yaw = e.y; pitch = e.x;
+        camera.quaternion.setFromEuler(new THREE.Euler(pitch, yaw, 0, 'YXZ'));
+      } else {
+        controls.target.set(...j.look);
+        controls.update();
+      }
+      document.getElementById('location-label').textContent = j.label;
+    }
+
+    document.querySelectorAll('#jump-bar button').forEach(b => b.addEventListener('click', () => jumpTo(b.dataset.jump)));
+    document.querySelectorAll('.lvl-btn').forEach(b => {
+      b.addEventListener('click', () => {
+        document.querySelectorAll('.lvl-btn').forEach(x => x.classList.remove('active'));
+        b.classList.add('active');
+        const l = b.dataset.lvl;
+        grpGF.visible = (l === 'all' || l === 'gf');
+        grpFF.visible = (l === 'all' || l === 'ff');
+        grpTF.visible = (l === 'all' || l === 'tf');
+      });
+    });
+
+    let exploded = false;
+    document.getElementById('btn-explode').addEventListener('click', (e) => {
+      exploded = !exploded;
+      e.target.classList.toggle('active', exploded);
+      grpFF.position.y = exploded ? 3.2 : 0;
+      grpTF.position.y = exploded ? 6.4 : 0;
+    });
+
+    document.getElementById('btn-wind').addEventListener('click', (e) => {
+      grpWind.visible = !grpWind.visible;
+      e.target.classList.toggle('active', grpWind.visible);
+    });
+
+    const planModal = document.getElementById('plan-modal');
+    const planCanvas = document.getElementById('plan-canvas');
+    const ctx = planCanvas.getContext('2d');
+    let planLevel = 1;
+
+    function togglePlan() {
+      planModal.classList.toggle('open');
+      document.getElementById('btn-plan').classList.toggle('active', planModal.classList.contains('open'));
+    }
+    document.getElementById('btn-plan').addEventListener('click', togglePlan);
+    document.querySelectorAll('.plan-lvl').forEach(b => {
+      b.addEventListener('click', () => {
+        document.querySelectorAll('.plan-lvl').forEach(x => x.classList.remove('active'));
+        b.classList.add('active');
+        planLevel = parseInt(b.dataset.pl, 10);
+      });
+    });
+
+    function drawPlan() {
+      if (!planModal.classList.contains('open')) return;
+      const W = planCanvas.width, H = planCanvas.height;
+      ctx.clearRect(0, 0, W, H);
+      const sx = (x) => ((x + 9.2) / 18.4) * W;
+      const sz = (z) => ((z + 6.8) / 13.6) * H;
+      const rect = (x0, x1, z0, z1, fill, stroke, label) => {
+        ctx.fillStyle = fill;
+        ctx.fillRect(sx(x0), sz(z0), sx(x1) - sx(x0), sz(z1) - sz(z0));
+        if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = 1.5; ctx.strokeRect(sx(x0), sz(z0), sx(x1) - sx(x0), sz(z1) - sz(z0)); }
+        if (label) {
+          ctx.fillStyle = '#e8efe9'; ctx.font = 'bold 11px sans-serif'; ctx.textAlign = 'center';
+          ctx.fillText(label, (sx(x0) + sx(x1)) / 2, (sz(z0) + sz(z1)) / 2 + 4);
+        }
+      };
+
+      ctx.fillStyle = '#91a196'; ctx.font = '12px sans-serif'; ctx.textAlign = 'center';
+      ctx.fillText('NORTH (51 ft)', W / 2, 16);
+      ctx.fillText('SOUTH (46 ft)', W / 2, H - 6);
+
+      if (planLevel === 0) {
+        rect(-8.4, 8.2, -5.5, 5.5, 'rgba(83,122,67,0.35)', '#6ea862', 'Open Stilt Garden');
+        rect(-1.5, 1.2, -1.6, 1.4, 'rgba(116,198,157,0.35)', '#74c69d', 'Courtyard Tree');
+        rect(-7.95, -5.05, -4.15, -3.05, 'rgba(181,99,69,0.42)', '#d98a6c', 'THINNAI');
+        rect(-8.35, -4.45, -2.35, 0.95, 'rgba(120,130,132,0.30)', '#a9b4b5', 'Stone Arrival Path');
+        rect(-7.98, -7.08, -1.78, 0.02, 'rgba(72,159,181,0.35)', '#489fb5', 'Water Pot / Tap');
+        rect(-1.5, 1.5, 1.8, 4.9, 'rgba(233,196,106,0.28)', '#e9c46a', 'Stairs ↑');
+      } else if (planLevel === 1) {
+        rect(-7.3, -3.3, -5.0, -3.0, 'rgba(160,135,100,0.30)', '#b79a70', 'Library (NW)');
+        rect(-7.3, -3.3, -3.0, -0.3, 'rgba(85,117,130,0.36)', '#9bb5bf', 'Kids (W)');
+        rect(-7.3, -4.8, -0.3, 1.7, 'rgba(130,170,180,0.34)', '#a9d6e5', 'Shared Ensuite');
+        rect(-4.8, -3.3, -0.3, 1.7, 'rgba(116,198,157,0.26)', '#74c69d', 'Common Bath');
+        rect(-7.3, -3.3, 1.7, 5.0, 'rgba(85,117,130,0.38)', '#9bb5bf', 'Master (SW)');
+        rect(-3.3, 3.5, -5.0, -1.6, 'rgba(216,210,195,0.22)', '#cfc9bb', 'Living Hall (N)');
+        rect(-3.1, 3.1, -6.0, -5.0, 'rgba(181,99,69,0.24)', '#d98a6c', 'N Balcony');
+        rect(-1.5, 1.2, -1.6, 1.4, 'rgba(93,161,73,0.35)', '#74c69d', 'Nadumuttam');
+        rect(1.2, 3.5, -1.6, 1.8, 'rgba(216,210,195,0.22)', '#cfc9bb', 'Dining');
+        rect(3.5, 7.3, -5.0, -2.5, 'rgba(233,196,106,0.32)', '#e9c46a', 'Pooja (NE)');
+        rect(3.5, 7.3, -2.5, 2.0, 'rgba(85,117,130,0.38)', '#9bb5bf', 'Parents (E)');
+        rect(1.5, 7.3, 2.0, 5.0, 'rgba(181,99,69,0.35)', '#d98a6c', 'Open Kitchen (SE)');
+        rect(-1.5, 1.5, 1.8, 4.9, 'rgba(233,196,106,0.25)', '#e9c46a', 'Stairs + Jaali');
+      } else {
+        rect(-7.3, 7.3, -5.0, 5.0, 'rgba(83,122,67,0.28)', '#8abf7c', 'Terrace Garden Deck');
+        rect(-6.9, -3.3, 1.7, 4.7, 'rgba(29,43,68,0.65)', '#6f8ab8', 'Solar Canopy');
+        rect(-1.5, 1.2, -1.6, 1.4, 'rgba(116,198,157,0.25)', '#74c69d', 'Open Void');
+        rect(-1.5, 1.5, 1.8, 4.9, 'rgba(233,196,106,0.32)', '#e9c46a', 'Stair Head');
+      }
+
+      ctx.fillStyle = '#74c69d';
+      ctx.beginPath();
+      ctx.arc(sx(camera.position.x), sz(camera.position.z), 6, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // =========================================================================
+    // 11. RENDER LOOP
+    // =========================================================================
+    const clock = new THREE.Clock();
+    function animate() {
+      requestAnimationFrame(animate);
+      const dt = Math.min(0.05, clock.getDelta());
+      updateWalk(dt);
+      updateWind(dt);
+      if (!walkMode) controls.update();
+      drawPlan();
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+  </script>
+</body>
+</html>
