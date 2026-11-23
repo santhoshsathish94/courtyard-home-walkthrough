@@ -189,7 +189,7 @@ async function main() {
       applyLevels('all', false);
       labels.group.visible = false;
       walker.enable(v.pos, v.look);
-      $('walk-hint').textContent = touch ? 'Left pad: walk · drag: look around · tap a door or the gate to open/close' : 'Click to look around · W A S D / arrows to walk · Shift to hurry · E or click on a door to open/close · Esc releases the mouse';
+      $('walk-hint').textContent = touch ? 'Left pad: walk · drag: look around · tap a door or a gate to open/close' : 'Click to look around · W A S D / arrows to walk · Shift to hurry · E or click on a door to open/close · Esc releases the mouse';
       if (touch) setPanel(false);
       else walker.requestLock();
     } else {
@@ -251,7 +251,7 @@ async function main() {
     return true;
   }
   const isShown = (o) => { for (let p = o; p; p = p.parent) if (!p.visible) return false; return true; };
-  const prettyName = (d) => (d.id === 'gate' ? 'Gate' : d.label === 'Main door' ? 'Main door' : d.id.replace(/-/g, ' ').replace(/\bdoor\b/, '').trim().replace(/^\w/, (c) => c.toUpperCase()) + ' door');
+  const prettyName = (d) => (d.id.startsWith('gate') ? d.label || 'Gate' : d.label === 'Main door' ? 'Main door' : d.id.replace(/-/g, ' ').replace(/\bdoor\b/, '').trim().replace(/^\w/, (c) => c.toUpperCase()) + ' door');
   let downAt = null;
   canvas.addEventListener('pointerdown', (e) => { downAt = [e.clientX, e.clientY]; });
   canvas.addEventListener('pointerup', (e) => {
@@ -287,7 +287,8 @@ async function main() {
     }
     make('Nadumuttam', 'open to sky', 'terrace', (D.COURT.x0 + D.COURT.x1) / 2, (D.COURT.z0 + D.COURT.z1) / 2, D.LEVELS.terrace + 1.6);
     make('Recharge pit', '', 'ground', D.DRAINAGE.rechargePit.x, D.DRAINAGE.rechargePit.z, 1.2);
-    make('West gate', 'from the road', 'ground', D.boundaryX('W', 3) - 0.6, 3.0, 2.4);
+    for (const g of D.GATES) make(g.label, g.type === 'sliding' ? 'slides open' : 'to the stair', 'ground', D.boundaryX('W', (g.z0 + g.z1) / 2) - 0.6, (g.z0 + g.z1) / 2, 2.4);
+    make('Balcony', 'west, off the master bedroom', 'first', (D.BALCONY.x0 + D.BALCONY.x1) / 2 - 0.3, 1.6, D.LEVELS.first + 2.6);
     return { group, items };
   }
 
@@ -361,7 +362,7 @@ async function main() {
   $('opt-airflow').addEventListener('change', () => {
     airflow.group.visible = $('opt-airflow').checked;
     if (airflow.group.visible && app.mode === 'orbit') { if (levelState.cut === 'all') applyLevels('first'); flyTo([-5.5, 19.5, 13.5], [0.4, 3.4, -0.2]); }
-    if (airflow.group.visible) toast('Cool air enters low on the south-west and leaves high through the court, the stair jaali and the NE vents');
+    if (airflow.group.visible) toast('Cool air enters low on the south-west and leaves high through the court, the stair-head jaali and the east vents');
     requestRender();
   });
   $('opt-rain').addEventListener('change', () => {
@@ -417,8 +418,8 @@ async function main() {
   Object.assign(app, {
     ready: true, setMode, jump, openPlans, renderPlan, applyLevels, interact,
     renderNow: () => { if (app.mode === 'orbit') { if (camAnim) { camAnim.t = 1; stepCamAnim(0); } orbit.update(); } renderer.render(scene, camera); app.frames++; },
-    toggleDoor: (id) => { const d = [...world.doors, world.gate].find((x) => x.id === id); if (!d) return null; d.open = !d.open; requestRender(); return d.open; },
-    doorState: (id) => { const d = [...world.doors, world.gate].find((x) => x.id === id); return d ? { open: d.open, t: d.t } : null; },
+    toggleDoor: (id) => { const d = [...world.doors, ...world.gates].find((x) => x.id === id); if (!d) return null; d.open = !d.open; requestRender(); return d.open; },
+    doorState: (id) => { const d = [...world.doors, ...world.gates].find((x) => x.id === id); return d ? { open: d.open, t: d.t } : null; },
     walkTo: (x, z) => { walker.state.x = x; walker.state.z = z; requestRender(); },
     walkStep: (forward, seconds = 1, strafe = 0) => {
       // Test helper: simulate held movement for a number of seconds.

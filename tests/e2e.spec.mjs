@@ -47,42 +47,48 @@ test('the canvas fills the screen and the page does not scroll sideways', async 
   expect(m.sw).toBeLessThanOrEqual(m.w);
 });
 
-test('walk from the road through the gate and main door, up the stair to the first floor and terrace', async ({ page }) => {
+test('walk from the road through the front gate, up the straight stair, through the main door and on to the terrace', async ({ page }) => {
   await boot(page);
   const r = await page.evaluate(() => {
     const a = window.__app, w = a.walker.state, out = {};
     // yaw: 0 = north (−z), π = south, π/2 = west, −π/2 = east.
     a.jump('gate');
     out.start = { level: a.walker.level, feet: w.feet };
-    w.yaw = -Math.PI / 2; let s = a.walkStep(1, 1.75);          // through the sliding gate
+    w.yaw = -Math.PI / 2; let s = a.walkStep(1, 1.8);            // through the front gate
     out.inside = { x: s.x };
-    w.yaw = 0; s = a.walkStep(1, 4.1);                          // north along the front yard
-    out.yard = { z: s.z };
-    w.z = -3.125; w.yaw = -Math.PI / 2; s = a.walkStep(1, 3.6); // between the thinnai, through the main door
-    out.hall = { x: s.x, feet: s.feet };
-    a.jump('stair');
-    s = a.walkStep(1, 2.2); out.mid = s.feet;                   // flight 1 east to the mid landing
-    w.yaw = 0; a.walkStep(1, 0.8);                              // across to the north lane
-    w.yaw = Math.PI / 2; s = a.walkStep(1, 3.2); out.first = { feet: s.feet, level: s.level };
-    w.yaw = Math.PI; s = a.walkStep(1, 1.4); out.hallFirst = { z: s.z, level: s.level };
-    w.x = -1.6; w.z = -2.7; w.yaw = -Math.PI / 2; a.walkStep(1, 2.2);
-    w.yaw = 0; a.walkStep(1, 0.8);
-    w.yaw = Math.PI / 2; a.walkStep(1, 3.2);
-    w.yaw = Math.PI; w.x = -1.55; s = a.walkStep(1, 2.0); out.terrace = { feet: s.feet, level: s.level, z: s.z };
+    w.z = -4.13; s = a.walkStep(1, 1.6);                          // along the entry path to the stair foot
+    out.foot = { x: s.x, feet: s.feet };
+    s = a.walkStep(1, 1.85); out.mid = s.feet;                    // flight 1 east to the mid landing
+    s = a.walkStep(1, 3.2); out.first = { feet: s.feet, level: s.level, x: s.x }; // flight 2 to the foyer
+    w.x = 1.81; w.yaw = Math.PI; s = a.walkStep(1, 1.2);          // south through the main door
+    out.hall = { z: s.z, level: s.level };
+    w.x = -0.5; w.z = -2.8; w.yaw = Math.PI / 2; s = a.walkStep(1, 2.1); // west through the lobby arch
+    out.lobby = { x: s.x };
+    w.yaw = 0; s = a.walkStep(1, 1.0);                            // north into the terrace-stair pocket
+    out.pocket = { z: s.z, feet: s.feet };
+    w.z = -4.13; w.yaw = -Math.PI / 2; s = a.walkStep(1, 4.4);    // east up the terrace run
+    out.top = { feet: s.feet, level: s.level };
+    w.x = 2.6; w.yaw = Math.PI; s = a.walkStep(1, 1.2);           // out of the stair-head door
+    out.terrace = { feet: s.feet, level: s.level, z: s.z };
     return out;
   });
   expect(r.start.level).toBe('ground');
   expect(r.start.feet).toBeLessThan(0);
-  expect(r.inside.x).toBeGreaterThan(-6.7);
-  expect(r.yard.z).toBeLessThan(-2.5);
-  expect(r.hall.x).toBeGreaterThan(-2.0);
+  expect(r.inside.x).toBeGreaterThan(-6.6);
+  expect(r.foot.x).toBeGreaterThan(-4.4);
+  expect(r.foot.feet).toBeLessThan(0.1);
   expect(r.mid).toBeCloseTo(1.6, 1);
   expect(r.first.level).toBe('first');
   expect(r.first.feet).toBeCloseTo(3.21, 1);
-  expect(r.hallFirst.z).toBeGreaterThan(-2.14);
-  expect(r.hallFirst.level).toBe('first');
+  expect(r.first.x).toBeGreaterThan(1.2);
+  expect(r.hall.z).toBeGreaterThan(-2.9);
+  expect(r.hall.level).toBe('first');
+  expect(r.lobby.x).toBeLessThan(-3.0);
+  expect(r.pocket.z).toBeLessThan(-3.6);
+  expect(r.pocket.feet).toBeCloseTo(3.21, 1);
+  expect(r.top.level).toBe('terrace');
   expect(r.terrace.level).toBe('terrace');
-  expect(r.terrace.z).toBeGreaterThan(-2.0);
+  expect(r.terrace.z).toBeGreaterThan(-3.3);
 });
 
 test('every walk viewpoint stands on a floor at eye height', async ({ page }) => {
@@ -99,24 +105,24 @@ test('doors: a closed door blocks, an open one does not, and clicking the gate t
   await boot(page);
   const r = await page.evaluate(() => {
     const a = window.__app, w = a.walker.state;
-    // Common bath, entered from the stair's floor landing (the door starts closed).
+    // Common bath, entered from the utility lobby (the door starts closed).
     a.jump('hall');
-    w.x = -1.6; w.z = -3.55; w.feet = 3.21; w.yaw = Math.PI / 2;
-    const closed = a.walkStep(1, 1.5).x;
+    w.x = -3.2; w.z = -2.82; w.feet = 3.21; w.yaw = Math.PI / 2;
+    const closed = a.walkStep(1, 1.2).x;
     a.toggleDoor('cbath-door');
     for (let i = 0; i < 40; i++) a.world.update(0.05);
-    w.x = -1.6; w.z = -3.55;
-    return { closed, open: a.walkStep(1, 1.5).x };
+    w.x = -3.2; w.z = -2.82;
+    return { closed, open: a.walkStep(1, 1.2).x };
   });
-  expect(r.closed).toBeGreaterThan(-2.0);
-  expect(r.open).toBeLessThan(-2.4);
-  // Back to orbit, then click/tap the sliding gate leaf on screen (real input through the UI).
+  expect(r.closed).toBeGreaterThan(-3.9);
+  expect(r.open).toBeLessThan(-4.3);
+  // Back to orbit, then click/tap the sliding car-gate leaf on screen (real input through the UI).
   await page.evaluate(() => window.__app.jump('overview'));
   const pt = await page.evaluate(() => {
     const a = window.__app;
     a.renderNow();
     const lf = a.world.gate.leaves[0], p = lf.pivot.position, ry = lf.pivot.rotation.y;
-    const v = a.camera.position.clone().set(p.x + Math.cos(ry) * lf.w * 0.5, 0.85, p.z - Math.sin(ry) * lf.w * 0.5).project(a.camera);
+    const v = a.camera.position.clone().set(p.x + Math.cos(ry) * lf.w * 0.5, 1.42, p.z - Math.sin(ry) * lf.w * 0.5).project(a.camera);
     return { x: ((v.x + 1) / 2) * innerWidth, y: ((1 - v.y) / 2) * innerHeight };
   });
   expect(await page.evaluate(() => window.__app.doorState('gate').open)).toBe(true);
@@ -171,7 +177,7 @@ test('about dialog explains the plot discrepancy and the concept status', async 
   const dlg = page.locator('#about-dialog');
   await expect(dlg).toBeVisible();
   await expect(dlg).toContainText('1,620');
-  await expect(dlg).toContainText('1,596');
+  await expect(dlg).toContainText('1,617');
   await expect(dlg).toContainText('not a construction drawing');
   await page.locator('#about-close').click();
   await expect(dlg).toBeHidden();

@@ -49,6 +49,8 @@ Complete a polished, realistic, interactive 3D walkthrough of a traditional Tami
 - **Stale artefacts:** `render/` (Blender scripts) and `media/` (a 42 MB video) depict an older, different house and are not referenced by the site. `revisions/` holds archived HTML iterations.
 
 ## Plot reconciliation (known / inferred / unknown)
+> Superseded in cycle 4: the owner confirmed a straight 33 ft road side, S 46 ft and N 52 ft (1,617 sq ft, E derived). See *Cycle 4* below.
+
 - **Known (supplied):** N 51 ft, S 46 ft, W 33 ft, E 33 ft; area 1,620 sq ft; road on the west.
 - **Verified by computation:**
   - The maximum area of any quadrilateral with these four sides (Brahmagupta, cyclic case) is **1,595.9 sq ft (148.3 m²)**, so 1,620 sq ft is unattainable.
@@ -58,6 +60,8 @@ Complete a polished, realistic, interactive 3D walkthrough of a traditional Tami
 - **Assumption used for visualisation (labelled in the UI):** an isosceles trapezoid with N parallel to S. This is the only shape that keeps **all four supplied lengths exact**, and it is also the maximum-area case (1,595.9 sq ft, the closest to the stated area). Depth is 10.0295 m. The west and east sides lean 4.34° (0.762 m offset each).
 
 ## Design basis (as built in cycle 2; conceptual, not validated construction design)
+> Superseded by cycles 3 and 4. The current design (16 columns, nine squares, straight north stair) is described under *Cycle 4* below.
+
 Cycle 1 numbers were revised once the validator and the browser walk exposed conflicts. Each reason is noted. The authoritative values are in `src/design.js`.
 
 - **Fit:**
@@ -254,7 +258,66 @@ New palette:
 - **Close extra WebGL tabs before timing tests.** Two open walkthrough tabs tripled the local Playwright time (11 min against 3.8 min).
 - **PowerShell `.Replace` with multi-line strings breaks on CRLF files.** Use a small Node script that normalises line endings, or the edit tool.
 
+## Cycle 4 — owner direction (2026-11-23, 18:09)
+"This is very old school. I asked for a modern house with traditional values." Plot clarified: the west road side is straight; only the NE corner is extended (S 46 ft, N 52 ft, W 33 ft). Push the columns out to the compound walls (16 columns, 4 × 4), use the 4 centre columns for the court, and make one simple straight stair on the north side rising west → east to a first-floor main door that opens into the hall. Of the 9 blocks around the court: 3 for hall + open kitchen + pooja, 4 for three bedrooms, 1 for the common bath. Good water, air and light flow.
+
+### Decisions (cycle 4)
+- **Plot.** A right trapezoid: W 33 ft straight (road), S 46 ft, N 52 ft, so E = √(33² + 6²) = 33′-6½″ (derived). Area 33 × (46 + 52) / 2 = **1,617 sq ft**, within 0.2 % of the stated 1,620. The earlier N 51 / E 33 brief could not reach 1,620 (max 1,596); 52 ft reconciles it. Survey must confirm.
+- **Structure.** 16 columns on lines A −5.65, B −1.55, C 2.65, D 6.70 and rows −4.73, −1.15, 1.65, 4.73. Rows 1 and 4 and line D stand in (merge with) the compound walls. Line A is set in 1.2 m so a full-width west balcony projects to, but not over, the road boundary. C2, at the court's open corner, is a round exposed column; all others hide in walls. Every beam spans ≤ 4.2 m (230 × 450). The stairwell cuts line B's north beam, which cantilevers from B2 to pick up the stair trimmer. **A structural engineer must confirm this.**
+- **Nine squares.** NW: common bath + utility lobby (shared basin) + terrace-stair pocket. N: hall + stair lane + entrance foyer. NE: living + closed oak pooja cabinet (idols face west). W: master bath + dressing. Centre: nadumuttam, 3.97 × 2.57 m, with a small SE landing for bedroom 2's door. E: open U kitchen. SW: master bedroom with a slider to the west balcony. S: bedroom 2. SE: bedroom 3.
+- **Kitchen U.** It opens west to a walkway along the court. North leg: breakfast counter with stools (no dining table). East leg: stove under the high exhaust jaali. South leg: sink, with the fridge at the U's mouth.
+- **Stair.** One straight stair in a 0.90 m lane along the north wall, 18 × 178 mm risers, 260 mm treads, two flights of 9 with a 0.90 m mid landing.
+  - The main run climbs from the stilt garden to the foyer. The main door opens outward into the foyer.
+  - The terrace run is stacked directly above, starting 0.92 m further east from a pocket off the utility lobby. Minimum headroom is 2.21 m.
+  - It is a floating oak stair on a steel spine, with a terracotta-jaali wall behind it at ground level.
+- **Gates.** A slatted oak car gate slides north behind the wall (2.7 m clear). A separate hinged front gate (1.0 m) opens inward, with a foot-wash tap. A straight entrance path leads to the stair foot and its thinnai bench.
+- **Drainage.** The terrace drains through 9 scuppers into the court rain garden. A weir on its east edge feeds a channel to a silt trap and a recharge pit in the NE garden (the extended corner). The gate intercept was dropped because the balcony and first floor roof the front strip.
+- **Airflow.** Low inlets: the master bedroom's south jaali and the stilts. High exhausts: the open court, the stair-head north jaali, and the kitchen and pooja east jaalis.
+
+### Verification controls changed in cycle 4 (disclose to the owner)
+- **Plot:** N, S and W must be exact. W must be straight, square to N and S. E is checked as derived. The area must be within 0.5 % of 1,620 sq ft. This replaces the four-exact-sides and Brahmagupta rules.
+- **House in the plot:** "house ≥ 0.25 m from the compound wall" became "first floor (house + balcony) stays inside the plot line". The owner asked for columns on the compound walls.
+- **Structure:**
+  - 16 columns instead of 12.
+  - An expressed (exposed) column may stand free of walls and rooms.
+  - Beams must lie within the house or the balcony.
+- **Stair rules** are rewritten for straight runs:
+  - ≤ 15 risers per flight.
+  - Mid, foot and top landings ≥ the flight width.
+  - The slab openings end at the top riser.
+  - Headroom ≥ 2.2 m including the stacked run.
+- **Doors:**
+  - The main door must open away from the room it serves.
+  - Private rooms (the master dressing) open inward like bedrooms.
+  - Sliding doors count as passable.
+- **Circulation:**
+  - The first-floor envelope includes the balcony.
+  - Pedestrians are checked from the front gate, the car from the car gate, and two-wheelers from either gate.
+  - The terrace-stair foot must be reachable.
+  - **New:** every door leaf counts as open, so an open door may not block a route. This caught the common-bath door blocking the terrace stair.
+- **Court and water:**
+  - Court edges follow the L-shaped void.
+  - Scuppers carry an explicit spout direction, which must point into the void.
+  - The weir may sit on any basin edge.
+- **Gates:** the car gate and front gate are checked separately. The front gate must open inward.
+- **Thinnai:** one bench beside the stair foot. This replaces the twin thinnai flanking the main door, which is now on the first floor.
+- **Plan labels:** "16 columns" and "Silt trap" replace "12 columns" and "Gate intercept".
+
+### Outcome log (cycle 4)
+- **4a (redesign).** `design.js` was rewritten from the brief, and the validator rules were updated. The first full run passed 5,264 checks. The builder, plans, walk and app shell were then adapted (straight runs, two gates, glass guards, balcony, slider, scuppers, new furniture).
+- **Browser review.** Every viewpoint and all three plans were checked. Two walk-mode blockers were found and fixed:
+  - the open common-bath door crossed the lobby; it is now hinged at the south jamb, and the validator rule above was added
+  - the stair balustrade collider reached into the first-floor pocket; it now follows the flight
+- **Polish:** a modern oak pooja cabinet, rugs, and a board-formed fin framing the balcony.
+
+### Growth (cycle 4)
+- **Move columns to the boundary and the plan opens up.** With the structure on the compound walls, the nine-square plan has no free-standing columns except the one deliberately exposed at the court.
+- **Stacking straight runs needs exact numbers.** A 0.92 m offset gives 2.21 m headroom against a 2.20 m limit. The validator's headroom probe is what makes such a tight solution safe to keep.
+- **Test with doors open.** A closed-door flood fill missed a real blockage. Treating every leaf as open is the stricter, more honest check.
+- **Browser caches can serve stale ES modules even with no-store.** Disable the cache (CDP `Network.setCacheDisabled`) before re-checking a local fix.
+
 ## Open questions for the owner
-1. Survey or FMB sketch: which is right, the side lengths or the 1,620 sq ft? What are the corner angles?
-2. Local setback and coverage rules for the site. The current margins are a design choice.
-3. `render/` and `media/` show an older house. Keep, archive or delete?
+1. Survey or FMB sketch: please confirm the north side (52 ft here; 51 ft in an earlier note), the derived east side (33′-6½″) and the corner angles.
+2. Local setback and coverage rules. The first floor now reaches the compound-wall line on three sides, and the balcony reaches the road boundary. These need approval.
+3. Structural confirmation of the cut line-B beam (a cantilever from B2 picking up the stair trimmer) and of the round exposed column C2.
+4. `render/` and `media/` show an older house. Keep, archive or delete?

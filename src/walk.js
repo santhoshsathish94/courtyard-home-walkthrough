@@ -11,7 +11,7 @@ const isHoriz = (w) => Math.abs(w.a[1] - w.b[1]) < EPS;
 function wallSolids(w) {
   const len = D.wallLength(w), h = w.t / 2, horiz = isHoriz(w);
   const dir = horiz ? Math.sign(w.b[0] - w.a[0]) : Math.sign(w.b[1] - w.a[1]);
-  const cuts = w.openings.filter((o) => o.type === 'door' || o.type === 'arch').map((o) => [o.s, o.s + o.w]).sort((a, b) => a[0] - b[0]);
+  const cuts = w.openings.filter((o) => o.type === 'door' || o.type === 'arch' || o.type === 'slider').map((o) => [o.s, o.s + o.w]).sort((a, b) => a[0] - b[0]);
   const parts = [];
   let cur = 0;
   for (const [s0, s1] of cuts) { if (s0 > cur) parts.push([cur, s0]); cur = Math.max(cur, s1); }
@@ -33,7 +33,15 @@ function buildColliders() {
     const base = D.LEVELS[f.level];
     rects.push({ x0: f.x0, x1: f.x1, z0: f.z0, z1: f.z1, y0: f.hang ? base + f.h - 0.08 : base, y1: base + f.h });
   }
-  for (const c of D.COLUMNS) rects.push({ x0: c.x - c.w / 2, x1: c.x + c.w / 2, z0: c.z - c.d / 2, z1: c.z + c.d / 2, y0: 0, y1: D.LEVELS.first });
+  // Columns: stilts at ground level; the expressed round column also stands in the first floor.
+  for (const c of D.COLUMNS) rects.push({ x0: c.x - c.w / 2, x1: c.x + c.w / 2, z0: c.z - c.d / 2, z1: c.z + c.d / 2, y0: 0, y1: c.expressed ? D.LEVELS.terrace : D.LEVELS.first });
+  // Open (south) side of the main stair: a balustrade that follows the flight (and stops
+  // walking under the stair) without reaching up into the first-floor pocket.
+  const run0 = D.STAIR_RUNS[0], lane = D.STAIR.lane, zc = (lane.z0 + lane.z1) / 2;
+  for (let x = run0.f1.x0 + 0.35; x < run0.x1 - 1e-6; x += 0.25) {
+    const x1 = Math.min(run0.x1, x + 0.25), y = D.stairWalkY(Math.min(x1, run0.x1 - 1e-4), zc, run0.y0) ?? run0.y1;
+    rects.push({ x0: x, x1, z0: lane.z1 - 0.06, z1: lane.z1, y0: 0.3, y1: y + 1.0 });
+  }
   for (const g of D.GUARDS) for (const r of D.guardBands(g)) rects.push({ ...r, y0: D.LEVELS[g.level], y1: D.LEVELS[g.level] + g.h });
   const yT = D.LEVELS.terrace;
   for (const p of D.TERRACE.planters) rects.push({ ...p, y0: yT, y1: yT + p.h });
@@ -41,21 +49,30 @@ function buildColliders() {
   const tr = D.COURT_TREE;
   rects.push({ x0: tr.x - 0.09, x1: tr.x + 0.09, z0: tr.z - 0.09, z1: tr.z + 0.09, y0: -0.1, y1: 2.3 });
   const pm = D.PALM;
-  rects.push({ x0: pm.x - 0.18, x1: pm.x + 0.18, z0: pm.z - 0.18, z1: pm.z + 0.18, y0: 0, y1: 4 });
-  // Compound wall along the boundary (inset by half its thickness), with the gate gap.
+  if (pm) rects.push({ x0: pm.x - 0.18, x1: pm.x + 0.18, z0: pm.z - 0.18, z1: pm.z + 0.18, y0: 0, y1: 4 });
+  // Compound wall along the boundary (inset by half its thickness), with a gap per gate.
   const V = D.PLOT.vertices;
   for (let i = 0; i < 4; i++) {
     const p = V[i], q = V[(i + 1) % 4], dx = q[0] - p[0], dz = q[1] - p[1], L = Math.hypot(dx, dz), n = [-dz / L, dx / L];
     const off = (pt) => [pt[0] + (n[0] * D.COMPOUND.t) / 2, pt[1] + (n[1] * D.COMPOUND.t) / 2];
     const at = (z) => [D.boundaryX('W', z), z];
-    const runs = i === 3 ? [[p, at(D.GATE.z1 + D.GATE.pierW)], [at(D.GATE.z0 - D.GATE.pierW), q]] : [[p, q]];
+    const runs = [];
+    if (i === 3) {
+      let cur = p;
+      for (const G of [...D.GATES].sort((a, b) => b.z1 - a.z1)) {
+        runs.push([cur, at(G.z1 + G.pierW)]);
+        cur = at(G.z0 - G.pierW);
+        for (const [za, zb] of [[G.z0 - G.pierW, G.z0], [G.z1, G.z1 + G.pierW]]) segs.push({ a: off(at(za)), b: off(at(zb)), t: D.COMPOUND.t + 0.1, y0: -0.2, y1: G.pierH });
+      }
+      runs.push([cur, q]);
+    } else runs.push([p, q]);
     for (const [a, b] of runs) segs.push({ a: off(a), b: off(b), t: D.COMPOUND.t, y0: -0.2, y1: D.COMPOUND.h });
-    if (i === 3) for (const [za, zb] of [[D.GATE.z0 - D.GATE.pierW, D.GATE.z0], [D.GATE.z1, D.GATE.z1 + D.GATE.pierW]]) segs.push({ a: off(at(za)), b: off(at(zb)), t: D.COMPOUND.t + 0.12, y0: -0.2, y1: D.GATE.pierH });
   }
   return { rects, segs };
 }
 const inR = (x, z, r) => x > r.x0 && x < r.x1 && z > r.z0 && z < r.z1;
 const inHouse = (x, z) => x >= D.HOUSE.x0 && x <= D.HOUSE.x1 && z >= D.HOUSE.z0 && z <= D.HOUSE.z1;
+const inFirst = (x, z) => D.inFirstFloor(x, z);
 function terraceY(x, z) {
   const C = D.COURT, g = 0.23, x0 = D.HOUSE.x0 + g, x1 = D.HOUSE.x1 - g, z0 = D.HOUSE.z0 + g, z1 = D.HOUSE.z1 - g;
   const dmax = Math.max(C.x0 - g - x0, x1 - C.x1 - g, C.z0 - g - z0, z1 - C.z1 - g);
@@ -68,11 +85,11 @@ export function floorCandidates(x, z) {
   if (D.pointInPolygon([x, z], D.PLOT.vertices)) c.push(inR(x, z, D.DRAINAGE.courtBasin) ? D.DRAINAGE.courtBasin.floor : 0.014);
   else c.push(x < D.boundaryX('W', z) - 1.2 ? -D.ROAD.drop : -0.03);
   for (const lvl of ['first', 'terrace']) {
-    if (!inHouse(x, z) || D.SLAB_OPENINGS[lvl].some((o) => inR(x, z, o))) continue;
+    if (!(lvl === 'first' ? inFirst(x, z) : inHouse(x, z)) || D.SLAB_OPENINGS[lvl].some((o) => inR(x, z, o))) continue;
     if (lvl === 'first') c.push(D.LEVELS.first + 0.012);
     else c.push(inR(x, z, D.MUMTY) ? D.LEVELS.terrace + 0.012 : terraceY(x, z));
   }
-  for (const y0 of [D.LEVELS.ground, D.LEVELS.first]) { const y = D.stairWalkY(x, z, y0); if (y !== null) c.push(y); }
+  for (const run of D.STAIR_RUNS) { const y = D.stairWalkY(x, z, run.y0); if (y !== null) c.push(y); }
   return c;
 }
 export function levelOf(feet) { return feet > D.LEVELS.terrace - 0.6 ? 'terrace' : feet > D.LEVELS.first - 0.6 ? 'first' : 'ground'; }

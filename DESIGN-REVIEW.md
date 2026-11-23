@@ -149,32 +149,43 @@ Owner's brief: stairs on the north (vastu), a SW entrance and car parking, a hal
 - [x] **Façade depth (cycle 3c).** Dark box frames around the main windows; exposed-concrete stilt columns, beams and soffit; pendants over the breakfast counter and a chimney hood; neutral bounce light so ceilings read white.
 - [ ] Next: west-facing shading fins, lighting moods, richer landscape on the stilt level.
 
+### Pass 9 — Modern nine-square plan on 16 columns (cycle 4, 2026-11-23)
+- [x] **Plot reconciled.** Straight 33 ft road side, S 46 ft, N 52 ft, E 33′-6½″ derived; 1,617 sq ft (stated 1,620).
+- [x] **Structure on the boundary.** 16 columns (4 × 4); outer rows in the compound walls; the 4 centre columns frame the court; one round exposed column at the court's open corner; spans ≤ 4.2 m.
+- [x] **Nine squares.** The court is in the centre. Hall, living + pooja and open kitchen take three squares. Three bedrooms take four: the master suite uses two. The common bath and utility lobby take one. No corridors.
+- [x] **Straight north stair, west → east.** The main run rises to an entrance foyer. The main door opens outward into it, then on to the hall. The terrace run is stacked above, reached from the utility lobby.
+- [x] **Entrances.** A sliding car gate leads to the car bay. A separate front gate leads straight to the stair foot past a foot-wash and a thinnai bench.
+- [x] **Modern expression.** A white box with a full-width west balcony framed by its roof slab and a board-formed fin. Glass guards and slider, a floating oak stair, slatted oak gates, a fluted-oak TV wall, a low sofa, a modern pooja cabinet and terracotta jaalis.
+- [x] **Water, air, light.** Terrace → 9 scuppers → court rain garden → silt trap → NE recharge pit. SW low inlets lead to high exhausts at the court, stair head, kitchen and pooja. Every room has daylight; the bedroom walls bring court light in.
+- [x] **Walk-mode fixes.** The open bath door no longer blocks the terrace stair, and the stair balustrade follows the flight.
+- [ ] Next: lighting moods, richer stilt-level landscape, survey-based plot correction.
+
 ## Critical dimension check before any build-ready review
 
 **Resolved in Pass 6.** Before, the compound wall was 16.7 × 11.2 m (about 2,020 sq ft), larger than the plot.
 
-**Now:** the boundary is drawn from the four supplied side lengths. It is a trapezoid of 1,595.9 sq ft with N parallel to S, and the house fits inside it with margins.
+**Now (cycle 4):** the owner clarified the outline. The road side is a straight 33 ft, square to a 46 ft south side and a 52 ft north side; the east side (33′-6½″) is derived. The area is 1,617 sq ft against the stated 1,620.
 
-**Still unknown:** the supplied area (1,620 sq ft) cannot coexist with those sides. Confirm the actual side lengths, corner angles and surveyed area before any build-ready drawings. The design data has one place to change the boundary: `PLOT` in `src/design.js`. The validator then re-checks fit, margins, drainage and circulation.
+**Still unknown:** the north side was 51 ft in an earlier note, and the corner angles are not surveyed. Confirm the actual side lengths, corner angles and surveyed area before any build-ready drawings. The design data has one place to change the boundary: `PLOT` in `src/design.js`. The validator then re-checks fit, margins, drainage and circulation.
 
 ## Current conceptual material map
 
 | Zone | Proposed finish |
 |---|---|
-| Compound wall | Local rubble stone with a flat granite coping; granite gate piers; sliding reclaimed-teak batten gate on a steel track |
-| Stilt level and stair | Board-formed concrete stair hall and thinnai (black granite seats); honed light stone paving; stone treads; granite column bases |
-| Rooms | Honed light stone through the open half (hall, living, family, kitchen); warm terrazzo in the bedrooms; large light tiles in the baths |
+| Compound wall | Smooth white lime plaster with flat granite coping; board-formed concrete gate piers; slatted oak sliding car gate and hinged front gate on dark steel frames |
+| Stilt level and stair | Kota paving with an exposed-concrete driveway between granite strips; floating oak stair on a dark steel spine with steel balusters; board-formed concrete wall with terracotta jaali behind the stair; thinnai bench |
+| Rooms | Honed light stone through the open half (foyer, hall, living, kitchen); warm terrazzo in the bedrooms and dressing; large light tiles in the baths; teak deck on the balcony |
 | Walls and ceilings | Smooth white lime plaster |
-| Jaali and screens | Terracotta brick jaali, hit-and-miss (exterior vents, low inlets, stair spine, wash screen); oak slat screen at the stair; slat transoms and pooja-cabinet doors |
+| Jaali and screens | Terracotta brick jaali (stair wall, high exhausts, low inlets, wash screen); full-height oak fin screen at the stairwell; frameless glass guards on the court and balcony |
 | Terrace | Terracotta pavers falling to the court; flat stone coping on parapets; thin concrete wash canopy |
 | Joinery and windows | Flush light-oak doors and a grooved dark-teak main door; slim dark-aluminium windows with clear glass and room-side safety rails; thin flat concrete chajjas |
 
 ## Current rainwater concept
 
 1. The terrace finish rises 60 mm from the court guard to the parapets (≥ 1:100), so rain runs to the open court.
-2. Eight clay scuppers in the court guard drop rain into the court rain garden, a permeable planted basin 0.10 m below grade.
-3. Overflow passes a weir on the west kerb. It then runs through a shallow stone channel west (1:121), north through the grated intercept, then the silt trap, then the recharge pit in the NW yard.
-4. A grated channel inside the west gate intercepts yard runoff before the road. No water discharges to the road. There are no downpipes or gutters.
+2. Nine stone scuppers in the court guard spout rain into the court rain garden, a permeable planted basin 0.10 m below grade.
+3. Overflow passes a weir on the east kerb. It runs through a shallow stone channel east (1:96), then north through the silt trap to the recharge pit in the north-east garden.
+4. The balcony and first floor roof the front strip, so no gate intercept is needed. No water discharges to the road. There are no downpipes or gutters.
 5. Channel sections, pit size and its distance from footings (currently ≥ 1.0 m from column centres) must be confirmed with rainfall data and soil percolation tests.
 
 ## Important limitations

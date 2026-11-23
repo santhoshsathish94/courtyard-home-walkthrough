@@ -89,8 +89,7 @@ export function buildRain() {
   // Water flows: scupper jets (terrace → court garden), terrace run-off, and channels.
   const flows = [];
   const yT = D.LEVELS.terrace, cb = D.DRAINAGE.courtBasin;
-  for (const [x, z] of D.SCUPPERS) {
-    const inX = Math.abs(x - D.COURT.x0) < 0.01 ? 1 : Math.abs(x - D.COURT.x1) < 0.01 ? -1 : 0, inZ = inX ? 0 : Math.abs(z - D.COURT.z0) < 0.01 ? 1 : -1;
+  for (const [x, z, inX = 0, inZ = 0] of D.SCUPPERS) {
     const p0 = new THREE.Vector3(x + inX * 0.3, yT + 0.06, z + inZ * 0.3);
     const curve = new THREE.QuadraticBezierCurve3(p0, new THREE.Vector3(x + inX * 0.55, yT - 0.4, z + inZ * 0.55), new THREE.Vector3(x + inX * 0.62, cb.floor + 0.05, z + inZ * 0.62));
     flows.push({ curve, n: 14, speed: 1.1, size: 0.07 });

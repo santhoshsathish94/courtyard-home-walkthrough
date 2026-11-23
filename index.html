@@ -204,22 +204,23 @@
   <div class="about">
     <p class="warn"><strong>Concept visualisation, not a construction drawing.</strong> It shows design intent only. The structure (column and beam sizes, foundations), drainage sizing, setbacks, plot geometry and approvals all need a site survey and professional design by a licensed architect and structural engineer.</p>
     <h3>Plot: what was supplied and what is drawn</h3>
-    <p>Supplied: north 51 ft, south 46 ft, west 33 ft (road side), east 33 ft, area 1,620 sq ft. <strong>These four sides cannot enclose 1,620 sq ft.</strong> The largest area any four-sided plot with these sides can have is 1,596 sq ft (1,595.9). So either a side length or the stated area is approximate.</p>
-    <p>The model keeps all four side lengths exact and assumes the north and south sides are parallel. That is a trapezoid of 1,595.9 sq ft, with the west and east sides leaning about 4.3°. Corner angles, bearing and levels are <em>not</em> surveyed. Please check the survey or FMB sketch.</p>
+    <p>Owner's outline: the road (west) side is straight, 33 ft, and square to the north and south sides. South 46 ft, north 52 ft, so only the north-east corner reaches further east. The east side follows: √(33² + 6²) = 33 ft 6½ in.</p>
+    <p>Area = 33 × (46 + 52) / 2 = <strong>1,617 sq ft</strong>, within 0.2 % of the stated 1,620 sq ft. An earlier note gave the north side as 51 ft and the east side as 33 ft, which cannot enclose 1,620 sq ft (maximum 1,596). The 52 ft north side reconciles the area. Corner angles, bearing and levels are <em>not</em> surveyed. Please confirm with the survey or FMB sketch.</p>
     <h3>Design intent</h3>
     <table>
-      <tr><td>Ground</td><td>Open stilt garden on 12 columns: a sliding timber gate on the south-west, a car bay under the master suite, two-wheeler parking, a porch with twin thinnai and a foot-wash, the main door facing west into the stair hall, and the courtyard rain garden.</td></tr>
-      <tr><td>First floor</td><td>A half-open family floor around a 2.9 × 2.4 m <em>nadumuttam</em> open to the sky. The north and east are open: the stair (north centre), a hall along the court, a family space, an open kitchen with a U counter (one leg for sitting, the others for the stove and the sink with the fridge, so there is no separate dining table), and the living room with a closed pooja cabinet in the NE (idols face west). The south and west form an "L" of three bedrooms whose walls and windows are the court's other two sides: the master suite (W + SW) with its own bath, the parents' room (S) and the kids' room (SE). The common bath (NW) opens off the stair landing. No corridors: every door opens off the open space.</td></tr>
+      <tr><td>Structure</td><td>16 columns on a 4 × 4 grid. The outer rows stand in the north, south and east boundary walls, so the plan is free of internal columns. The four centre columns frame the court; the one at its open corner is a round, exposed column.</td></tr>
+      <tr><td>Ground</td><td>An open stilt garden. From the road: a slatted sliding car gate (south) to the car bay, and a separate front gate (north) with a foot-wash tap. The front gate leads straight along the entrance path to the foot of the stair, with a thinnai bench beside it. The ground also has two-wheeler parking and the courtyard rain garden under the open sky. A terracotta-jaali wall screens the stair from the north neighbour.</td></tr>
+      <tr><td>First floor</td><td>Nine squares around a 4.0 × 2.6 m <em>nadumuttam</em> open to the sky. One straight stair runs along the north wall, rising west to east, to an entrance foyer. The main door opens outward into the foyer and leads into the hall.<br>The north and east are open around the court: the hall with an oonjal facing the court, the living room with a closed pooja cabinet in the NE corner (idols face west), and the open kitchen. The kitchen is a U: a breakfast-counter leg with stools (no separate dining table), a stove leg under a high exhaust jaali, and a sink leg with the fridge at its mouth.<br>Four squares on the west and south hold three bedrooms: the master suite (west bath and dressing plus the SW bedroom, opening onto a full-width west balcony with a swing), bedroom 2 (south) and bedroom 3 (SE). Their walls and windows form the court's other two sides.<br>The NW square has the common bath and a utility lobby with a shared wash basin. The terrace stair starts from a pocket off this lobby, stacked above the main stair. No corridors.</td></tr>
       <tr><td>Terrace</td><td>Terracotta-paved garden with planters, a PV pergola, a wash and drying area, and the stair head carrying a 1,000 L tank.</td></tr>
       <tr><td>Passive cooling</td><td>Low jaali inlets in the south-west (master suite) and the shaded stilts draw cooler air in. It crosses the court and the open half of the house. Warm air rises out through the open court, the stair-head jaali and high east jaalis over the kitchen and the pooja. Deep walls and rain hoods shade the openings.</td></tr>
-      <tr><td>Rain</td><td>The terrace falls to the court. Eight scuppers drop rain into the permeable court garden. Overflow runs through a stone channel and silt trap to a recharge pit in the NW yard. A grated channel inside the gate stops yard water reaching the road.</td></tr>
-      <tr><td>Materials</td><td>Modern and natural: smooth white lime plaster, board-formed concrete on the stilt level, honed light stone floors through the open half and warm terrazzo in the bedrooms, terracotta brick jaalis and terrace pavers, flat stone coping, light oak and reclaimed teak joinery, slim dark-aluminium windows with clear glass, and thin concrete chajjas instead of sloped hoods.</td></tr>
+      <tr><td>Rain</td><td>The terrace falls to the court. Nine scuppers drop rain into the permeable court garden. Overflow runs east through a stone channel and silt trap to a recharge pit in the north-east garden, the extended corner. The balcony and the first floor roof the front strip, so nothing drains to the road.</td></tr>
+      <tr><td>Materials</td><td>Modern and natural: smooth white lime plaster, board-formed and fair-faced concrete, honed light stone floors through the open half and warm terrazzo in the bedrooms, terracotta jaalis and terrace pavers, flat stone coping, frameless glass guards, a floating oak stair on a steel spine, light oak joinery and timber-slat gates, and slim dark-aluminium windows and sliders.</td></tr>
     </table>
     <h3>What is checked automatically</h3>
     <p>Every published version passes a design validator. It checks that:</p>
     <ul>
-      <li>the plot sides are exact</li>
-      <li>the 12 columns sit within the walls</li>
+      <li>the supplied plot sides are exact, the east side is derived and the area is within 0.5 % of 1,620 sq ft</li>
+      <li>the 16 columns sit within the walls (except the one exposed column), and every beam spans ≤ 4.2 m</li>
       <li>no beam crosses the court or stairwell</li>
       <li>stair risers, treads and headroom (≥ 2.2 m) meet common rules</li>
       <li>room sizes, door swings and step-free circulation work</li>
@@ -229,7 +230,7 @@
     </ul>
     <p>It also runs browser tests on desktop and mobile. These are design-consistency checks, not code compliance or engineering approval.</p>
     <h3>Open questions</h3>
-    <ul><li>Which is correct: the side lengths or the 1,620 sq ft? What are the corner angles?</li><li>What local setback and coverage rules apply? The current margins are a design choice.</li><li>Soil and percolation data, to size the recharge pit and confirm its distance from the footings.</li></ul>
+    <ul><li>Please confirm the north side (52 ft here; 51 ft in an earlier note) and the corner angles with the survey.</li><li>What local setback and coverage rules apply? The current margins are a design choice.</li><li>Soil and percolation data, to size the recharge pit and confirm its distance from the footings.</li></ul>
     <p style="color:var(--soft);font-size:12px">Built with three.js (MIT). All textures are generated procedurally.</p>
   </div>
 </dialog>
