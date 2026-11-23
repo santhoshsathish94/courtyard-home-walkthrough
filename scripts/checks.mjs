@@ -133,15 +133,15 @@ check(/1,620/.test(html + allJs) && /1,596/.test(html + allJs), 'The stated vs p
 check(!/function addEastServiceEave|const rainPipe\s*=|const fascia\s*=/.test(allJs + html), 'Long roof frame and downpipe must not return');
 check(!/addNorthRoofWing|addWestRoofWing|addSouthRoofWing/.test(allJs + html), 'Removed broad roof wings must not return');
 const planSrc = src['plan.js'] || '';
-for (const label of ['12 columns', 'Courtyard overflow', 'Recharge pit', 'Gate intercept', 'Wall-top clay tiles', 'SW low inlet → cross-flow → high exhaust']) {
+for (const label of ['12 columns', 'Courtyard overflow', 'Recharge pit', 'Gate intercept', 'Flat stone coping', 'SW low inlet → cross-flow → high exhaust']) {
   check(planSrc.includes(label), `Plans must label "${label}"`);
 }
 const b3 = src['build3d.js'] || '';
-for (const [fn, why] of [['addCopingTiles', 'Individual wall-top clay tiles'], ['addRainHood', 'Rain hoods over inlets and exhausts'], ['buildGate', 'West entrance timber gate'], ['addChannel', 'Sloped surface-water channels'], ['addJaali', 'Jaali ventilation screens']]) {
+for (const [fn, why] of [['addCoping', 'Flat stone coping on exposed wall tops'], ['addRainHood', 'Rain hoods over inlets and exhausts'], ['buildGate', 'West entrance timber gate'], ['addChannel', 'Sloped surface-water channels'], ['addJaali', 'Jaali ventilation screens']]) {
   check(new RegExp(`function ${fn}\\b`).test(b3), `${why} must be built in 3D (${fn})`);
 }
 check(!/neighbou?r(ing)?\s*(house|building)s?\s*=/.test(b3), 'No neighbouring buildings (keeps 360° views clear)');
-for (const k of ['parapet', 'guard', 'compound']) check(D.COPING.on.includes(k), `Clay coping tiles must cover ${k} walls`);
+for (const k of ['parapet', 'guard', 'compound']) check(D.COPING.on.includes(k), `Stone coping must cover ${k} walls`);
 C.meta = { ids: ids.length, refs: refIds.size, modules: srcFiles.length };
 }
 

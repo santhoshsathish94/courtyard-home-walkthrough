@@ -355,7 +355,7 @@ export const TERRACE = {
 };
 // Stair head (mumty) on the terrace; its roof carries the 1,000 L tank.
 export const MUMTY = { x0: fBw, x1: fCe, z0: HOUSE.z0, z1: yMumtyS + WALL_T.grid / 2, roofTop: LEVELS.mumtyRoof };
-// Individual clay coping tiles on every wall top exposed to rain.
+// Flat stone coping (with drip overhangs) on every wall top exposed to rain.
 export const COPING = { tile: 0.24, gap: 0.012, h: 0.035, overhang: 0.03, on: ['parapet', 'guard', 'compound'] };
 
 // ------------------------------------------------------------- drainage ----

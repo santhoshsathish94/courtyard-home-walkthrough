@@ -338,7 +338,7 @@ function drawTerrace(T, overlays) {
   if (T.compact) return;
   const maxRun = Math.max(D.COURT.x0 - D.HOUSE.x0, D.HOUSE.x1 - D.COURT.x1, D.COURT.z0 - D.HOUSE.z0, D.HOUSE.z1 - D.COURT.z1);
   text(T, `Terrace falls to the court (≥ 1:${Math.round(maxRun / D.TERRACE.fall)}) · 8 scuppers`, 0.3, D.HOUSE.z0 - 0.38, { size: 0.11, color: C.water, weight: '600', bg: 'rgba(247,242,231,0.85)' });
-  text(T, 'Wall-top clay tiles on parapets · 1.0 m guards · 1.8 m jaali screen at the wash area', 0.3, D.HOUSE.z1 + 1.5, { size: 0.105, color: C.clay, weight: '600', bg: 'rgba(247,242,231,0.85)' });
+  text(T, 'Flat stone coping on parapets · 1.0 m guards · 1.8 m brick-jaali screen at the wash area', 0.3, D.HOUSE.z1 + 1.5, { size: 0.105, color: C.clay, weight: '600', bg: 'rgba(247,242,231,0.85)' });
 }
 
 // ---------------------------------------------------------------- legend ----
@@ -363,7 +363,7 @@ function drawLegend(T, level, side, [x, y, w, h], overlays) {
     ? [['#1d1916', '12 columns (stilts)'], [C.greenFill, 'Courtyard rain garden'], ['rgba(160,74,46,0.4)', 'Thinnai seats'], ...(overlays ? [[C.water, 'Drains: overflow → silt trap → recharge pit'], [C.water, 'Gate intercept: grated, no road discharge']] : [])]
     : level === 'first'
       ? [[C.poche, 'Walls'], [C.court, 'Nadumuttam (open to sky)'], ['rgba(180,97,58,0.5)', 'Jaali (perforated screen)'], ...(overlays ? [[C.cool, 'SW low inlet (cool air)'], [C.warm, 'High exhaust (warm air)']] : [])]
-      : [[C.poche, 'Parapets 1.0 m + clay coping'], [C.greenFill, 'Planters (≥ 0.6 m from guards)'], ['rgba(40,60,110,0.3)', 'PV pergola 11° south'], ...(overlays ? [[C.water, 'Falls + scuppers to the court']] : [])];
+      : [[C.poche, 'Parapets 1.0 m + stone coping'], [C.greenFill, 'Planters (≥ 0.6 m from guards)'], ['rgba(40,60,110,0.3)', 'PV pergola 11° south'], ...(overlays ? [[C.water, 'Falls + scuppers to the court']] : [])];
   for (const [col, label] of items) {
     ctx.fillStyle = col; ctx.fillRect(x + pad, cy + 1 * dpr, 14 * dpr, 10 * dpr);
     ctx.strokeStyle = C.soft; ctx.strokeRect(x + pad, cy + 1 * dpr, 14 * dpr, 10 * dpr);

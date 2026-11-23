@@ -67,13 +67,49 @@ const mix = (a, b, t) => a + (b - a) * t;
 const hex = (h) => [(h >> 16) & 255, (h >> 8) & 255, h & 255];
 
 // ------------------------------------------------------------- surfaces ----
-function limePlaster(N, seed, base = 0xefe7d8) {
+function limePlaster(N, seed, base = 0xefe7d8, amp = 1) {
   const n = fbm(N, seed, 3, 6, 0.55), m = fbm(N, seed + 11, 12, 3, 0.5);
   const [r, g, b] = hex(base);
-  const col = paint(N, (x, y, i) => { const k = 0.9 + n[i] * 0.14 - m[i] * 0.05; return [r * k, g * k, b * (k - 0.01)]; });
+  const col = paint(N, (x, y, i) => { const k = 1 - 0.1 * amp + (n[i] * 0.14 - m[i] * 0.05) * amp; return [r * k, g * k, b * (k - 0.01 * amp)]; });
   const h = new Float32Array(N * N);
   for (let i = 0; i < h.length; i++) h[i] = n[i] * 0.6 + m[i] * 0.4;
-  return { map: col, normal: normalFrom(h, N, 2.2) };
+  return { map: col, normal: normalFrom(h, N, 2.2 * amp) };
+}
+// Board-formed concrete: horizontal plank bands, fine grain and form-tie holes.
+function concreteBoard(N, seed) {
+  const n = fbm(N, seed, 4, 6, 0.55), g = fbm(N, seed + 5, 64, 2, 0.5), r = rng(seed), bands = 8, tone = [];
+  for (let k = 0; k < bands; k++) tone.push(0.94 + r() * 0.1);
+  const col = paint(N, (x, y, i) => {
+    const band = Math.floor((y / N) * bands), edge = ((y / N) * bands) % 1;
+    const k = tone[band] * (0.9 + n[i] * 0.16 + (g[i] - 0.5) * 0.08) * (edge < 0.03 ? 0.86 : 1);
+    return [168 * k, 165 * k, 158 * k];
+  });
+  const ctx = col.getContext('2d');
+  ctx.fillStyle = 'rgba(60,58,54,0.55)';
+  for (let k = 0; k < bands; k += 2) for (const fx of [0.25, 0.75]) { ctx.beginPath(); ctx.arc(fx * N, ((k + 0.5) / bands) * N, N / 180, 0, Math.PI * 2); ctx.fill(); }
+  const h = new Float32Array(N * N);
+  for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) { const e = ((y / N) * bands) % 1; h[y * N + x] = (e < 0.03 ? 0 : 0.6) + n[y * N + x] * 0.4; }
+  return { map: col, normal: normalFrom(h, N, 2.5) };
+}
+// Large honed stone slabs (600 mm) with hairline joints.
+function stoneSlabs(N, seed, base, perSide = 2) {
+  const s = stone(N, seed, base, base - 0x101010, { veins: 0.08, grain: 0.12, cells: 4 }), c = s.map, x = c.getContext('2d'), t = N / perSide, r = rng(seed);
+  for (let j = 0; j < perSide; j++) for (let i = 0; i < perSide; i++) { x.fillStyle = `rgba(${r() < 0.5 ? '255,255,255' : '0,0,0'},${0.02 + r() * 0.03})`; x.fillRect(i * t, j * t, t, t); }
+  x.strokeStyle = 'rgba(60,58,52,0.45)'; x.lineWidth = Math.max(1, N / 600);
+  for (let k = 0; k <= perSide; k++) { x.beginPath(); x.moveTo(k * t, 0); x.lineTo(k * t, N); x.stroke(); x.beginPath(); x.moveTo(0, k * t); x.lineTo(N, k * t); x.stroke(); }
+  return c;
+}
+// Terrazzo: a calm ground with marble and terracotta chips.
+function terrazzo(N, seed, base, chips) {
+  const n = fbm(N, seed, 3, 4, 0.5), [r, g, b] = hex(base);
+  const c = paint(N, (x, y, i) => { const k = 0.96 + n[i] * 0.06; return [r * k, g * k, b * k]; });
+  const x = c.getContext('2d'), rr = rng(seed + 1);
+  for (let i = 0; i < N * N * 0.004; i++) {
+    x.fillStyle = chips[Math.floor(rr() * chips.length)];
+    const cx = rr() * N, cy = rr() * N, s = (0.6 + rr() * 2.2) * (N / 512);
+    x.beginPath(); x.ellipse(cx, cy, s * (1 + rr()), s, rr() * Math.PI, 0, Math.PI * 2); x.fill();
+  }
+  return c;
 }
 function redOxide(N, seed) {
   const n = fbm(N, seed, 2, 6, 0.6), s = fbm(N, seed + 3, 24, 2, 0.5);
@@ -189,25 +225,28 @@ function wood(N, seed, base = 0x6b4126, { dark = 0.55, rings = 22 } = {}) {
   });
 }
 // Jaali: perforated screens. Alpha marks the holes.
+// Modern brick jaali: hit-and-miss terracotta bricks in staggered courses.
 function jaaliTerracotta(N) {
-  const c = canvas(N), x = c.getContext('2d'), cell = N / 4;
-  x.fillStyle = '#b4613a'; x.fillRect(0, 0, N, N);
-  x.globalCompositeOperation = 'destination-out';
-  for (let j = 0; j < 4; j++) for (let i = 0; i < 4; i++) {
-    const cx = i * cell + cell / 2, cy = j * cell + cell / 2, r = cell * 0.2;
-    for (const [dx, dy] of [[0, -1], [1, 0], [0, 1], [-1, 0]]) { x.beginPath(); x.arc(cx + dx * r * 0.95, cy + dy * r * 0.95, r * 0.82, 0, Math.PI * 2); x.fill(); }
-    for (const [dx, dy] of [[0, 0], [1, 0], [0, 1], [1, 1]]) { x.beginPath(); x.arc(i * cell + dx * cell, j * cell + dy * cell, cell * 0.1, 0, Math.PI * 2); x.fill(); }
+  const c = canvas(N), x = c.getContext('2d'), rows = 6, rh = N / rows, L = N / 3, gap = N / 6, r = rng(7);
+  for (let j = 0; j < rows; j++) {
+    const off = j % 2 ? (L + gap) / 2 : 0;
+    for (let k = -1; k < 3; k++) {
+      const x0 = k * (L + gap) + off, tone = 0.9 + r() * 0.18;
+      x.fillStyle = `rgb(${178 * tone},${92 * tone},${58 * tone})`;
+      x.fillRect(x0 + 1, j * rh + 1, L - 2, rh - 2);
+      x.fillStyle = 'rgba(0,0,0,0.12)'; x.fillRect(x0 + 1, j * rh + rh - 3, L - 2, 2);
+    }
   }
   return c;
 }
+// Vertical timber slats (stair screen, transoms, pooja doors).
 function jaaliTimber(N) {
-  const c = canvas(N), x = c.getContext('2d');
-  x.fillStyle = '#5d3a22'; x.fillRect(0, 0, N, N);
-  x.globalCompositeOperation = 'destination-out';
-  const k = N / 6;
-  x.save(); x.translate(N / 2, N / 2); x.rotate(Math.PI / 4);
-  for (let j = -6; j <= 6; j++) for (let i = -6; i <= 6; i++) x.fillRect(i * k * 0.7071 * 1.0 - k * 0.27, j * k * 0.7071 - k * 0.27, k * 0.54, k * 0.54);
-  x.restore();
+  const c = canvas(N), x = c.getContext('2d'), n = 6, p = N / n;
+  for (let i = 0; i < n; i++) {
+    const g = x.createLinearGradient(i * p, 0, i * p + p * 0.62, 0);
+    g.addColorStop(0, '#7a5434'); g.addColorStop(0.5, '#8e6540'); g.addColorStop(1, '#6a4729');
+    x.fillStyle = g; x.fillRect(i * p, 0, p * 0.62, N);
+  }
   return c;
 }
 function grassTex(N, seed) {
@@ -370,10 +409,10 @@ export function makeMaterials(renderer, quality = 'high') {
   const T = (c, tile, o = {}) => tex(c, tile, { aniso, ...o });
   const std = (o) => new THREE.MeshStandardMaterial(o);
 
-  const lime = limePlaster(N, 11), limeOut = limePlaster(N, 23, 0xe9dfcd), kaavi = limePlaster(N, 31, 0xa04a2e);
+  const lime = limePlaster(N, 11, 0xf3f0ea, 0.55), limeOut = limePlaster(N, 23, 0xf0ece4, 0.7), kaavi = limePlaster(N, 31, 0xa04a2e);
   const ox = redOxide(N, 41), kota = stone(N, 51, 0x7d8478, 0x5b6158, { veins: 0.15 }), kadappa = stone(N, 61, 0x2a2b2b, 0x3d3f40, { veins: 0.2, grain: 0.1 });
-  const terr = tiles(N, 71, 4, 0xb15f39, { grout: '#7e5a44', vary: 0.18 }), bath = tiles(N, 81, 6, 0xd9d4c8, { grout: '#9a9488', vary: 0.05, groutW: 0.03 });
-  const rub = rubble(N, 91);
+  const terr = tiles(N, 71, 4, 0xb15f39, { grout: '#7e5a44', vary: 0.18 }), bath = tiles(N, 81, 4, 0xdcd9d2, { grout: '#b9b5ac', vary: 0.03, groutW: 0.012 });
+  const rub = rubble(N, 91), board = concreteBoard(N, 97);
 
   const M = {
     lime: std({ map: T(lime.map, 2.4), normalMap: T(lime.normal, 2.4, { srgb: false }), normalScale: new THREE.Vector2(0.35, 0.35), roughness: 0.93, envMapIntensity: 0.55 }),
@@ -431,6 +470,21 @@ export function makeMaterials(renderer, quality = 'high') {
     paintRed: std({ color: 0x9b2c22, roughness: 0.45, metalness: 0.2 }),
     mirror: std({ color: 0xdfe5e8, metalness: 1.0, roughness: 0.04 }),
     glassDark: std({ color: 0x15181a, roughness: 0.1, metalness: 0.4 }),
+    // ---- modern palette (cycle 3): crisp lime white, board-formed concrete, honed stone,
+    // terrazzo, light timber, dark aluminium and clear glass.
+    concreteBoard: std({ map: T(board.map, 1.6), normalMap: T(board.normal, 1.6, { srgb: false }), normalScale: new THREE.Vector2(0.45, 0.45), roughness: 0.88 }),
+    kotaSlab: std({ map: T(stoneSlabs(N, 53, 0xd4cbbb), 1.2), roughness: 0.42, envMapIntensity: 0.7 }),
+    terrazzoWarm: std({ map: T(terrazzo(N, 57, 0xd9cdb8, ['#f4efe6', '#b9ab95', '#8f7f6a', '#b06a48', '#3e3a35']), 0.8), roughness: 0.38, envMapIntensity: 0.75 }),
+    oak: std({ map: T(wood(N, 141, 0xb08458, { dark: 0.75, rings: 30 }), 1.2), roughness: 0.5, envMapIntensity: 0.6 }),
+    frameDark: std({ color: 0x2d2a26, metalness: 0.55, roughness: 0.42 }),
+    glass: new THREE.MeshPhysicalMaterial({ color: 0xd8e8ea, transparent: true, opacity: 0.16, roughness: 0.04, metalness: 0.0, envMapIntensity: 1.2, depthWrite: false, side: THREE.DoubleSide }),
+    cabinet: std({ color: 0xe8e2d6, roughness: 0.68 }),
+    cabinetSage: std({ color: 0x7f8c79, roughness: 0.7 }),
+    quartz: std({ color: 0xf1eee8, roughness: 0.22, envMapIntensity: 0.9 }),
+    fabricGrey: std({ color: 0x8e8a82, roughness: 0.96 }),
+    fabricLinen: std({ color: 0xe2d9c8, roughness: 0.96 }),
+    fabricSage: std({ color: 0x8c9a83, roughness: 0.95 }),
+    fabricRust: std({ color: 0xa65a3a, roughness: 0.95 }),
   };
   return M;
 }

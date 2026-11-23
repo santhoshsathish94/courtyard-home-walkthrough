@@ -40,7 +40,7 @@ function cylG(x, z, r, y0, y1, seg = 16, rTop = r) {
   g.translate(x, (y0 + y1) / 2, z);
   return worldUV(g);
 }
-const NO_SHADOW = new Set(['water', 'grass', 'soil', 'gravel', 'asphalt', 'flame']);
+const NO_SHADOW = new Set(['water', 'grass', 'soil', 'gravel', 'asphalt', 'flame', 'glass']);
 class Batch {
   constructor(name) { this.name = name; this.map = new Map(); this.raw = new Map(); }
   add(key, g) { if (!g) return; const a = this.map.get(key) || []; a.push(g.index ? g.toNonIndexed() : g); this.map.set(key, a); }
@@ -161,29 +161,22 @@ function addJaali(b, w, s0, s1, y0, y1, key = 'jaaliClay', n = 0, frameKey = 'gr
   wallBox(b, frameKey, w, s0, s1, y0 - f, y0, -t, t);
   wallBox(b, frameKey, w, s0, s1, y1, y1 + f, -t, t);
 }
-// Rain hood (chajja): a thin projecting slab on the exterior side, falling outward.
+// Chajja: a crisp, thin concrete shade slab on the exterior side (modern, flat).
 function addRainHood(b, w, s0, s1, y, depth = 0.45, key = 'limeExt') {
   const m = wallMap(w), out = outwardOf(w), sgn = Math.sign(out[0] * m.nx + out[1] * m.nz) || 1, t = w.t / 2;
   const n0 = sgn * t, n1 = sgn * (t + depth);
-  wallBox(b, key, w, s0 - 0.12, s1 + 0.12, y, y + 0.06, Math.min(n0, n1), Math.max(n0, n1));
-  wallBox(b, 'clayTile', w, s0 - 0.12, s1 + 0.12, y + 0.06, y + 0.085, Math.min(n0, n1), Math.max(n0, n1));
+  wallBox(b, key, w, s0 - 0.15, s1 + 0.15, y, y + 0.07, Math.min(n0, n1), Math.max(n0, n1));
 }
-// Individual clay coping tiles along a wall top.
-function addCopingTiles(b, p0, p1, y, t) {
-  const dx = p1[0] - p0[0], dz = p1[1] - p0[1], len = Math.hypot(dx, dz);
-  const n = Math.max(1, Math.round(len / COPING.tile)), step = len / n;
-  for (let i = 0; i < n; i++) {
-    const a = (i * step + COPING.gap / 2) / len, c = ((i + 1) * step - COPING.gap / 2) / len;
-    const q0 = [p0[0] + dx * a, p0[1] + dz * a], q1 = [p0[0] + dx * c, p0[1] + dz * c];
-    b.add('clayTile', segBoxG(q0, q1, y, y + COPING.h, t + 2 * COPING.overhang));
-  }
+// Flat stone coping with a drip overhang on both faces along a wall top.
+function addCoping(b, p0, p1, y, t) {
+  b.add('granite', segBoxG(p0, p1, y, y + COPING.h, t + 2 * COPING.overhang));
 }
 
 function buildWall(b, w, opts) {
   const y0 = LEVELS[w.level], h = w.h, m = wallMap(w), t = w.t / 2;
   const mat = opts.mat || 'lime', ops = [...w.openings].sort((a, c) => a.s - c.s);
   if (w.kind === 'screen' || w.kind === 'spine') {
-    const key = w.kind === 'screen' ? 'jaaliTeak' : 'jaaliClay', fk = w.kind === 'screen' ? 'teakDark' : 'lime';
+    const key = w.kind === 'screen' ? 'jaaliTeak' : 'jaaliClay', fk = w.kind === 'screen' ? 'oak' : 'lime';
     const yTop = w.kind === 'spine' ? opts.spineTop : y0 + h, yBot = w.kind === 'spine' ? opts.spineBottom : y0;
     addJaali(b, w, 0.03, m.len - 0.03, yBot + 0.04, yTop - 0.04, key, 0, fk);
     wallBox(b, fk, w, 0, 0.03, yBot, yTop, -t, t);
@@ -196,7 +189,7 @@ function buildWall(b, w, opts) {
     // Solid parapet to jaaliAbove with a terracotta jaali above (wash-area safety screen).
     piece(0, m.len, 0, w.jaaliAbove);
     addJaali(b, w, 0.02, m.len - 0.02, y0 + w.jaaliAbove + 0.035, y0 + h - 0.035, 'jaaliClay', 0, 'limeExt');
-    addCopingTiles(b, m.at(0), m.at(m.len), y0 + h, w.t);
+    addCoping(b, m.at(0), m.at(m.len), y0 + h, w.t);
     return;
   }
   if (w.kind === 'low') {
@@ -215,7 +208,7 @@ function buildWall(b, w, opts) {
     fillOpening(b, w, o, opts);
   }
   piece(cur, m.len, 0, h);
-  if (COPING.on.includes(w.kind)) addCopingTiles(b, m.at(0), m.at(m.len), y0 + h, w.t);
+  if (COPING.on.includes(w.kind)) addCoping(b, m.at(0), m.at(m.len), y0 + h, w.t);
 }
 
 function fillOpening(b, w, o, opts) {
@@ -231,38 +224,35 @@ function fillOpening(b, w, o, opts) {
     addRainHood(b, w, s0, s1, y0 + o.lowJaali[1] + 0.02, 0.22);
   }
   if (o.type === 'window') {
-    const fy0 = y0 + o.sill, fy1 = y0 + o.head, fw = 0.06;
-    wallBox(b, 'teak', w, s0, s0 + fw, fy0, fy1, -t + 0.02, -t + 0.10);
-    wallBox(b, 'teak', w, s1 - fw, s1, fy0, fy1, -t + 0.02, -t + 0.10);
-    wallBox(b, 'teak', w, s0, s1, fy1 - fw, fy1, -t + 0.02, -t + 0.10);
-    wallBox(b, 'granite', w, s0 - 0.03, s1 + 0.03, fy0 - 0.03, fy0, -t - 0.04, t + 0.04);
-    if (o.grille !== false) {
-      const out = outwardOf(w), sgn = Math.sign(out[0] * m.nx + out[1] * m.nz) || 1, nb = sgn * (t - 0.05);
-      const n = Math.max(2, Math.round(o.w / 0.11));
-      for (let i = 1; i < n; i++) { const s = s0 + (o.w * i) / n; wallBox(b, 'iron', w, s - 0.007, s + 0.007, fy0, fy1 - fw, nb - 0.007, nb + 0.007); }
-      for (const yy of [fy0 + (fy1 - fy0) * 0.33, fy0 + (fy1 - fy0) * 0.66]) wallBox(b, 'iron', w, s0, s1, yy - 0.012, yy + 0.012, nb - 0.004, nb + 0.004);
+    // Modern window: slim dark aluminium frame centred in a deep reveal, mullions about
+    // every 0.6 m, clear glass, a honed stone sill. No shutters or bars.
+    const fy0 = y0 + o.sill, fy1 = y0 + o.head, fw = 0.045, fn0 = -0.03, fn1 = 0.03;
+    wallBox(b, 'frameDark', w, s0, s0 + fw, fy0, fy1, fn0, fn1);
+    wallBox(b, 'frameDark', w, s1 - fw, s1, fy0, fy1, fn0, fn1);
+    wallBox(b, 'frameDark', w, s0, s1, fy1 - fw, fy1, fn0, fn1);
+    wallBox(b, 'frameDark', w, s0, s1, fy0, fy0 + fw, fn0, fn1);
+    const nm = o.w > 1.05 ? Math.round(o.w / 0.6) : 1;
+    for (let i = 1; i < nm; i++) { const s = s0 + (o.w * i) / nm; wallBox(b, 'frameDark', w, s - 0.018, s + 0.018, fy0, fy1, fn0, fn1); }
+    if (fy1 - fy0 > 1.25) { const yb = fy1 - 0.42; wallBox(b, 'frameDark', w, s0, s1, yb - 0.018, yb + 0.018, fn0, fn1); }
+    wallBox(b, 'glass', w, s0 + fw, s1 - fw, fy0 + fw, fy1 - fw, -0.004, 0.004);
+    wallBox(b, 'kotaSlab', w, s0 - 0.02, s1 + 0.02, fy0 - 0.03, fy0, -t - 0.02, t + 0.02);
+    // Safety rails (the "grille") on the room side of low and court-facing windows.
+    if (o.grille !== false && (o.sill < 1.0 || o.court)) {
+      let roomSide;
+      if (o.court) { const cc = [(COURT.x0 + COURT.x1) / 2, (COURT.z0 + COURT.z1) / 2], wa = m.at(0); roomSide = -(Math.sign((cc[0] - wa[0]) * m.nx + (cc[1] - wa[1]) * m.nz) || 1); }
+      else { const out = outwardOf(w); roomSide = -(Math.sign(out[0] * m.nx + out[1] * m.nz) || 1); }
+      const nr = roomSide * (t - 0.04);
+      for (const yy of [0.62, 1.02]) if (yy > o.sill + 0.08) wallBox(b, 'frameDark', w, s0 + fw, s1 - fw, y0 + yy - 0.012, y0 + yy + 0.012, nr - 0.012, nr + 0.012);
+      for (const ss of [s0 + fw + 0.01, s1 - fw - 0.03]) wallBox(b, 'frameDark', w, ss, ss + 0.02, fy0, y0 + 1.04, nr - 0.012, nr + 0.012);
     }
-    // Teak shutters folded back inside (traditional: bars outside, shutters inside); none over counters.
-    if (o.sill < 1.0) {
-      const out = outwardOf(w), sgn = Math.sign(out[0] * m.nx + out[1] * m.nz) || 1, half = (o.w - 2 * fw) / 2 - 0.01;
-      const inward = [-sgn * m.nx, -sgn * m.nz], ang = (168 * Math.PI) / 180;
-      for (const [hs, dir] of [[s0 + fw, 1], [s1 - fw, -1]]) {
-        const hp = m.at(hs, -sgn * (t - 0.02));
-        const d = [Math.cos(ang) * dir * m.ux + Math.sin(ang) * inward[0], Math.cos(ang) * dir * m.uz + Math.sin(ang) * inward[1]];
-        b.add('teakDark', segBoxG(hp, [hp[0] + d[0] * half, hp[1] + d[1] * half], fy0 + 0.02, fy1 - fw - 0.01, 0.03));
-      }
-    }
-    if (ext) addRainHood(b, w, s0, s1, y0 + o.head + (o.vent ? 0.44 : 0.04), o.hood ? 0.45 : 0.40);
+    if (ext) addRainHood(b, w, s0, s1, y0 + o.head + (o.vent ? 0.44 : 0.04), o.hood ? 0.55 : 0.45);
   }
   if (o.type === 'door') {
-    const fw = 0.06, head = y0 + o.head;
-    wallBox(b, 'teak', w, s0, s0 + fw, y0, head, -t, t);
-    wallBox(b, 'teak', w, s1 - fw, s1, y0, head, -t, t);
-    wallBox(b, 'teak', w, s0, s1, head - fw, head, -t, t);
-    if (o.main) {
-      wallBox(b, 'granite', w, s0 - 0.12, s1 + 0.12, y0, y0 + 0.04, -t - 0.25, t + 0.06);
-      wallBox(b, 'teakDark', w, s0 - 0.14, s1 + 0.14, head, head + 0.08, -t - 0.02, t + 0.02);
-    }
+    const fw = 0.05, head = y0 + o.head, fk = o.main ? 'teakDark' : 'oak';
+    wallBox(b, fk, w, s0, s0 + fw, y0, head, -t, t);
+    wallBox(b, fk, w, s1 - fw, s1, y0, head, -t, t);
+    wallBox(b, fk, w, s0, s1, head - fw, head, -t, t);
+    if (o.main) wallBox(b, 'kotaSlab', w, s0 - 0.12, s1 + 0.12, y0, y0 + 0.04, -t - 0.25, t + 0.25);
   }
   if (o.type === 'arch') {
     const rise = Math.min(0.30, o.w * 0.28), H = y0 + o.head;
@@ -286,26 +276,27 @@ function fillOpening(b, w, o, opts) {
 
 // --------------------------------------------------------------- doors ----
 function makeLeafMesh(M, w, h, kind) {
-  const g = new THREE.Group(), th = 0.04;
-  const body = new THREE.Mesh(boxG(0, w, 0, h, -th / 2, th / 2), M.teakDark);
+  // Flush modern leaves: light oak for rooms, a grooved dark-teak main door, and
+  // oak-framed timber-slat leaves for the pooja. Slim dark pull handles.
+  const g = new THREE.Group(), th = 0.04, skin = kind === 'main' ? M.teakDark : M.oak;
+  const body = new THREE.Mesh(boxG(0, w, 0, h, -th / 2, th / 2), skin);
   g.add(body);
   if (kind === 'jali') {
     body.geometry = boxG(0, w, 0, h * 0.42, -th / 2, th / 2);
-    const top = new THREE.Mesh(boxG(0, 0.05, h * 0.42, h, -th / 2, th / 2), M.teakDark); g.add(top);
-    g.add(new THREE.Mesh(boxG(w - 0.05, w, h * 0.42, h, -th / 2, th / 2), M.teakDark));
-    g.add(new THREE.Mesh(boxG(0, w, h - 0.05, h, -th / 2, th / 2), M.teakDark));
+    const top = new THREE.Mesh(boxG(0, 0.05, h * 0.42, h, -th / 2, th / 2), skin); g.add(top);
+    g.add(new THREE.Mesh(boxG(w - 0.05, w, h * 0.42, h, -th / 2, th / 2), skin));
+    g.add(new THREE.Mesh(boxG(0, w, h - 0.05, h, -th / 2, th / 2), skin));
     const j = new THREE.PlaneGeometry(w - 0.1, h * 0.58 - 0.05);
     j.translate(w / 2, h * 0.42 + (h * 0.58 - 0.05) / 2, 0);
     g.add(new THREE.Mesh(j, M.jaaliTeak));
-  } else {
-    for (const zf of [-1, 1]) for (const [a, c] of [[0.12, 0.45], [0.55, 0.92]]) {
-      g.add(new THREE.Mesh(boxG(0.07, w - 0.07, h * a, h * c, zf * th / 2 - (zf < 0 ? 0.008 : 0), zf * th / 2 + (zf > 0 ? 0.008 : 0)), M.teak));
+  } else if (kind === 'main') {
+    for (const zf of [-1, 1]) for (let u = 0.09; u < w - 0.05; u += 0.09) {
+      g.add(new THREE.Mesh(boxG(u - 0.004, u + 0.004, 0.08, h - 0.08, zf * th / 2 - 0.002, zf * th / 2 + 0.002), M.iron));
     }
   }
   for (const zf of [-1, 1]) {
-    const k = new THREE.Mesh(new THREE.SphereGeometry(0.022, 10, 8), M.brass);
-    k.position.set(w - 0.09, 1.0, zf * (th / 2 + 0.02));
-    g.add(k);
+    const hy = kind === 'main' ? [0.7, 1.5] : [0.92, 1.12];
+    g.add(new THREE.Mesh(boxG(w - 0.08, w - 0.06, hy[0], hy[1], zf * (th / 2 + 0.035) - 0.01, zf * (th / 2 + 0.035) + 0.01), M.frameDark));
   }
   g.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
   return g;
@@ -324,7 +315,7 @@ function buildDoors(M, groups) {
       const hx = lf.hinge[0] + lf.closedDir[0] * 0.06 - sw[0] * 0.025, hz = lf.hinge[1] + lf.closedDir[1] * 0.06 - sw[1] * 0.025;
       pivot.position.set(hx, y0 + 0.01, hz);
       const closed = angleOf(lf.closedDir), open = closed + deltaAngle(closed, angleOf(lf.openDir));
-      pivot.add(makeLeafMesh(M, lw, h, o.jali ? 'jali' : 'panel'));
+      pivot.add(makeLeafMesh(M, lw, h, o.jali ? 'jali' : o.main ? 'main' : 'flush'));
       pivot.userData.door = o.id;
       return { pivot, closed, open, w: lw, hinge: [hx, hz] };
     });
@@ -375,31 +366,35 @@ function buildFurnitureItem(b, M, f, dyn) {
   const F = frame(f, back, y), W = F.W, Dp = F.Dp;
   switch (f.type) {
     case 'bed': {
-      F.box(b, 'teak', 0, W, 0, 0.95, 0, 0.05);
-      F.box(b, 'teak', 0.02, W - 0.02, 0.06, 0.30, 0.05, Dp - 0.01);
-      for (const [u, v] of [[0.03, Dp - 0.06], [W - 0.06, Dp - 0.06]]) F.box(b, 'teakDark', u, u + 0.05, 0, 0.08, v, v + 0.05);
+      F.box(b, 'oak', -0.05, W + 0.05, 0, 1.05, 0, 0.06);
+      F.box(b, 'fabricLinen', 0.02, W - 0.02, 0.32, 1.0, 0.06, 0.12);
+      F.box(b, 'oak', 0.02, W - 0.02, 0.06, 0.30, 0.05, Dp - 0.01);
+      for (const [u, v] of [[0.03, Dp - 0.06], [W - 0.06, Dp - 0.06]]) F.box(b, 'frameDark', u, u + 0.05, 0, 0.06, v, v + 0.05);
       F.box(b, 'mattress', 0.04, W - 0.04, 0.30, 0.47, 0.07, Dp - 0.04);
-      F.box(b, f.single ? 'fabricIndigo' : f.id.startsWith('parents') ? 'fabricGreen' : 'fabricRed', 0.025, W - 0.025, 0.30, 0.49, 0.48, Dp - 0.02);
+      F.box(b, f.single ? 'fabricSage' : f.id.startsWith('parents') ? 'fabricLinen' : 'fabricRust', 0.025, W - 0.025, 0.30, 0.49, Dp * 0.62, Dp - 0.02);
       const pw = f.single ? W - 0.2 : (W - 0.3) / 2;
       for (let i = 0; i < (f.single ? 1 : 2); i++) F.box(b, 'white', 0.1 + i * (pw + 0.1), 0.1 + i * (pw + 0.1) + pw, 0.47, 0.58, 0.1, 0.42);
       break;
     }
     case 'wardrobe': {
-      F.box(b, 'teak', 0, W, 0.06, f.h, 0, Dp);
-      F.box(b, 'teakDark', 0, W, 0, 0.06, 0.02, Dp - 0.02);
+      F.box(b, 'oak', 0, W, 0.06, f.h, 0, Dp);
+      F.box(b, 'frameDark', 0.02, W - 0.02, 0, 0.06, 0.04, Dp - 0.04);
       const n = Math.max(2, Math.round(W / 0.5));
       for (let i = 0; i < n; i++) {
-        const u0 = (W / n) * i + 0.03, u1 = (W / n) * (i + 1) - 0.03;
-        F.box(b, 'teakDark', u0, u1, 0.15, f.h - 0.12, Dp, Dp + 0.012);
-        F.cyl(b, 'brass', i % 2 ? u0 + 0.05 : u1 - 0.05, Dp + 0.03, 0.012, 1.0, 1.18, 8);
+        const u0 = (W / n) * i + 0.004, u1 = (W / n) * (i + 1) - 0.004;
+        F.box(b, 'oak', u0, u1, 0.07, f.h - 0.01, Dp, Dp + 0.018);
+        const hu = i % 2 ? u0 + 0.04 : u1 - 0.06;
+        F.box(b, 'frameDark', hu, hu + 0.02, 0.9, 1.3, Dp + 0.018, Dp + 0.04);
       }
       break;
     }
     case 'diwan': {
-      F.box(b, 'teak', 0, W, 0.1, 0.3, 0, Dp);
-      for (const u of [0.03, W - 0.08]) for (const v of [0.03, Dp - 0.08]) F.box(b, 'teakDark', u, u + 0.05, 0, 0.1, v, v + 0.05);
-      F.box(b, 'fabricRed', 0.03, W - 0.03, 0.3, 0.42, 0.03, Dp - 0.03);
-      for (const u of [0.25, W / 2, W - 0.25]) F.box(b, 'cushion', u - 0.2, u + 0.2, 0.42, 0.78, 0.02, 0.16);
+      F.box(b, 'oak', 0, W, 0.06, 0.2, 0, Dp);
+      F.box(b, 'frameDark', 0.06, W - 0.06, 0, 0.06, 0.06, Dp - 0.06);
+      F.box(b, 'fabricGrey', 0.02, W - 0.02, 0.2, 0.42, 0.02, Dp - 0.02);
+      F.box(b, 'fabricGrey', 0, W, 0.2, 0.72, 0, 0.18);
+      for (const u of [0, W - 0.16]) F.box(b, 'fabricGrey', u, u + 0.16, 0.2, 0.58, 0.18, Dp);
+      for (const [u, k] of [[0.45, 'fabricLinen'], [W / 2, 'fabricLinen'], [W - 0.45, 'fabricRust']]) F.box(b, k, u - 0.22, u + 0.22, 0.42, 0.8, 0.18, 0.3);
       break;
     }
     case 'swing': {
@@ -417,12 +412,12 @@ function buildFurnitureItem(b, M, f, dyn) {
       break;
     }
     case 'chair': {
-      F.box(b, 'teak', 0.03, W - 0.03, 0.40, 0.45, 0.05, Dp - 0.03);
+      F.box(b, 'oak', 0.03, W - 0.03, 0.40, 0.45, 0.05, Dp - 0.03);
       F.box(b, 'cane', 0.06, W - 0.06, 0.45, 0.46, 0.1, Dp - 0.06);
-      for (const u of [0.03, W - 0.07]) for (const v of [0.05, Dp - 0.07]) F.box(b, 'teak', u, u + 0.04, 0, 0.42, v, v + 0.04);
-      F.box(b, 'teak', 0.03, W - 0.03, 0.42, f.h, 0.05, 0.1);
+      for (const u of [0.03, W - 0.07]) for (const v of [0.05, Dp - 0.07]) F.box(b, 'oak', u, u + 0.04, 0, 0.42, v, v + 0.04);
+      F.box(b, 'oak', 0.03, W - 0.03, 0.42, f.h, 0.05, 0.1);
       F.box(b, 'cane', 0.08, W - 0.08, 0.5, f.h - 0.06, 0.07, 0.08);
-      for (const u of [0.03, W - 0.07]) F.box(b, 'teak', u, u + 0.04, 0.6, 0.64, 0.05, Dp - 0.05);
+      for (const u of [0.03, W - 0.07]) F.box(b, 'oak', u, u + 0.04, 0.6, 0.64, 0.05, Dp - 0.05);
       break;
     }
     case 'cabinet': {
@@ -472,20 +467,21 @@ function buildFurnitureItem(b, M, f, dyn) {
       break;
     }
     case 'sidetable': {
-      F.box(b, 'teak', 0, W, f.h - 0.04, f.h, 0, Dp);
-      for (const u of [0.02, W - 0.06]) for (const v of [0.02, Dp - 0.06]) F.box(b, 'teak', u, u + 0.04, 0, f.h - 0.04, v, v + 0.04);
-      F.box(b, 'teak', 0.03, W - 0.03, 0.12, 0.15, 0.03, Dp - 0.03);
+      F.box(b, 'oak', 0, W, f.h - 0.04, f.h, 0, Dp);
+      for (const u of [0.02, W - 0.06]) for (const v of [0.02, Dp - 0.06]) F.box(b, 'frameDark', u, u + 0.03, 0, f.h - 0.04, v, v + 0.03);
+      F.box(b, 'oak', 0.03, W - 0.03, 0.12, 0.15, 0.03, Dp - 0.03);
       F.cyl(b, 'brass', W / 2, Dp / 2, 0.05, f.h, f.h + 0.03, 12);
       F.cyl(b, 'brass', W / 2, Dp / 2, 0.01, f.h + 0.03, f.h + 0.3, 8);
       F.cyl(b, 'white', W / 2, Dp / 2, 0.11, f.h + 0.28, f.h + 0.45, 14, 0.07);
       break;
     }
     case 'counter': {
-      F.box(b, 'teak', 0, W, 0.1, f.h - 0.04, 0, Dp - 0.04);
-      F.box(b, 'kadappa', 0, W, 0, 0.1, 0.02, Dp - 0.08);
-      F.box(b, 'kadappa', 0, W, f.h - 0.04, f.h, 0, Dp);
+      const cab = f.level === 'terrace' ? 'concrete' : 'cabinetSage', top = f.level === 'terrace' ? 'kadappa' : 'quartz';
+      F.box(b, cab, 0, W, 0.1, f.h - 0.04, 0, Dp - 0.04);
+      F.box(b, 'frameDark', 0, W, 0, 0.1, 0.02, Dp - 0.08);
+      F.box(b, top, 0, W, f.h - 0.04, f.h, 0, Dp);
       const n = Math.max(1, Math.round(W / 0.55));
-      for (let i = 0; i < n; i++) F.box(b, 'teakDark', (W / n) * i + 0.02, (W / n) * (i + 1) - 0.02, 0.14, f.h - 0.08, Dp - 0.04, Dp - 0.025);
+      for (let i = 0; i < n; i++) F.box(b, cab, (W / n) * i + 0.003, (W / n) * (i + 1) - 0.003, 0.12, f.h - 0.06, Dp - 0.04, Dp - 0.022);
       if (f.level !== 'terrace') F.box(b, 'bathTile', 0, W, f.h, f.h + 0.6, 0, 0.012);
       // Map a world range along the counter's length to the frame's u axis.
       const toU = ([a, c]) => (back === 'E' ? a - f.z0 : back === 'W' ? f.z1 - c : back === 'N' ? a - f.x0 : f.x1 - c);
@@ -518,7 +514,7 @@ function buildFurnitureItem(b, M, f, dyn) {
         for (const [g0, g1] of [...gaps.sort((p, q) => p[0] - q[0]), [W, W]]) {
           const end = Math.min(g0, W);
           if (end - u > 0.35) {
-            F.box(b, 'teak', u, end, 1.55, 1.58, 0, 0.3);
+            F.box(b, 'oak', u, end, 1.55, 1.59, 0, 0.3);
             const n = Math.floor((end - u) / 0.32);
             for (let i = 0; i < n; i++) F.cyl(b, i % 3 ? 'steel' : 'brass', u + 0.16 + i * 0.32, 0.15, 0.06, 1.58, 1.72, 12, 0.05);
           }
@@ -549,9 +545,10 @@ function buildFurnitureItem(b, M, f, dyn) {
       break;
     }
     case 'desk': {
-      F.box(b, 'teak', 0, W, f.h - 0.04, f.h, 0, Dp);
-      for (const u of [0, W - 0.04]) F.box(b, 'teak', u, u + 0.04, 0, f.h - 0.04, 0, Dp);
-      F.box(b, 'teak', W * 0.25, W * 0.75, 0, 0.45, Dp + 0.18, Dp + 0.58);
+      F.box(b, 'oak', 0, W, f.h - 0.04, f.h, 0, Dp);
+      for (const u of [0, W - 0.04]) F.box(b, 'frameDark', u, u + 0.03, 0, f.h - 0.04, 0, Dp);
+      F.box(b, 'fabricSage', W * 0.25, W * 0.75, 0.4, 0.46, Dp + 0.18, Dp + 0.58);
+      F.box(b, 'frameDark', W * 0.48, W * 0.52, 0, 0.4, Dp + 0.36, Dp + 0.4);
       F.box(b, 'books', 0.05, 0.4, f.h, f.h + 0.25, 0.02, 0.2);
       break;
     }
@@ -576,10 +573,10 @@ function buildFurnitureItem(b, M, f, dyn) {
       break;
     }
     case 'thinnai': {
-      F.box(b, 'kaavi', 0, W, 0, f.h - 0.06, 0.04, Dp);
+      F.box(b, 'concreteBoard', 0, W, 0, f.h - 0.06, 0.04, Dp);
       F.box(b, 'graniteBlack', -0.02, W + 0.02, f.h - 0.06, f.h, 0.02, Dp + 0.04);
       F.box(b, 'granite', 0, W, 0, 0.08, Dp, Dp + 0.03);
-      F.cyl(b, 'fabricRed', 0.35, 0.22, 0.09, f.h, f.h + 0.18, 12);
+      F.box(b, 'fabricRust', 0.25, 0.75, f.h, f.h + 0.06, 0.08, Dp - 0.06);
       break;
     }
     case 'waterpot': {
@@ -627,9 +624,9 @@ function buildFurnitureItem(b, M, f, dyn) {
       break;
     }
     case 'tulsi': {
-      F.box(b, 'kaavi', 0, W, 0, 0.12, 0, Dp);
+      F.box(b, 'concreteBoard', 0, W, 0, 0.12, 0, Dp);
       F.box(b, 'kolam', 0.05, W - 0.05, 0.12, 0.62, 0.05, Dp - 0.05);
-      F.box(b, 'kaavi', 0.02, W - 0.02, 0.62, 0.72, 0.02, Dp - 0.02);
+      F.box(b, 'concreteBoard', 0.02, W - 0.02, 0.62, 0.72, 0.02, Dp - 0.02);
       F.box(b, 'soil', 0.06, W - 0.06, 0.72, 0.74, 0.06, Dp - 0.06);
       const [x, z] = F.P(W / 2, Dp / 2);
       leafClump(b, 'tulsi', x, y + 0.92, z, 0.42, 0.3);
@@ -664,17 +661,17 @@ function buildFurnitureItem(b, M, f, dyn) {
       // Breakfast counter = the U's seating leg. Back (v = 0) faces the cook; the
       // 300 mm overhang and the stools face the family space and the court.
       const base = 0.6, top = f.h, seatV = Dp - 0.2;
-      F.box(b, 'teak', 0, W, 0.1, top - 0.04, 0, base);
-      F.box(b, 'kadappa', 0, W, 0, 0.1, 0.02, base - 0.02);
-      F.box(b, 'kadappa', 0, W, top - 0.04, top, -0.02, base + 0.3);
+      F.box(b, 'oak', 0, W, 0.1, top - 0.04, 0, base);
+      F.box(b, 'frameDark', 0, W, 0, 0.1, 0.02, base - 0.02);
+      F.box(b, 'quartz', 0, W, top - 0.04, top, -0.02, base + 0.3);
       const n = Math.max(2, Math.round(W / 0.5));
-      for (let i = 0; i < n; i++) F.box(b, 'teakDark', (W / n) * i + 0.02, (W / n) * (i + 1) - 0.02, 0.14, top - 0.08, -0.015, 0);
-      F.box(b, 'teakDark', 0, W, 0.1, top - 0.04, base, base + 0.015);
+      for (let i = 0; i < n; i++) F.box(b, 'cabinetSage', (W / n) * i + 0.003, (W / n) * (i + 1) - 0.003, 0.12, top - 0.06, -0.015, 0);
+      F.box(b, 'oak', 0, W, 0.1, top - 0.04, base, base + 0.015);
       for (let i = 0; i < (f.stools || 3); i++) {
         const u = (W * (i + 0.5)) / (f.stools || 3);
         F.cyl(b, 'steel', u, seatV, 0.16, 0, 0.02, 16);
         F.cyl(b, 'steel', u, seatV, 0.025, 0.02, 0.62, 8);
-        F.cyl(b, 'teak', u, seatV, 0.17, 0.62, 0.66, 18);
+        F.cyl(b, 'oak', u, seatV, 0.17, 0.62, 0.66, 18);
         F.cyl(b, 'steel', u, seatV, 0.13, 0.24, 0.255, 14);
       }
       break;
@@ -850,7 +847,7 @@ export function buildWorld(M) {
     } else runs.push([p, q]);
     for (const [a, c] of runs) {
       B.site.add('rubble', segBoxG(off(a), off(c), -0.26, COMPOUND.h, COMPOUND.t));
-      addCopingTiles(B.site, off(a), off(c), COMPOUND.h, COMPOUND.t);
+      addCoping(B.site, off(a), off(c), COMPOUND.h, COMPOUND.t);
     }
   }
 
@@ -903,14 +900,14 @@ export function buildWorld(M) {
   for (const r of rectMinus(HOUSE, D.SLAB_OPENINGS.terrace)) B.L2.box('lime', r.x0, r.x1, yT - SLAB, yT, r.z0, r.z1);
   // One continuous Kota floor through the open half (hall, living, family, kitchen);
   // bedrooms and baths get their own finish on top (slightly thicker, so no z-fighting).
-  for (const r of rectMinus({ x0: FACE.A, x1: FACE.D, z0: FACE.N, z1: FACE.S }, D.SLAB_OPENINGS.first)) B.L1.box('kota', r.x0, r.x1, yF, yF + 0.010, r.z0, r.z1);
-  const finishOf = { bedroom: 'redOxide', study: 'redOxide', bath: 'bathTile' };
+  for (const r of rectMinus({ x0: FACE.A, x1: FACE.D, z0: FACE.N, z1: FACE.S }, D.SLAB_OPENINGS.first)) B.L1.box('kotaSlab', r.x0, r.x1, yF, yF + 0.010, r.z0, r.z1);
+  const finishOf = { bedroom: 'terrazzoWarm', study: 'terrazzoWarm', bath: 'bathTile' };
   for (const r of ROOMS) {
     if (r.level !== 'first') continue;
     if (finishOf[r.use]) B.L1.box(finishOf[r.use], r.x0, r.x1, yF, yF + 0.014, r.z0, r.z1);
   }
-  B.L0.box('kota', STAIR.floorLanding.x0, STAIR.box.x1, 0, 0.014, STAIR.box.z0, STAIR.box.z1);
-  B.L2.box('kota', STAIR.floorLanding.x0, STAIR.floorLanding.x1, yT, yT + 0.012, STAIR.box.z0, STAIR.box.z1);
+  B.L0.box('kotaSlab', STAIR.floorLanding.x0, STAIR.box.x1, 0, 0.014, STAIR.box.z0, STAIR.box.z1);
+  B.L2.box('kotaSlab', STAIR.floorLanding.x0, STAIR.floorLanding.x1, yT, yT + 0.012, STAIR.box.z0, STAIR.box.z1);
   // Slab drip bands: a 100 mm projecting edge at each slab casts a crisp shadow line.
   for (const [b, y] of [[B.L1, yF], [B.L2, yT]]) {
     const p = 0.1, x0 = HOUSE.x0 - p, x1 = HOUSE.x1 + p, z0 = HOUSE.z0 - p, z1 = HOUSE.z1 + p, ya = y - SLAB - 0.04, yb = y + (y === yT ? 0.02 : 0);
@@ -928,12 +925,12 @@ export function buildWorld(M) {
       buildWall(B.L1, w, { spineBottom: yF, spineTop: w.h });
       continue;
     }
-    const mat = w.level === 'ground' ? 'kaavi' : w.kind === 'parapet' || w.kind === 'guard' || w.kind === 'mumty' ? 'limeExt' : 'lime';
+    const mat = w.level === 'ground' ? 'concreteBoard' : w.kind === 'parapet' || w.kind === 'guard' || w.kind === 'mumty' ? 'limeExt' : 'lime';
     buildWall(lvlBatch(w.level), w, { mat });
   }
   // Mumty roof slab with a drip edge; the tank stands on it.
   B.L2.box('lime', MUMTY.x0 - 0.05, MUMTY.x1 + 0.05, MUMTY.roofTop - SLAB, MUMTY.roofTop, MUMTY.z0 - 0.05, MUMTY.z1);
-  addCopingTiles(B.L2, [MUMTY.x0 - 0.05, MUMTY.z0 - 0.05], [MUMTY.x1 + 0.05, MUMTY.z0 - 0.05], MUMTY.roofTop, 0.12);
+  addCoping(B.L2, [MUMTY.x0 - 0.05, MUMTY.z0 - 0.05], [MUMTY.x1 + 0.05, MUMTY.z0 - 0.05], MUMTY.roofTop, 0.12);
   const tk = TERRACE.tank;
   B.L2.box('concrete', tk.x - tk.r - 0.1, tk.x + tk.r + 0.1, MUMTY.roofTop, MUMTY.roofTop + 0.15, tk.z - tk.r - 0.1, tk.z + tk.r + 0.1);
   B.L2.add('concrete', cylG(tk.x, tk.z, tk.r, MUMTY.roofTop + 0.15, MUMTY.roofTop + 0.15 + tk.h, 24));
@@ -947,21 +944,21 @@ export function buildWorld(M) {
   // ---- first-floor court guard: granite kerb, teak balusters < 100 mm apart, handrail ----
   for (const g of D.GUARDS) for (const r of D.guardBands(g)) {
     const y0 = LEVELS[g.level];
-    B.L1.box('granite', r.x0, r.x1, y0, y0 + g.kerb, r.z0, r.z1);
-    B.L1.box('teak', r.x0 - 0.01, r.x1 + 0.01, y0 + g.h - 0.06, y0 + g.h, r.z0 - 0.01, r.z1 + 0.01);
+    B.L1.box('kotaSlab', r.x0, r.x1, y0, y0 + g.kerb, r.z0, r.z1);
+    B.L1.box('oak', r.x0 - 0.01, r.x1 + 0.01, y0 + g.h - 0.05, y0 + g.h, r.z0 - 0.01, r.z1 + 0.01);
     const along = r.x1 - r.x0 > r.z1 - r.z0, L = along ? r.x1 - r.x0 : r.z1 - r.z0, n = Math.ceil(L / 0.11);
     for (let i = 0; i <= n; i++) {
       const s = (along ? r.x0 : r.z0) + (L * i) / n, cx = along ? s : (r.x0 + r.x1) / 2, cz = along ? (r.z0 + r.z1) / 2 : s;
-      B.L1.box('teakDark', cx - 0.02, cx + 0.02, y0 + g.kerb, y0 + g.h - 0.06, cz - 0.02, cz + 0.02);
+      B.L1.box('frameDark', cx - (along ? 0.006 : 0.02), cx + (along ? 0.006 : 0.02), y0 + g.kerb, y0 + g.h - 0.05, cz - (along ? 0.02 : 0.006), cz + (along ? 0.02 : 0.006));
     }
   }
 
-  // ---- scuppers at terrace level: clay spouts throwing rain into the court ----
+  // ---- scuppers at terrace level: stone spouts throwing rain into the court ----
   for (const [x, z] of SCUPPERS) {
     const inX = Math.abs(x - COURT.x0) < 0.01 ? 1 : Math.abs(x - COURT.x1) < 0.01 ? -1 : 0, inZ = inX ? 0 : Math.abs(z - COURT.z0) < 0.01 ? 1 : -1;
     const x0 = x - (inX ? 0 : 0.06), x1 = x + (inX ? 0 : 0.06), z0 = z - (inZ ? 0 : 0.06), z1 = z + (inZ ? 0 : 0.06);
     const ex = inX * 0.3, ez = inZ * 0.3, back = 0.25;
-    B.L2.box('clayTile', Math.min(x0 - inX * back, x1 + ex), Math.max(x0 - inX * back, x1 + ex), yT + 0.02, yT + 0.09, Math.min(z0 - inZ * back, z1 + ez), Math.max(z0 - inZ * back, z1 + ez));
+    B.L2.box('granite', Math.min(x0 - inX * back, x1 + ex), Math.max(x0 - inX * back, x1 + ex), yT + 0.02, yT + 0.09, Math.min(z0 - inZ * back, z1 + ez), Math.max(z0 - inZ * back, z1 + ez));
   }
 
   // ---- terrace: planters, solar canopy, wash canopy ----
@@ -994,7 +991,7 @@ export function buildWorld(M) {
   const wc = TERRACE.washCanopy;
   for (const [px, pz] of wc.posts) B.L2.box('steel', px - 0.035, px + 0.035, yT, yT + wc.h, pz - 0.035, pz + 0.035);
   B.L2.box('steel', wc.x0, wc.x1, yT + wc.h, yT + wc.h + 0.05, wc.z0, wc.z1);
-  B.L2.box('clayTile', wc.x0 - 0.05, wc.x1, yT + wc.h + 0.05, yT + wc.h + 0.08, wc.z0 - 0.05, wc.z1);
+  B.L2.box('concrete', wc.x0 - 0.05, wc.x1, yT + wc.h + 0.05, yT + wc.h + 0.1, wc.z0 - 0.05, wc.z1);
 
   // ---- furniture ----
   for (const f of FURNITURE) buildFurnitureItem(furnBatch(f.level), M, f, dyn);

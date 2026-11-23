@@ -215,6 +215,30 @@ Verbatim intent, in order of priority:
   - The hall and the gate yard were sealed off by the water point + column A2 + the parked car (the footwash moved to the porch).
   - The master was unreachable (the reading chair plus the wardrobe wall closed the dressing zone; master-bath fixtures left a 0.4 m gap).
   - A sink was floating in the court void because counter `sink`/`stove` are world ranges, not offsets (a validator check was added).
+- **3a, published** (a5bb2c1). Actions "Validate courtyard walkthrough" and "pages build and deployment" both succeeded. The live site was checked in a real browser: no errors, 246 meshes, 7 doors, the new court and the sliding gate are served.
+
+### Direction (cycle 3b: modern restyle; owner: "modern house with traditional values, not a traditional looking house")
+Keep the values (court, cross-ventilation, jaali, thinnai, rainwater, natural materials). Drop the traditional *look*:
+- iron bars and teak shutters
+- sloped clay hoods
+- clay coping tiles
+- kaavi walls
+- turned teak balusters
+- striped fabrics
+
+New palette:
+- **Walls:** smooth white lime.
+- **Stilt level:** board-formed concrete.
+- **Floors:** honed light stone through the open half; warm terrazzo in the bedrooms.
+- **Windows:** slim dark-aluminium frames with clear glass. Safety rails on the room side replace the iron grilles.
+- **Shading and coping:** thin flat concrete chajjas; flat stone coping.
+- **Joinery:** light oak flush doors; a grooved dark-teak main door.
+- **Screens:** a timber-slat stair screen and transoms; terracotta *brick* jaali (hit-and-miss) outside.
+- **Court guard:** black steel flats with an oak handrail.
+- **Kitchen:** sage cabinets with a quartz top.
+- **Furniture:** a low grey sofa; beds with linen headboards.
+
+**Verification control changed (disclose):** the source checks for `addCopingTiles` and the plan label "Wall-top clay tiles" became `addCoping` and "Flat stone coping". COPING still has to cover the parapets, guards and the compound wall.
 
 ## Open questions for the owner
 1. Survey or FMB sketch: which is right, the side lengths or the 1,620 sq ft? What are the corner angles?

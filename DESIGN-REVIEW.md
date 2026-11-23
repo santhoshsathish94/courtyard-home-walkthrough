@@ -139,6 +139,15 @@ Owner's brief: stairs on the north (vastu), a SW entrance and car parking, a hal
 - [x] **Verification.** The validator (3,800+ checks) and mutation tests (23 regressions, including the new rules) pass. Playwright, desktop + phone: 18/18. The walk route now goes road → gate → front yard → between the thinnai → main door → stair → first-floor hall → terrace.
 - [ ] Modern restyle (Pass 8): material palette, openings, railings, furniture.
 
+### Pass 8 — Modern house, traditional values (cycle 3b)
+- [x] **Windows.** Slim dark-aluminium frames with mullions, clear glass and stone sills; safety rails on the room side for low and court-facing windows. No iron bars or teak shutters.
+- [x] **Shade and wall tops.** Thin flat concrete chajjas (no sloped clay hoods) and flat granite coping on the parapets, guards and compound wall (no clay coping tiles).
+- [x] **Surfaces.** Smooth white lime walls. Board-formed concrete on the stilt-level stair hall and the thinnai. Honed light stone floors through the open half, warm terrazzo in the bedrooms, large light tiles in the baths.
+- [x] **Joinery.** Flush light-oak doors with slim dark pulls, and a grooved dark-teak main door. Oak slat screen at the stair, slat transoms indoors, terracotta brick jaali (hit-and-miss) outside.
+- [x] **Court guard.** Black steel flats, oak handrail, light stone kerb.
+- [x] **Furniture.** Sage flat-front kitchen with a quartz top and an oak breakfast counter; low grey sofa; oak beds with linen headboards; flat oak wardrobes; oak and cane chairs. The pooja cabinet stays teak.
+- [ ] Next: façade depth (shading fins and window frames), stilt-level detailing, lighting.
+
 ## Critical dimension check before any build-ready review
 
 **Resolved in Pass 6.** Before, the compound wall was 16.7 × 11.2 m (about 2,020 sq ft), larger than the plot.
@@ -151,13 +160,13 @@ Owner's brief: stairs on the north (vastu), a SW entrance and car parking, a hal
 
 | Zone | Proposed finish |
 |---|---|
-| Compound wall | Local rubble stone with individual clay coping tiles; granite gate piers; reclaimed-teak batten gate |
-| Stilt level and stair | Kota stone paving and treads; kaavi (red-ochre) lime on the stair-hall walls; granite column bases |
-| Rooms | Red-oxide floors (bedrooms, library, kitchen); Athangudi tiles (living, verandahs, pooja); ceramic tiles in baths |
-| Walls and ceilings | Lime plaster |
-| Jaali and screens | Terracotta jaali (exterior, stair spine, wash screen); teak jaali (stair screen, pooja door, transoms) |
-| Terrace | Terracotta pavers falling to the court; clay coping tiles on parapets |
-| Joinery | Reclaimed teak doors, shutters and frames; iron window bars |
+| Compound wall | Local rubble stone with a flat granite coping; granite gate piers; sliding reclaimed-teak batten gate on a steel track |
+| Stilt level and stair | Board-formed concrete stair hall and thinnai (black granite seats); honed light stone paving; stone treads; granite column bases |
+| Rooms | Honed light stone through the open half (hall, living, family, kitchen); warm terrazzo in the bedrooms; large light tiles in the baths |
+| Walls and ceilings | Smooth white lime plaster |
+| Jaali and screens | Terracotta brick jaali, hit-and-miss (exterior vents, low inlets, stair spine, wash screen); oak slat screen at the stair; slat transoms and pooja-cabinet doors |
+| Terrace | Terracotta pavers falling to the court; flat stone coping on parapets; thin concrete wash canopy |
+| Joinery and windows | Flush light-oak doors and a grooved dark-teak main door; slim dark-aluminium windows with clear glass and room-side safety rails; thin flat concrete chajjas |
 
 ## Current rainwater concept
 
