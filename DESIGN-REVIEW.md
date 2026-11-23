@@ -146,7 +146,8 @@ Owner's brief: stairs on the north (vastu), a SW entrance and car parking, a hal
 - [x] **Joinery.** Flush light-oak doors with slim dark pulls, and a grooved dark-teak main door. Oak slat screen at the stair, slat transoms indoors, terracotta brick jaali (hit-and-miss) outside.
 - [x] **Court guard.** Black steel flats, oak handrail, light stone kerb.
 - [x] **Furniture.** Sage flat-front kitchen with a quartz top and an oak breakfast counter; low grey sofa; oak beds with linen headboards; flat oak wardrobes; oak and cane chairs. The pooja cabinet stays teak.
-- [ ] Next: façade depth (shading fins and window frames), stilt-level detailing, lighting.
+- [x] **Façade depth (cycle 3c).** Dark box frames around the main windows; exposed-concrete stilt columns, beams and soffit; pendants over the breakfast counter and a chimney hood; neutral bounce light so ceilings read white.
+- [ ] Next: west-facing shading fins, lighting moods, richer landscape on the stilt level.
 
 ## Critical dimension check before any build-ready review
 

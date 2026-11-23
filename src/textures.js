@@ -430,7 +430,7 @@ export function makeMaterials(renderer, quality = 'high') {
     rubble: std({ map: T(rub.map, 1.6), normalMap: T(rub.normal, 1.6, { srgb: false }), normalScale: new THREE.Vector2(1.1, 1.1), roughness: 0.96 }),
     teak: std({ map: T(wood(N, 121, 0x7a4a2a), 1.4), roughness: 0.55, envMapIntensity: 0.6 }),
     teakDark: std({ map: T(wood(N, 131, 0x4e2f1b, { dark: 0.45 }), 1.4), roughness: 0.6, envMapIntensity: 0.5 }),
-    concrete: std({ color: 0xc9c2b4, roughness: 0.9 }),
+    concrete: std({ color: 0xbdbcb7, roughness: 0.9 }),
     brass: std({ color: 0xc9a14a, metalness: 1.0, roughness: 0.28 }),
     copper: std({ color: 0xb4683d, metalness: 1.0, roughness: 0.35 }),
     steel: std({ color: 0xb8bcc0, metalness: 0.95, roughness: 0.32 }),

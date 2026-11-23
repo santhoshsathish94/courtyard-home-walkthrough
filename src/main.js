@@ -74,14 +74,15 @@ async function main() {
   sun.shadow.normalBias = 0.025;
   sun.target.position.set(0.3, 2, 0);
   scene.add(sun, sun.target);
-  const hemi = new THREE.HemisphereLight(0xe4edf3, 0xbfb6a8, 0.6);
+  const hemi = new THREE.HemisphereLight(0xe4edf3, 0xc9c7c2, 0.6);
   scene.add(hemi);
   const pmrem = new THREE.PMREMGenerator(renderer);
   const envScene = new THREE.Scene(), envSky = new Sky();
   envSky.scale.setScalar(50);
   envScene.add(envSky);
-  // A warm ground disc in the environment so interiors receive bounced, earthy light.
-  const envGround = new THREE.Mesh(new THREE.CircleGeometry(40, 32), new THREE.MeshBasicMaterial({ color: 0xb9b0a2 }));
+  // A light, near-neutral ground disc in the environment: interiors get soft bounce light
+  // and ceilings stay white (a warm disc tinted every ceiling tan).
+  const envGround = new THREE.Mesh(new THREE.CircleGeometry(40, 32), new THREE.MeshBasicMaterial({ color: 0xc8c5be }));
   envGround.rotation.x = -Math.PI / 2;
   envGround.position.y = -1;
   envScene.add(envGround);

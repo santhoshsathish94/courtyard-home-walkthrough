@@ -245,7 +245,17 @@ function fillOpening(b, w, o, opts) {
       for (const yy of [0.62, 1.02]) if (yy > o.sill + 0.08) wallBox(b, 'frameDark', w, s0 + fw, s1 - fw, y0 + yy - 0.012, y0 + yy + 0.012, nr - 0.012, nr + 0.012);
       for (const ss of [s0 + fw + 0.01, s1 - fw - 0.03]) wallBox(b, 'frameDark', w, ss, ss + 0.02, fy0, y0 + 1.04, nr - 0.012, nr + 0.012);
     }
-    if (ext) addRainHood(b, w, s0, s1, y0 + o.head + (o.vent ? 0.44 : 0.04), o.hood ? 0.55 : 0.45);
+    // Main first-floor windows get a projecting dark box frame (shade + depth on the
+    // facade); smaller ones keep a thin chajja.
+    if (ext && w.kind === 'exterior' && w.level === 'first' && o.w >= 1.0) {
+      const out = outwardOf(w), sg = Math.sign(out[0] * m.nx + out[1] * m.nz) || 1, n0 = sg * t, n1 = sg * (t + 0.28);
+      const lo = Math.min(n0, n1), hi = Math.max(n0, n1), k = 0.06;
+      const yb = y0 + (o.lowJaali ? o.lowJaali[0] : o.sill) - k, yt = y0 + o.head + (o.vent ? 0.40 : 0) + k;
+      wallBox(b, 'frameDark', w, s0 - k, s1 + k, yt - k, yt, lo, hi);
+      wallBox(b, 'frameDark', w, s0 - k, s1 + k, yb, yb + k, lo, hi);
+      wallBox(b, 'frameDark', w, s0 - k, s0, yb, yt, lo, hi);
+      wallBox(b, 'frameDark', w, s1, s1 + k, yb, yt, lo, hi);
+    } else if (ext) addRainHood(b, w, s0, s1, y0 + o.head + (o.vent ? 0.44 : 0.04), o.hood ? 0.55 : 0.45);
   }
   if (o.type === 'door') {
     const fw = 0.05, head = y0 + o.head, fk = o.main ? 'teakDark' : 'oak';
@@ -496,10 +506,16 @@ function buildFurnitureItem(b, M, f, dyn) {
         F.box(b, 'glassDark', u0, u1, f.h, f.h + 0.02, 0.1, Dp - 0.06);
         for (const k of [0.25, 0.75]) F.cyl(b, 'iron', u0 + (u1 - u0) * k, Dp / 2, 0.09, f.h + 0.02, f.h + 0.045, 14);
         F.cyl(b, 'brass', u0 + (u1 - u0) * 0.25, Dp / 2, 0.12, f.h + 0.045, f.h + 0.2, 14, 0.1);
+        // Slim chimney hood; its duct rises to the high exhaust jaali.
+        if (f.level !== 'terrace') {
+          F.box(b, 'frameDark', u0 - 0.03, u1 + 0.03, 1.62, 1.70, 0, 0.5);
+          F.box(b, 'frameDark', (u0 + u1) / 2 - 0.14, (u0 + u1) / 2 + 0.14, 1.70, 2.0, 0, 0.26);
+        }
       }
       if (f.level !== 'terrace') {
-        // Open teak shelf on the back wall, split around any window in that wall.
+        // Open oak shelf on the back wall, split around windows in that wall and the hood.
         const line = back === 'E' ? f.x1 : back === 'W' ? f.x0 : back === 'S' ? f.z1 : f.z0, gaps = [];
+        if (f.stove) { const s0 = toU(f.stove); gaps.push([s0 - 0.08, s0 + (f.stove[1] - f.stove[0]) + 0.08]); }
         for (const w2 of WALLS) {
           if (w2.level !== f.level || (back === 'E' || back === 'W') === isHoriz(w2)) continue;
           if (Math.abs((isHoriz(w2) ? w2.a[1] : w2.a[0]) - line) > w2.t / 2 + 0.05) continue;
@@ -546,7 +562,7 @@ function buildFurnitureItem(b, M, f, dyn) {
     }
     case 'desk': {
       F.box(b, 'oak', 0, W, f.h - 0.04, f.h, 0, Dp);
-      for (const u of [0, W - 0.04]) F.box(b, 'frameDark', u, u + 0.03, 0, f.h - 0.04, 0, Dp);
+      for (const u of [0, W - 0.03]) F.box(b, 'oak', u, u + 0.03, 0, f.h - 0.04, 0, Dp);
       F.box(b, 'fabricSage', W * 0.25, W * 0.75, 0.4, 0.46, Dp + 0.18, Dp + 0.58);
       F.box(b, 'frameDark', W * 0.48, W * 0.52, 0, 0.4, Dp + 0.36, Dp + 0.4);
       F.box(b, 'books', 0.05, 0.4, f.h, f.h + 0.25, 0.02, 0.2);
@@ -673,6 +689,11 @@ function buildFurnitureItem(b, M, f, dyn) {
         F.cyl(b, 'steel', u, seatV, 0.025, 0.02, 0.62, 8);
         F.cyl(b, 'oak', u, seatV, 0.17, 0.62, 0.66, 18);
         F.cyl(b, 'steel', u, seatV, 0.13, 0.24, 0.255, 14);
+        // Pendant over the counter: cord from the ceiling, dark cone shade, warm bulb.
+        const ceil = LEVELS.terrace - SLAB - y, pv = base * 0.55;
+        F.cyl(b, 'frameDark', u, pv, 0.004, 1.95, ceil, 6);
+        F.cyl(b, 'frameDark', u, pv, 0.16, 1.72, 1.95, 18, 0.03);
+        F.cyl(b, 'flame', u, pv, 0.05, 1.69, 1.74, 10);
       }
       break;
     }
@@ -891,12 +912,13 @@ export function buildWorld(M) {
   for (const c of COLUMNS) {
     const w = c.w + 0.006, d = c.d + 0.006;
     B.L0.box('granite', c.x - w / 2 - 0.04, c.x + w / 2 + 0.04, 0, 0.35, c.z - d / 2 - 0.04, c.z + d / 2 + 0.04);
-    B.L0.box('lime', c.x - w / 2, c.x + w / 2, 0.35, LEVELS.first - D.BEAM.d, c.z - d / 2, c.z + d / 2);
+    B.L0.box('concrete', c.x - w / 2, c.x + w / 2, 0.35, LEVELS.first - D.BEAM.d, c.z - d / 2, c.z + d / 2);
   }
-  for (const bm of BEAMS) lvlBatch(bm.level === 'first' ? 'first' : 'terrace').box('lime', bm.x0 - 0.008, bm.x1 + 0.008, bm.y0, bm.y1 - 0.004, bm.z0 - 0.008, bm.z1 + 0.008);
+  // Exposed concrete under the first floor (the stilt ceiling); plastered beams indoors.
+  for (const bm of BEAMS) lvlBatch(bm.level === 'first' ? 'first' : 'terrace').box(bm.level === 'first' ? 'concrete' : 'lime', bm.x0 - 0.008, bm.x1 + 0.008, bm.y0, bm.y1 - 0.004, bm.z0 - 0.008, bm.z1 + 0.008);
 
   // ---- slabs, floor finishes, terrace surface ----
-  for (const r of rectMinus(HOUSE, D.SLAB_OPENINGS.first)) B.L1.box('lime', r.x0, r.x1, yF - SLAB, yF, r.z0, r.z1);
+  for (const r of rectMinus(HOUSE, D.SLAB_OPENINGS.first)) B.L1.box('concrete', r.x0, r.x1, yF - SLAB, yF, r.z0, r.z1);
   for (const r of rectMinus(HOUSE, D.SLAB_OPENINGS.terrace)) B.L2.box('lime', r.x0, r.x1, yT - SLAB, yT, r.z0, r.z1);
   // One continuous Kota floor through the open half (hall, living, family, kitchen);
   // bedrooms and baths get their own finish on top (slightly thicker, so no z-fighting).

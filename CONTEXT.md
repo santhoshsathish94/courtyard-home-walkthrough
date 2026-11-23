@@ -240,6 +240,20 @@ New palette:
 
 **Verification control changed (disclose):** the source checks for `addCopingTiles` and the plan label "Wall-top clay tiles" became `addCoping` and "Flat stone coping". COPING still has to cover the parapets, guards and the compound wall.
 
+- **3b, published** (72178e5). Actions and Pages succeeded. The restyle made the scene lighter: 26.5k triangles, down from 35k (shutters, bars and clay tiles removed). Load time is unchanged at about 5.5 s.
+- **3c (façade depth and details).**
+  - Dark box frames project 280 mm around the main first-floor windows.
+  - Exposed-concrete stilt columns, beams and slab soffit; plastered ceilings indoors.
+  - Pendant lights over the breakfast counter, and a chimney hood whose duct rises to the high exhaust jaali.
+  - The bounce colours are neutral now. A warm ground disc had tinted every ceiling tan.
+  - The mobile view was checked at 412 × 915: the panel starts collapsed and the model fills the screen.
+
+### Growth (cycle 3)
+- **Decide quickly, then let the validator and the browser find the problems.** The topology analysis was worth doing once. After that, short build–look–fix loops found real issues that more analysis would have missed: blocked circulation, a misread data convention, the tan bounce light.
+- **Data conventions must be checked, not remembered.** Counter `sink`/`stove` are world ranges; a validator rule now enforces it.
+- **Close extra WebGL tabs before timing tests.** Two open walkthrough tabs tripled the local Playwright time (11 min against 3.8 min).
+- **PowerShell `.Replace` with multi-line strings breaks on CRLF files.** Use a small Node script that normalises line endings, or the edit tool.
+
 ## Open questions for the owner
 1. Survey or FMB sketch: which is right, the side lengths or the 1,620 sq ft? What are the corner angles?
 2. Local setback and coverage rules for the site. The current margins are a design choice.
