@@ -22,6 +22,7 @@ Each pass follows **Context → Direction → Action → Success → Growth**. R
 - [x] Add subtle visible falls to surface-water runs so water is not represented as a flat stagnant strip.
 - [x] Correct drainage fall orientation: north collector falls east, east collector falls south, and courtyard overflow falls toward the recharge garden.
 - [x] Join the north and east surface channels at the north-east corner and add a falling branch into the recharge garden.
+- [x] Overlap the east-to-recharge branch with its collector and match the courtyard overflow branch start level to its upstream channel outlet.
 - [x] Remove a duplicated terrace courtyard channel and replace flat blue strips with sloped water surfaces where the run has a defined direction.
 - [x] Connect the courtyard-tree basin overflow to the planted recharge garden with a shallow surface channel.
 - [ ] Confirm exposed wall locations, tile projection, surface-channel falls, splash control, overflow and recharge capacity with a local engineer after site levels and rainfall design data are known.
