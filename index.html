@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -136,9 +135,9 @@
   <div class="hud">
     <div class="top-stack">
       <div class="card main-card">
-        <h1>Traditional Courtyard <span class="badge">2 Baths · North-Entry Master · Open Courtyard</span></h1>
+        <h1>Traditional Courtyard <span class="badge">2 Baths · Library · Open Courtyard</span></h1>
         <div class="sub hide-mobile">
-          <b>W33·S46·E33·N51</b> · 1,620 sq ft full plot (West Road) · Rationalised 12-column concept · Open Stilt Garden + 1F Living + Open-to-sky Nadumuttam + Terrace Garden
+          <b>W33·S46·E33·N51</b> · 1,620 sq ft plot (West Road) · 12-column concept · Open Stilt Garden + 1F Living + Open-to-sky Nadumuttam + Terrace Garden
         </div>
         <div class="pill-row">
           <button id="btn-orbit" class="active">Orbit</button>
@@ -185,12 +184,12 @@
         <button data-jump="living">3 Living (N)</button>
         <button data-jump="kitchen">4 Kitchen (SE)</button>
         <button data-jump="pooja">5 Pooja (NE)</button>
-        <button data-jump="master">6 Master (SW · N Entry) · N Entry</button>
+        <button data-jump="master">6 Master (SW · N Entry)</button>
         <button data-jump="parents">7 Parents (E)</button>
-        <button data-jump="kids">8 Kids (NW)</button>
-        <button data-jump="study">9 Study (W)</button>
+        <button data-jump="kids">8 Kids (W)</button>
+        <button data-jump="study">9 Library (NW)</button>
         <button data-jump="common_bath">10 Common Bath</button>
-        <button data-jump="terrace">10 Terrace</button>
+        <button data-jump="terrace">11 Terrace</button>
       </div>
     </div>
   </div>
@@ -210,7 +209,7 @@
       </div>
     </div>
     <canvas id="plan-canvas" width="590" height="440"></canvas>
-    <div class="sub">Green dot = camera · open-to-sky courtyard · 1 common bath + enlarged master bath</div>
+    <div class="sub">Green dot = camera · Open-to-sky courtyard · Jack-and-Jill Ensuite + Common Bath</div>
   </div>
 
   <script type="module">
@@ -282,12 +281,12 @@
     // 3. TRADITIONAL MATERIALS
     // =========================================================================
     const MAT = {
-      wall: new THREE.MeshStandardMaterial({ color: 0xf5efe3, roughness: 0.86 }), // Lime-plaster off-white
+      wall: new THREE.MeshStandardMaterial({ color: 0xf5efe3, roughness: 0.86 }),
       wallWarm: new THREE.MeshStandardMaterial({ color: 0xe7dcc7, roughness: 0.86 }),
       concrete: new THREE.MeshStandardMaterial({ color: 0xc5c0b5, roughness: 0.9 }),
       kota: new THREE.MeshStandardMaterial({ color: 0x828c7f, roughness: 0.7 }),
       athangudi: new THREE.MeshStandardMaterial({ color: 0x9b543c, roughness: 0.68 }),
-      tile: new THREE.MeshStandardMaterial({ color: 0xb65236, roughness: 0.72 }), // Mangalore clay tile
+      tile: new THREE.MeshStandardMaterial({ color: 0xb65236, roughness: 0.72 }),
       terracotta: new THREE.MeshStandardMaterial({ color: 0xbd6b4b, roughness: 0.78 }),
       teak: new THREE.MeshStandardMaterial({ color: 0x6b4022, roughness: 0.58 }),
       darkWood: new THREE.MeshStandardMaterial({ color: 0x3b2314, roughness: 0.54 }),
@@ -323,7 +322,6 @@
       return mesh;
     }
 
-    // Traditional architectural builders: Walls, Mullioned Windows, Paneled Doors, Jaali Screens, Sloped Chajjas & Pillars
     function addWallX(parent, z, x0, x1, yBase, height, thick, mat, openings = [], collide = true) {
       const z0 = z - thick / 2, z1 = z + thick / 2;
       const ops = [...openings].sort((a, b) => a.start - b.start);
@@ -331,9 +329,16 @@
       for (const op of ops) {
         if (op.start > cursor) addBox(parent, cursor, op.start, yBase, yBase + height, z0, z1, mat, collide);
         if (op.sill > 0) addBox(parent, op.start, op.end, yBase, yBase + op.sill, z0, z1, mat, collide);
-        if (op.head < height) addBox(parent, op.start, op.end, yBase + op.head, yBase + height, z0, z1, mat, collide);
-        if (op.glass) addWindowDetailX(parent, z, op.start, op.end, yBase + op.sill, yBase + op.head, op.louver);
-        if (op.jaali) addJaaliX(parent, z, op.start, op.end, yBase + op.sill, yBase + op.head, op.jaaliMat || MAT.terracotta, op.cols || 6, op.rows || 5);
+        // Reserve extra 0.34 m above op.head for door transom louvers so solid wall doesn't bury it
+        const topCut = op.door ? Math.min(height, op.head + 0.34) : op.head;
+        if (topCut < height) addBox(parent, op.start, op.end, yBase + topCut, yBase + height, z0, z1, mat, collide);
+        if (op.glass) addWindowDetailX(parent, z, op.start, op.end, yBase + op.sill, yBase + op.head, op.louver, op.louverDir ?? -1);
+        if (op.jaali) {
+          addJaaliX(parent, z, op.start, op.end, yBase + op.sill, yBase + op.head, op.jaaliMat || MAT.terracotta, op.cols || 6, op.rows || 5);
+          if (collide && op.sill < 1.0) {
+            colliders.push({ x0: op.start, x1: op.end, y0: yBase + op.sill, y1: yBase + op.head, z0, z1 });
+          }
+        }
         if (op.door) addHingedDoorX(parent, z, op.start, op.end, yBase, yBase + op.head, op.swingDir || 1, op.openAngle || 0.9, op.jaliDoor);
         cursor = Math.max(cursor, op.end);
       }
@@ -347,17 +352,22 @@
       for (const op of ops) {
         if (op.start > cursor) addBox(parent, x0, x1, yBase, yBase + height, cursor, op.start, mat, collide);
         if (op.sill > 0) addBox(parent, x0, x1, yBase, yBase + op.sill, op.start, op.end, mat, collide);
-        if (op.head < height) addBox(parent, x0, x1, yBase + op.head, yBase + height, op.start, op.end, mat, collide);
-        if (op.glass) addWindowDetailZ(parent, x, op.start, op.end, yBase + op.sill, yBase + op.head, op.louver);
-        if (op.jaali) addJaaliZ(parent, x, op.start, op.end, yBase + op.sill, yBase + op.head, op.jaaliMat || MAT.terracotta, op.cols || 5, op.rows || 4);
+        const topCut = op.door ? Math.min(height, op.head + 0.34) : op.head;
+        if (topCut < height) addBox(parent, x0, x1, yBase + topCut, yBase + height, op.start, op.end, mat, collide);
+        if (op.glass) addWindowDetailZ(parent, x, op.start, op.end, yBase + op.sill, yBase + op.head, op.louver, op.louverDir ?? 1);
+        if (op.jaali) {
+          addJaaliZ(parent, x, op.start, op.end, yBase + op.sill, yBase + op.head, op.jaaliMat || MAT.terracotta, op.cols || 5, op.rows || 4);
+          if (collide && op.sill < 1.0) {
+            colliders.push({ x0, x1, y0: yBase + op.sill, y1: yBase + op.head, z0: op.start, z1: op.end });
+          }
+        }
         if (op.door) addHingedDoorZ(parent, x, op.start, op.end, yBase, yBase + op.head, op.swingDir || 1, op.openAngle || 0.9, op.jaliDoor);
         cursor = Math.max(cursor, op.end);
       }
       if (cursor < z1) addBox(parent, x0, x1, yBase, yBase + height, cursor, z1, mat, collide);
     }
 
-    // Window with timber frame (chaukhat), mullions & optional wooden louvers
-    function addWindowDetailX(parent, z, x0, x1, y0, y1, louver = false) {
+    function addWindowDetailX(parent, z, x0, x1, y0, y1, louver = false, dirZ = -1) {
       addBox(parent, x0, x1, y0, y0 + 0.05, z - 0.09, z + 0.09, MAT.darkWood, false);
       addBox(parent, x0, x1, y1 - 0.05, y1, z - 0.09, z + 0.09, MAT.darkWood, false);
       addBox(parent, x0, x0 + 0.05, y0, y1, z - 0.09, z + 0.09, MAT.darkWood, false);
@@ -369,11 +379,11 @@
       }
       addBox(parent, x0, x1, y0, y1, z - 0.01, z + 0.01, MAT.glass, false, false, false);
       if (louver) {
-        addBox(parent, x0 + 0.05, x0 + 0.42, y0 + 0.05, y1 - 0.05, z + 0.08, z + 0.12, MAT.teak, false);
+        addBox(parent, x0 + 0.05, x0 + 0.42, y0 + 0.05, y1 - 0.05, z + dirZ * 0.10 - 0.02, z + dirZ * 0.10 + 0.02, MAT.teak, false);
       }
     }
 
-    function addWindowDetailZ(parent, x, z0, z1, y0, y1, louver = false) {
+    function addWindowDetailZ(parent, x, z0, z1, y0, y1, louver = false, dirX = 1) {
       addBox(parent, x - 0.09, x + 0.09, y0, y0 + 0.05, z0, z1, MAT.darkWood, false);
       addBox(parent, x - 0.09, x + 0.09, y1 - 0.05, y1, z0, z1, MAT.darkWood, false);
       addBox(parent, x - 0.09, x + 0.09, y0, y1, z0, z0 + 0.05, MAT.darkWood, false);
@@ -385,11 +395,10 @@
       }
       addBox(parent, x - 0.01, x + 0.01, y0, y1, z0, z1, MAT.glass, false, false, false);
       if (louver) {
-        addBox(parent, x + 0.08, x + 0.12, y0 + 0.05, y1 - 0.05, z0 + 0.05, z0 + 0.42, MAT.teak, false);
+        addBox(parent, x + dirX * 0.10 - 0.02, x + dirX * 0.10 + 0.02, y0 + 0.05, y1 - 0.05, z0 + 0.05, z0 + 0.42, MAT.teak, false);
       }
     }
 
-    // Terracotta / Timber Jaali perforated screen (lightweight crisp grid)
     function addJaaliX(parent, z, x0, x1, y0, y1, mat, cols = 6, rows = 5) {
       addBox(parent, x0, x1, y0, y0 + 0.05, z - 0.08, z + 0.08, MAT.darkWood, false);
       addBox(parent, x0, x1, y1 - 0.05, y1, z - 0.08, z + 0.08, MAT.darkWood, false);
@@ -416,13 +425,11 @@
       }
     }
 
-    // Traditional Paneled Teak Door with Chaukhat Frame + Transom Ventilator
     function addHingedDoorX(parent, z, x0, x1, y0, y1, swingDir = 1, openAngle = 0.85, jaliDoor = false) {
       const w = x1 - x0, h = y1 - y0;
       addBox(parent, x0, x0 + 0.06, y0, y1, z - 0.09, z + 0.09, MAT.darkWood, false);
       addBox(parent, x1 - 0.06, x1, y0, y1, z - 0.09, z + 0.09, MAT.darkWood, false);
       addBox(parent, x0, x1, y1 - 0.06, y1, z - 0.09, z + 0.09, MAT.darkWood, false);
-      // Transom ventilator louver above door
       addJaaliX(parent, z, x0 + 0.06, x1 - 0.06, y1, y1 + 0.34, MAT.teak, 3, 2);
 
       const leaf = new THREE.Group();
@@ -462,7 +469,6 @@
       parent.add(leaf);
     }
 
-    // Sloped Mangalore-tile Chajja (overhanging sunshade)
     function addChajjaX(parent, z, x0, x1, y, dirZ = -1, depth = 0.62) {
       const m = new THREE.Mesh(new THREE.BoxGeometry(x1 - x0, 0.07, depth), MAT.tile);
       m.position.set((x0 + x1) / 2, y, z + dirZ * (depth / 2 + 0.06));
@@ -479,14 +485,6 @@
       parent.add(m);
     }
 
-    // Traditional Carved Teak Pillar with Stone Base & Corbel Capital
-    function addTeakPillar(parent, x, z, y0, y1) {
-      addBox(parent, x - 0.11, x + 0.11, y0, y0 + 0.18, z - 0.11, z + 0.11, MAT.stone, true);
-      addBox(parent, x - 0.07, x + 0.07, y0 + 0.18, y1 - 0.16, z - 0.07, z + 0.07, MAT.teak, true);
-      addBox(parent, x - 0.18, x + 0.18, y1 - 0.16, y1, z - 0.13, z + 0.13, MAT.darkWood, false);
-    }
-
-    // Traditional Balustrade with Turned Timber Posts
     function addBalusterRail(parent, x0, x1, z0, z1, y0, y1, alongX = true) {
       addBox(parent, x0, x1, y1 - 0.06, y1, z0, z1, MAT.darkWood, true);
       addBox(parent, x0, x1, y0, y0 + 0.12, z0, z1, MAT.teak, true);
@@ -539,18 +537,25 @@
       addBox(grpGF, -3.4 + i * 0.68, -2.9 + i * 0.68, 0.03, 0.07, 1.55, 2.15, MAT.kota, false, false, true);
     }
 
-    // Rationalised concept grid: 3 support lines across × 4 along the plot.
-    // This is a visual design study only; final column/beam sizes and locations require structural design.
+    // Rationalised 12-column grid (3 along X × 4 along Z).
+    // Z = -1.6 and Z = +1.5 align cleanly with the North & South courtyard rims;
+    // beams stop around the Courtyard void & Stairwell so nothing cuts through open sky or stairs.
     const colXs = [-7.15, 0.0, 7.15];
-    const colZs = [-4.85, -1.5, 1.5, 4.85];
+    const colZs = [-4.85, -1.6, 1.5, 4.85];
     for (const cx of colXs) {
       for (const cz of colZs) {
         addBox(grpGF, cx - 0.17, cx + 0.17, 0, H_1F, cz - 0.17, cz + 0.17, MAT.concrete, true);
       }
     }
-    // Readable beam intent at the stilt ceiling; dimensions are deliberately schematic.
+    // Perimeter & continuous beams along Z = -4.85, -1.6, 1.5, 4.85
     for (const cz of colZs) addBox(grpGF, -7.15, 7.15, H_1F - 0.34, H_1F, cz - 0.13, cz + 0.13, MAT.concrete, false);
-    for (const cx of colXs) addBox(grpGF, cx - 0.13, cx + 0.13, H_1F - 0.34, H_1F, -4.85, 4.85, MAT.concrete, false);
+    // Outer West & East beams along X = -7.15 and +7.15
+    for (const cx of [-7.15, 7.15]) addBox(grpGF, cx - 0.13, cx + 0.13, H_1F - 0.34, H_1F, -4.85, 4.85, MAT.concrete, false);
+    // Center X = 0 beam ONLY in Living zone (-4.85 to -1.6), skipping Courtyard (-1.6..1.5) & Stairwell (1.8..4.85)
+    addBox(grpGF, -0.13, 0.13, H_1F - 0.34, H_1F, -4.85, -1.6, MAT.concrete, false);
+    // Courtyard East/West trimmer beams framing the void
+    addBox(grpGF, -1.63, -1.37, H_1F - 0.34, H_1F, -1.6, 1.5, MAT.concrete, false);
+    addBox(grpGF, 1.17, 1.43, H_1F - 0.34, H_1F, -1.6, 1.5, MAT.concrete, false);
 
     // Ground Floor Sunlit Courtyard Garden + Thinnai Plinth + Lily Basin
     addBox(grpGF, -1.65, 1.35, 0.02, 0.24, -1.75, 1.55, MAT.terracotta, false);
@@ -601,7 +606,7 @@
     buildStairFlight(grpFF, H_1F);
 
     // =========================================================================
-    // 6. FIRST FLOOR LIVING LEVEL (Y = 3.20m) — 1 COMMON + 1 MASTER BATH
+    // 6. FIRST FLOOR LIVING LEVEL (Y = 3.20m)
     // =========================================================================
     const yS0 = H_1F - SLAB_T, yS1 = H_1F;
     addBox(grpFF, -7.3, -1.5, yS0, yS1, -5.0, 5.0, MAT.kota, false);
@@ -610,7 +615,8 @@
     addBox(grpFF, 1.2, 7.3, yS0, yS1, -5.0, 1.8, MAT.kota, false);
     addBox(grpFF, 1.5, 7.3, yS0, yS1, 1.8, 5.0, MAT.athangudi, false);
 
-    // Traditional Balconies with Turned Balustrades
+    // Accessible Balconies only (North Living, NE Pooja, East Parents', SE Kitchen Utility)
+    // West road-facing wall has windows & chajjas only for privacy.
     function addBalcony(x0, x1, z0, z1, railSides) {
       addBox(grpFF, x0, x1, yS0, yS1, z0, z1, MAT.athangudi, false);
       const r0 = H_1F, r1 = H_1F + 0.95;
@@ -619,114 +625,99 @@
       if (railSides.includes('N')) addBalusterRail(grpFF, x0, x1, z0, z0 + 0.08, r0, r1, true);
       if (railSides.includes('S')) addBalusterRail(grpFF, x0, x1, z1 - 0.08, z1, r0, r1, true);
     }
-    addBalcony(-8.4, -7.3, -4.8, -2.0, ['W', 'N', 'S']); // NW Kids' Balcony
     addBalcony(-3.1, 3.1, -6.0, -5.0, ['N', 'W', 'E']);  // North Living Balcony
     addBalcony(7.3, 8.3, -4.8, -2.7, ['E', 'N', 'S']);   // NE Pooja Morning Balcony
     addBalcony(7.3, 8.3, -2.1, 1.5, ['E', 'N', 'S']);    // East Parents' Full Balcony
-    addBalcony(-8.4, -7.3, 2.0, 4.7, ['W', 'N', 'S']);   // SW Master Balcony
     addBalcony(7.3, 8.3, 2.3, 4.7, ['E', 'N', 'S']);     // SE Utility Balcony
 
-    // Central Nadumuttam: remove four ornamental corner posts.
-    // Keep the open void, child-safe balustrade and charupadi; roof/slab edge support must be engineered separately.
+    // Central Nadumuttam: Child-safe Balustrade, Charupadi & Sloped Rain Apron
     addBalusterRail(grpFF, -1.5, 1.2, -1.66, -1.56, H_1F, H_1F + 0.85, true);
     addBalusterRail(grpFF, -1.5, 1.2, 1.36, 1.46, H_1F, H_1F + 0.85, true);
     addBalusterRail(grpFF, -1.56, -1.46, -1.6, 1.4, H_1F, H_1F + 0.85, false);
     addBalusterRail(grpFF, 1.16, 1.26, -1.6, 1.4, H_1F, H_1F + 0.85, false);
-    // Traditional Charupadi Courtyard Seat along North Courtyard rim
     addBox(grpFF, -1.35, 1.05, H_1F, H_1F + 0.42, -2.05, -1.6, MAT.teak, true);
 
-    // Inward-Sloped Mangalore-Tile Courtyard Rain Apron (classic Nadumuttam eaves)
     addChajjaX(grpFF, -1.6, -1.7, 1.4, H_1F + WALL_H - 0.15, 1, 0.45);
     addChajjaX(grpFF, 1.4, -1.7, 1.4, H_1F + WALL_H - 0.15, -1, 0.45);
     addChajjaZ(grpFF, -1.5, -1.7, 1.5, H_1F + WALL_H - 0.15, 1, 0.45);
     addChajjaZ(grpFF, 1.2, -1.7, 1.5, H_1F + WALL_H - 0.15, -1, 0.45);
 
-    // --- EXTERIOR PERIMETER WALLS WITH WINDOWS, DOORS, JAALIS & SLOPED CHAJJAS ---
+    // --- EXTERIOR PERIMETER WALLS ---
     // North Wall (Z = -5.0)
     addWallX(grpFF, -5.0, -7.3, 7.3, H_1F, WALL_H, 0.2, MAT.wall, [
-      { start: -6.4, end: -4.2, sill: 0.75, head: 2.25, glass: true, louver: true }, // Kids' N Window
-      { start: -2.7, end: 2.7, sill: 0.0, head: 2.45, glass: true },                 // Living -> N Balcony
-      { start: 4.5, end: 6.7, sill: 0.55, head: 2.35, glass: true, louver: true }    // NE Pooja Window
+      { start: -6.4, end: -4.2, sill: 0.75, head: 2.25, glass: true, louver: true, louverDir: -1 }, // Library N Window
+      { start: -2.7, end: 2.7, sill: 0.0, head: 2.45, glass: true },                                // Living -> N Balcony
+      { start: 4.5, end: 6.7, sill: 0.55, head: 2.35, glass: true, louver: true, louverDir: -1 }    // NE Pooja Window
     ]);
     addChajjaX(grpFF, -5.0, -6.7, -3.9, H_1F + 2.45, -1);
     addChajjaX(grpFF, -5.0, -3.0, 3.0, H_1F + 2.65, -1, 0.75);
     addChajjaX(grpFF, -5.0, 4.2, 7.0, H_1F + 2.55, -1);
 
-    // South Wall (Z = +5.0) — Honeycomb Terracotta Jaali on Stairwell!
+    // South Wall (Z = +5.0)
     addWallX(grpFF, 5.0, -7.3, 7.3, H_1F, WALL_H, 0.2, MAT.wall, [
-      { start: -6.3, end: -4.3, sill: 0.8, head: 2.2, glass: true, louver: true },  // Master S Window
-      { start: -1.3, end: 1.3, sill: 0.7, head: 2.75, jaali: true, cols: 8, rows: 6 }, // STAIRWELL JAALI!
-      { start: 4.2, end: 6.4, sill: 0.95, head: 2.25, glass: true }                 // Kitchen S Window
+      { start: -6.3, end: -4.3, sill: 0.8, head: 2.2, glass: true, louver: true, louverDir: 1 }, // Master S Window
+      { start: -1.3, end: 1.3, sill: 0.7, head: 2.75, jaali: true, cols: 8, rows: 6 },           // Stairwell Jaali
+      { start: 4.2, end: 6.4, sill: 0.95, head: 2.25, glass: true }                              // Kitchen S Window
     ]);
     addChajjaX(grpFF, 5.0, -6.6, -4.0, H_1F + 2.4, 1);
     addChajjaX(grpFF, 5.0, -1.5, 1.5, H_1F + 2.88, 1, 0.7);
     addChajjaX(grpFF, 5.0, 4.0, 6.6, H_1F + 2.45, 1);
 
-    // West exterior wall: high privacy/ventilation openings for the library and bedrooms;
-    // no master bedroom door or balcony on the west road-facing side.
+    // West Exterior Wall (X = -7.3): Privacy windows & jaali ventilators shaded by chajjas
     addWallZ(grpFF, -7.3, -5.0, 5.0, H_1F, WALL_H, 0.2, MAT.wall, [
-      { start: -4.65, end: -3.45, sill: 0.85, head: 2.35, glass: true },              // Library
-      { start: -2.35, end: -1.05, sill: 0.85, head: 2.35, glass: true },              // Kids
-      { start: 0.15, end: 1.15, sill: 1.45, head: 2.4, jaali: true, cols: 4, rows: 3 }, // Shared attached bath ventilation
-      { start: 2.1, end: 3.4, sill: 0.9, head: 2.35, glass: true }                    // Master window only
+      { start: -4.65, end: -3.45, sill: 0.85, head: 2.35, glass: true, louver: true, louverDir: -1 }, // Library
+      { start: -2.35, end: -1.05, sill: 0.85, head: 2.35, glass: true, louver: true, louverDir: -1 }, // Kids
+      { start: 0.15, end: 1.15, sill: 1.45, head: 2.4, jaali: true, cols: 4, rows: 3 },               // Ensuite Jaali Vent
+      { start: 2.35, end: 3.65, sill: 0.9, head: 2.35, glass: true, louver: true, louverDir: -1 }     // Master W Window
     ]);
     addChajjaZ(grpFF, -7.3, -4.8, -3.3, H_1F + 2.55, -1);
     addChajjaZ(grpFF, -7.3, -2.5, -0.9, H_1F + 2.55, -1);
     addChajjaZ(grpFF, -7.3, 0.0, 1.35, H_1F + 2.55, -1);
-    addChajjaZ(grpFF, -7.3, 2.0, 3.6, H_1F + 2.55, -1);
+    addChajjaZ(grpFF, -7.3, 2.2, 3.8, H_1F + 2.55, -1);
 
-    // East Wall (X = +7.3) — NE Pooja Balcony, Parents' Large Balcony, SE Kitchen Utility + Jaali
+    // East Wall (X = +7.3)
     addWallZ(grpFF, 7.3, -5.0, 5.0, H_1F, WALL_H, 0.2, MAT.wall, [
-      { start: -4.5, end: -2.9, sill: 0.0, head: 2.35, glass: true },                // Pooja -> NE Balcony
-      { start: -1.5, end: 0.6, sill: 0.0, head: 2.35, glass: true },                 // Parents' -> East Balcony
-      { start: 2.8, end: 3.7, sill: 0.0, head: 2.2, door: true, swingDir: -1, openAngle: 0.8 }, // Kitchen -> Utility
-      { start: 3.9, end: 4.7, sill: 1.1, head: 2.35, jaali: true, cols: 4, rows: 4 } // SE Utility Breeze Jaali
+      { start: -4.5, end: -2.9, sill: 0.0, head: 2.35, glass: true },                                // Pooja -> NE Balcony
+      { start: -1.5, end: 0.6, sill: 0.0, head: 2.35, glass: true },                                 // Parents' -> East Balcony
+      { start: 2.8, end: 3.7, sill: 0.0, head: 2.2, door: true, swingDir: -1, openAngle: 0.8 },      // Kitchen -> Utility
+      { start: 3.9, end: 4.7, sill: 1.1, head: 2.35, jaali: true, cols: 4, rows: 4 }                 // SE Utility Jaali
     ]);
     addChajjaZ(grpFF, 7.3, -4.7, -2.7, H_1F + 2.55, 1);
     addChajjaZ(grpFF, 7.3, -1.8, 0.9, H_1F + 2.55, 1);
     addChajjaZ(grpFF, 7.3, 2.6, 4.8, H_1F + 2.5, 1);
 
     // --- INTERIOR PARTITIONS & TRADITIONAL HINGED DOORS ---
-    // WEST WING: library opposite the NE pooja, followed north-to-south by
-    // kids' bedroom, a split bathroom block, and master bedroom.
-    // All room doors face EAST into the hall. The west-side bathroom is a
-    // shared Jack-and-Jill ensuite for both bedrooms; east-side bathroom is common.
-
-    // One straight east-facing access wall for the west wing, kept away from the courtyard.
+    // West Wing Corridor Wall (X = -3.3): Doors for Library, Kids, Common Bath (+ high jaali vent!), Master (North Entry)
     addWallZ(grpFF, -3.3, -5.0, 5.0, H_1F, WALL_H, 0.15, MAT.wallWarm, [
-      { start: -4.45, end: -3.55, sill: 0, head: 2.15, door: true, swingDir: 1, openAngle: 0.9 }, // Library
-      { start: -2.0, end: -1.1, sill: 0, head: 2.15, door: true, swingDir: 1, openAngle: 0.9 },  // Kids
-      { start: 2.45, end: 3.35, sill: 0, head: 2.15, door: true, swingDir: 1, openAngle: 0.9 }   // Master
+      { start: -4.45, end: -3.55, sill: 0, head: 2.15, door: true, swingDir: 1, openAngle: 0.9 },     // Library Door
+      { start: -1.55, end: -0.65, sill: 0, head: 2.15, door: true, swingDir: 1, openAngle: 0.9 },     // Kids' Door
+      { start: 0.1, end: 1.0, sill: 0, head: 2.1, door: true, swingDir: 1, openAngle: 0.85 },        // Common Bath Door
+      { start: 1.1, end: 1.6, sill: 2.1, head: 2.75, jaali: true, cols: 3, rows: 2 },                // Common Bath High Courtyard Vent!
+      { start: 1.95, end: 2.85, sill: 0, head: 2.15, door: true, swingDir: 1, openAngle: 0.9 }       // Master North-Entry Door
     ]);
 
-    // Library opposite the pooja room: simple rectangular room with desk/bookshelves.
+    // Library (NW: X -7.3..-3.3, Z -5.0..-3.0)
     addWallX(grpFF, -3.0, -7.3, -3.3, H_1F, WALL_H, 0.15, MAT.wallWarm, []);
 
-    // Kids' bedroom below the library.
+    // Kids' Bedroom (W: X -7.3..-3.3, Z -3.0..-0.3) -> Door to Shared Ensuite clear of fixtures
     addWallX(grpFF, -0.3, -7.3, -3.3, H_1F, WALL_H, 0.15, MAT.wallWarm, [
-      { start: -6.1, end: -5.2, sill: 0, head: 2.15, door: true, swingDir: -1, openAngle: 0.9 } // Kids -> shared ensuite
+      { start: -5.95, end: -5.15, sill: 0, head: 2.15, door: true, swingDir: -1, openAngle: 0.9 }
     ]);
 
-    // Shared bathroom block between kids and master; split east/west.
-    // West half is Jack-and-Jill ensuite; east half is common bathroom.
+    // Shared Bath Block (Z -0.3..+1.7): West Half = Jack-and-Jill Ensuite (-7.3..-4.8), East Half = Common Bath (-4.8..-3.3)
     addWallX(grpFF, 1.7, -7.3, -3.3, H_1F, WALL_H, 0.15, MAT.wallWarm, [
-      { start: -6.1, end: -5.2, sill: 0, head: 2.15, door: true, swingDir: 1, openAngle: 0.9 } // Master -> shared ensuite
+      { start: -5.95, end: -5.15, sill: 0, head: 2.15, door: true, swingDir: 1, openAngle: 0.9 }
     ]);
-    addWallZ(grpFF, -4.8, -0.3, 1.7, H_1F, WALL_H, 0.12, MAT.wallWarm, [
-      { start: 0.1, end: 1.0, sill: 0, head: 2.1, door: true, swingDir: 1, openAngle: 0.85 } // Common bath east-facing door
-    ]);
+    addWallZ(grpFF, -4.8, -0.3, 1.7, H_1F, WALL_H, 0.12, MAT.wallWarm, []);
 
-    // Master bedroom at the south end; no west-road balcony or door.
-    addWallX(grpFF, 5.0, -7.3, -3.3, H_1F, WALL_H, 0.15, MAT.wallWarm, []);
-
-    // 4) Parents' Bedroom (East: X +3.5..+7.3, Z -2.5..+2.0) — Spacious, NO attached bath!
+    // Parents' Bedroom (East: X +3.5..+7.3, Z -2.5..+2.0)
     addWallX(grpFF, -2.5, 3.5, 7.3, H_1F, WALL_H, 0.15, MAT.wallWarm, []);
     addWallZ(grpFF, 3.5, -2.5, 2.0, H_1F, WALL_H, 0.15, MAT.wallWarm, [
       { start: -2.2, end: -1.3, sill: 0, head: 2.15, door: true, swingDir: 1, openAngle: 0.95 }
     ]);
     addWallX(grpFF, 2.0, 3.5, 7.3, H_1F, WALL_H, 0.15, MAT.wallWarm, []);
 
-    // 5) NE Pooja Sanctum — Traditional Carved Teak Jali Screen + Jali Double Door!
+    // NE Pooja Sanctum — Carved Teak Jali Screen + Jali Double Door
     addWallZ(grpFF, 3.5, -5.0, -2.5, H_1F, WALL_H, 0.12, MAT.teak, [
       { start: -4.85, end: -4.35, sill: 0.4, head: 2.35, jaali: true, jaaliMat: MAT.teak, cols: 2, rows: 6 },
       { start: -4.3, end: -3.2, sill: 0, head: 2.2, door: true, swingDir: 1, openAngle: 1.05, jaliDoor: true },
@@ -737,40 +728,45 @@
     lamp.position.set(5.95, H_1F + 0.7, -4.0);
     grpFF.add(lamp);
 
-    // --- FURNITURE & BATH FIXTURES ---
+    // --- FURNITURE & CLEAN NON-OVERLAPPING BATH FIXTURES ---
     // Living Hall Sofa & Teak Table
     addBox(grpFF, -2.2, 0.2, H_1F, H_1F + 0.45, -4.4, -3.55, MAT.fabric, true);
     addBox(grpFF, -2.2, 0.2, H_1F + 0.45, H_1F + 0.85, -4.4, -4.2, MAT.fabric, false);
     addBox(grpFF, -1.6, -0.4, H_1F, H_1F + 0.38, -3.2, -2.5, MAT.teak, true);
 
-    // Library furniture opposite the pooja: full-height shelves and a reading desk.
-    addBox(grpFF, -7.05, -6.75, H_1F, H_1F + 1.65, -4.75, -3.25, MAT.teak, true);
-    addBox(grpFF, -5.65, -4.45, H_1F, H_1F + 0.76, -4.65, -3.65, MAT.teak, true);
-    addBox(grpFF, -5.6, -4.5, H_1F + 0.76, H_1F + 0.82, -4.6, -3.7, MAT.darkWood, false);
+    // Library (NW): West Bookshelf + Reading Desk
+    addBox(grpFF, -7.1, -6.75, H_1F, H_1F + 1.85, -4.75, -3.25, MAT.teak, true);
+    addBox(grpFF, -5.65, -4.35, H_1F, H_1F + 0.76, -4.65, -3.65, MAT.teak, true);
 
-    // Kids' bedroom: bed and compact storage.
-    addBox(grpFF, -6.75, -4.85, H_1F, H_1F + 0.44, -2.65, -1.0, MAT.fabricBlue, true);
-    addBox(grpFF, -6.95, -6.15, H_1F, H_1F + 0.85, -2.65, -2.35, MAT.teak, true);
+    // Kids' Bedroom (W: Z -3.0..-0.3): Bed on West-North side, Study/Wardrobe on East-North corner (zero overlap!)
+    addBox(grpFF, -7.1, -5.25, H_1F, H_1F + 0.44, -2.85, -1.55, MAT.fabricBlue, true);
+    addBox(grpFF, -4.5, -3.5, H_1F, H_1F + 1.75, -2.9, -2.35, MAT.teak, true);
 
-    // Common washroom on the EAST half of the bathroom block; its door faces east.
-    addBox(grpFF, -4.55, -3.65, H_1F, H_1F + 0.82, -0.1, 0.55, MAT.teak, true); // Vanity
-    addBox(grpFF, -4.5, -3.7, H_1F + 0.82, H_1F + 0.92, -0.05, 0.5, MAT.ceramic, false);
-    addBox(grpFF, -4.55, -3.85, H_1F, H_1F + 0.42, 0.8, 1.45, MAT.ceramic, true); // WC
-    addBox(grpFF, -4.55, -3.85, H_1F, H_1F + 0.42, -0.25, 0.25, MAT.ceramic, true); // Shower zone
+    // Common Washroom (East Half: X -4.8..-3.3, Z -0.3..+1.7) — Clean clearance around door (Z 0.1..1.0)
+    addBox(grpFF, -4.65, -4.15, H_1F, H_1F + 0.82, -0.15, 0.55, MAT.teak, true);          // Vanity (NW)
+    addBox(grpFF, -4.6, -4.2, H_1F + 0.82, H_1F + 0.92, -0.1, 0.5, MAT.ceramic, false);
+    addBox(grpFF, -4.65, -4.1, H_1F, H_1F + 0.42, 1.0, 1.55, MAT.ceramic, true);           // WC (SW)
+    addBox(grpFF, -3.95, -3.4, H_1F, H_1F + 0.04, 1.0, 1.6, MAT.stone, false);             // Flush shower tray (SE)
 
-    // WEST half: shared attached bathroom with separate doors from kids' and master bedrooms.
-    addBox(grpFF, -6.95, -6.15, H_1F, H_1F + 0.82, -0.1, 0.55, MAT.teak, true); // Vanity
-    addBox(grpFF, -6.9, -6.2, H_1F + 0.82, H_1F + 0.92, -0.05, 0.5, MAT.ceramic, false);
-    addBox(grpFF, -5.65, -5.0, H_1F, H_1F + 0.42, 0.8, 1.45, MAT.ceramic, true); // WC
-    addBox(grpFF, -6.95, -5.0, H_1F, H_1F + 0.42, -0.25, 0.25, MAT.ceramic, true); // Shower
+    // Shared Ensuite (West Half: X -7.3..-4.8, Z -0.3..+1.7) — Clear between N & S doors (X -5.95..-5.15)
+    addBox(grpFF, -7.15, -6.35, H_1F, H_1F + 0.04, -0.2, 0.55, MAT.stone, false);          // Flush shower tray (NW)
+    addBox(grpFF, -7.15, -6.45, H_1F, H_1F + 0.82, 0.65, 1.55, MAT.teak, true);            // Vanity (SW)
+    addBox(grpFF, -7.05, -6.5, H_1F + 0.82, H_1F + 0.92, 0.75, 1.45, MAT.ceramic, false);
+    addBox(grpFF, -5.45, -4.9, H_1F, H_1F + 0.42, 0.45, 0.95, MAT.ceramic, true);          // WC (East wall)
 
-    // Master bedroom at south end, with headboard to south and clear circulation.
-    addBox(grpFF, -6.7, -4.55, H_1F, H_1F + 0.46, 2.0, 4.25, MAT.fabricBlue, true);
-    addBox(grpFF, -6.7, -4.55, H_1F + 0.46, H_1F + 0.62, 4.15, 4.28, MAT.darkWood, false);
-    addBox(grpFF, -6.85, -6.0, H_1F, H_1F + 0.42, 1.9, 2.55, MAT.teak, true);
-    addBox(grpFF, -4.3, -3.5, H_1F, H_1F + 0.42, 1.9, 2.55, MAT.teak, true);
+    // Master Bedroom (SW: X -7.3..-3.3, Z +1.7..+5.0) — Headboard at South (Z = 4.85), clear 1.2 m walkway at North!
+    addBox(grpFF, -6.75, -4.95, H_1F, H_1F + 0.46, 2.95, 4.85, MAT.fabricBlue, true);
+    addBox(grpFF, -6.75, -4.95, H_1F + 0.46, H_1F + 0.75, 4.75, 4.88, MAT.darkWood, false);
+    addBox(grpFF, -7.18, -6.8, H_1F, H_1F + 0.45, 4.25, 4.8, MAT.teak, true);
+    addBox(grpFF, -4.85, -4.35, H_1F, H_1F + 0.45, 4.25, 4.8, MAT.teak, true);
 
-    addBox(grpFF, 4.5, 6.5, H_1F, H_1F + 0.46, -1.4, 0.6, MAT.fabric, true); // Parents' bed
+    // Parents' Bedroom (East) + Dining + Open Kitchen
+    addBox(grpFF, 4.5, 6.5, H_1F, H_1F + 0.46, -1.4, 0.6, MAT.fabric, true);
+    addBox(grpFF, 1.85, 2.95, H_1F + 0.72, H_1F + 0.78, -1.4, 0.4, MAT.teak, true);
+    addBox(grpFF, 2.0, 2.8, H_1F, H_1F + 0.72, -1.1, 0.1, MAT.darkWood, false);
+    addBox(grpFF, 4.4, 7.1, H_1F, H_1F + 0.88, 4.15, 4.85, MAT.stone, true);
+    addBox(grpFF, 6.3, 7.1, H_1F, H_1F + 0.88, 2.2, 4.15, MAT.stone, true);
+    addBox(grpFF, 2.2, 4.2, H_1F, H_1F + 0.90, 2.15, 2.85, MAT.teak, true);
 
     // =========================================================================
     // 7. TERRACE GARDEN FLOOR (Y = 6.40m)
@@ -792,9 +788,6 @@
     addBalusterRail(grpTF, -1.56, -1.44, -1.6, 1.4, H_TF, H_TF + 0.9, false);
     addBalusterRail(grpTF, 1.14, 1.26, -1.6, 1.4, H_TF, H_TF + 0.9, false);
 
-    // The nadumuttam remains genuinely open to sky: no glass lid and no four-post canopy.
-    // Keep a simple parapet/guard around the void for safety and rain to reach the planted court below.
-
     addWallZ(grpTF, -1.55, 1.8, 5.0, H_TF, 2.55, 0.15, MAT.wall, [], true);
     addWallZ(grpTF, 1.55, 1.8, 5.0, H_TF, 2.55, 0.15, MAT.wall, [], true);
     addWallX(grpTF, 5.0, -1.55, 1.55, H_TF, 2.55, 0.15, MAT.wall, [], true);
@@ -812,7 +805,6 @@
     for (let x = -6.2; x <= -2.6; x += 1.1) addPlantCluster(grpTF, x, H_TF + 0.44, -4.08, 0.72, true);
     for (let x = 2.5; x <= 6.3; x += 1.1) addPlantCluster(grpTF, x, H_TF + 0.44, -4.08, 0.72, true);
 
-    // Two open-edge pergola supports instead of four; wall-side anchorage is conceptual and must be engineered.
     for (const px of [-6.8, -3.4]) {
       addBox(grpTF, px - 0.09, px + 0.09, H_TF, H_TF + 2.3, 4.6 - 0.09, 4.6 + 0.09, MAT.darkWood, true);
     }
@@ -1005,18 +997,18 @@
     // 10. JUMPS, LEVEL FILTERS, EXPLODE & COMPASS PLAN
     // =========================================================================
     const JUMPS = {
-      overview:    { pos: [-16.5, 11.8, 14.5], look: [0, 3.6, 0], label: 'Overview · Traditional Courtyard Home' },
+      overview:    { pos: [-16.5, 11.8, 14.5], look: [0, 3.6, 0],     label: 'Overview · Traditional Courtyard Home' },
       gf_garden:   { pos: [-5.5, 1.62, 0.2],   look: [0.5, 1.8, -0.2], label: 'Ground · Open Stilt Garden & Courtyard Tree' },
-      courtyard:   { pos: [-2.4, 4.82, -0.3],  look: [0.2, 4.1, -0.2], label: '1F Courtyard · Open Nadumuttam & shaded eaves' },
+      courtyard:   { pos: [-2.4, 4.82, -0.3],  look: [0.2, 4.1, -0.2], label: '1F Courtyard · Open Nadumuttam & Shaded Eaves' },
       living:      { pos: [-1.2, 4.82, -3.5],  look: [2.5, 4.6, -1.5], label: '1F Living Hall (N) · Charupadi & North Balcony' },
       kitchen:     { pos: [3.2, 4.82, 3.3],    look: [0.2, 4.5, -0.5], label: '1F Open Kitchen (SE) · Facing Courtyard' },
       pooja:       { pos: [4.2, 4.82, -3.6],   look: [6.4, 4.5, -4.0], label: '1F Pooja (NE) · Carved Jali Door & Morning Sun' },
-      master:      { pos: [-5.0, 4.82, 3.3], look: [-5.0, 4.6, 3.3], label: '1F Master Bedroom · Shared Ensuite Access' },
-      parents:     { pos: [4.9, 4.82, -0.8],   look: [7.6, 4.6, -0.8], label: '1F Parents\' Room (E) · Uninterrupted Space & Balcony' },
-      kids:        { pos: [-5.1, 4.82, -3.4],  look: [-7.8, 4.6, -3.4], label: '1F Kids\' Room (NW) · Corner Cross-Breeze' },
-      study:        { pos: [-5.8, 4.82, -4.0], look: [-5.8, 4.6, -4.0], label: 'Library · Opposite Pooja' },
-      common_bath: { pos: [-4.0, 4.82, 0.8], look: [-4.0, 4.6, 0.8], label: 'Common Washroom · East Half' },
-      terrace:     { pos: [-2.6, 8.02, -3.0],  look: [1.5, 7.3, 0.5],  label: 'Terrace Garden · two growing beds & open-sky courtyard' },
+      master:      { pos: [-4.0, 4.82, 2.3],   look: [-6.0, 4.3, 4.0], label: '1F Master Suite (SW · North Entry) · Ensuite Access' },
+      parents:     { pos: [4.9, 4.82, -0.8],   look: [7.6, 4.6, -0.8], label: '1F Parents\' Room (E) · East Balcony' },
+      kids:        { pos: [-4.0, 4.82, -1.2],  look: [-6.4, 4.4, -2.2],label: '1F Kids\' Room (W) · Ensuite & West Breeze' },
+      study:       { pos: [-4.0, 4.82, -4.0],  look: [-6.6, 4.6, -4.0],label: '1F Library (NW) · Quiet West Study Opposite Pooja' },
+      common_bath: { pos: [-3.5, 4.82, 0.55],  look: [-4.6, 4.4, 0.55],label: 'Common Washroom · East Half + Courtyard Jaali Vent' },
+      terrace:     { pos: [-2.6, 8.02, -3.0],  look: [1.5, 7.3, 0.5],  label: 'Terrace Garden · Growing Beds & Open-Sky Courtyard' },
     };
 
     function jumpTo(key) {
@@ -1090,7 +1082,7 @@
         ctx.fillRect(sx(x0), sz(z0), sx(x1) - sx(x0), sz(z1) - sz(z0));
         if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = 1.5; ctx.strokeRect(sx(x0), sz(z0), sx(x1) - sx(x0), sz(z1) - sz(z0)); }
         if (label) {
-          ctx.fillStyle = '#e8efe9'; ctx.font = 'bold 12px sans-serif'; ctx.textAlign = 'center';
+          ctx.fillStyle = '#e8efe9'; ctx.font = 'bold 11px sans-serif'; ctx.textAlign = 'center';
           ctx.fillText(label, (sx(x0) + sx(x1)) / 2, (sz(z0) + sz(z1)) / 2 + 4);
         }
       };
@@ -1104,16 +1096,14 @@
         rect(-1.5, 1.2, -1.6, 1.4, 'rgba(116,198,157,0.35)', '#74c69d', 'Courtyard Tree');
         rect(-1.5, 1.5, 1.8, 4.9, 'rgba(233,196,106,0.28)', '#e9c46a', 'Stairs ↑');
       } else if (planLevel === 1) {
-        rect(-7.3, -3.3, -5.0, -3.0, 'rgba(160,135,100,0.30)', '#b79a70', 'Library');
-        rect(-7.3, -3.3, -3.0, -0.3, 'rgba(116,198,157,0.30)', '#74c69d', 'Kids');
-        rect(-7.3, -4.8, -0.3, 1.7, 'rgba(130,170,180,0.32)', '#a9d6e5', 'Shared Bath Block');
-        rect(-4.8, -3.3, -0.3, 1.7, 'rgba(85,117,130,0.38)', '#9bb5bf', 'Common Bath');
-        rect(-7.3, -4.8, 1.7, 5.0, 'rgba(130,170,180,0.24)', '#a9d6e5', 'Shared Ensuite');
-        rect(-7.3, -3.3, 1.7, 5.0, 'rgba(116,198,157,0.24)', '#74c69d', 'Master');
-        rect(-5.5, -1.8, 1.5, 5.0, 'rgba(85,117,130,0.38)', '#9bb5bf', 'Master Bedroom');
-        rect(-4.1, -1.6, 2.7, 5.0, 'rgba(130,170,180,0.42)', '#a9d6e5', 'Master Bath');
+        rect(-7.3, -3.3, -5.0, -3.0, 'rgba(160,135,100,0.30)', '#b79a70', 'Library (NW)');
+        rect(-7.3, -3.3, -3.0, -0.3, 'rgba(85,117,130,0.36)', '#9bb5bf', 'Kids (W)');
+        rect(-7.3, -4.8, -0.3, 1.7, 'rgba(130,170,180,0.34)', '#a9d6e5', 'Shared Ensuite');
+        rect(-4.8, -3.3, -0.3, 1.7, 'rgba(116,198,157,0.26)', '#74c69d', 'Common Bath');
+        rect(-7.3, -3.3, 1.7, 5.0, 'rgba(85,117,130,0.38)', '#9bb5bf', 'Master (SW)');
         rect(-3.3, 3.5, -5.0, -1.6, 'rgba(216,210,195,0.22)', '#cfc9bb', 'Living Hall (N)');
-        rect(-1.5, 1.2, -1.6, 1.4, 'rgba(93,161,73,0.35)', '#74c69d', 'Courtyard');
+        rect(-3.1, 3.1, -6.0, -5.0, 'rgba(181,99,69,0.24)', '#d98a6c', 'N Balcony');
+        rect(-1.5, 1.2, -1.6, 1.4, 'rgba(93,161,73,0.35)', '#74c69d', 'Nadumuttam');
         rect(1.2, 3.5, -1.6, 1.8, 'rgba(216,210,195,0.22)', '#cfc9bb', 'Dining');
         rect(3.5, 7.3, -5.0, -2.5, 'rgba(233,196,106,0.32)', '#e9c46a', 'Pooja (NE)');
         rect(3.5, 7.3, -2.5, 2.0, 'rgba(85,117,130,0.38)', '#9bb5bf', 'Parents (E)');
@@ -1122,7 +1112,7 @@
       } else {
         rect(-7.3, 7.3, -5.0, 5.0, 'rgba(83,122,67,0.28)', '#8abf7c', 'Terrace Garden Deck');
         rect(-6.9, -3.3, 1.7, 4.7, 'rgba(29,43,68,0.65)', '#6f8ab8', 'Solar Canopy');
-        rect(-1.5, 1.2, -1.6, 1.4, 'rgba(217,238,245,0.25)', '#74c69d', 'Skylight');
+        rect(-1.5, 1.2, -1.6, 1.4, 'rgba(116,198,157,0.25)', '#74c69d', 'Open Void');
         rect(-1.5, 1.5, 1.8, 4.9, 'rgba(233,196,106,0.32)', '#e9c46a', 'Stair Head');
       }
 
