@@ -963,35 +963,23 @@
     // One selective east service eave shades the exposed wall and preserves the
     // open terrace and nadumuttam. This is a visual concept, not a roof framing design.
     // =========================================================================
-    const roofY = H_TF + 3.05;
-    const roofWingMat = new THREE.MeshStandardMaterial({
-      color: 0xffffff, map: TEX.terracotta, roughness: 0.92,
-      side: THREE.DoubleSide
-    });
-    function addEastServiceEave(x0, x1, z0, z1) {
-      const width = x1 - x0, depth = z1 - z0;
-      const panel = new THREE.Mesh(new THREE.BoxGeometry(width, 0.16, depth), roofWingMat);
-      panel.position.set((x0 + x1) / 2, roofY + 0.36, (z0 + z1) / 2);
-      // Fall the tile plane toward the east collection gutter.
-      panel.rotation.z = -0.13;
-      panel.castShadow = true; panel.receiveShadow = true; grpTF.add(panel);
-      // Reclaimed timber rafters visible below the tile plane.
-      for (let z = z0 + 0.18; z < z1; z += 0.72) {
-        const rafter = new THREE.Mesh(new THREE.BoxGeometry(width + 0.18, 0.12, 0.10), MAT.darkWood);
-        rafter.position.set((x0 + x1) / 2, roofY + 0.18, z);
-        rafter.rotation.z = -0.13;
-        rafter.castShadow = true; grpTF.add(rafter);
+    const roofY = H_TF + WALL_H + 0.02;
+    // Individual clay-tile rain caps sit directly on the exposed east service wall.
+    // No continuous roof deck, long rafters, fascia, gutter or freestanding roof frame.
+    function addWallTopTileRun(xWall, z0, z1, outward = 1) {
+      for (let z = z0; z <= z1 - 0.45; z += 0.82) {
+        const tile = new THREE.Mesh(new THREE.BoxGeometry(0.88, 0.075, 0.86), MAT.tile);
+        tile.position.set(xWall + outward * 0.38, roofY + 0.055, z + 0.41);
+        tile.rotation.z = outward * -0.10;
+        tile.castShadow = true; tile.receiveShadow = true; grpTF.add(tile);
+        // Short individual holders bear each tile directly on the wall top.
+        addBox(grpTF, xWall - 0.02, xWall + 0.18, roofY - 0.10, roofY + 0.02,
+          z + 0.10, z + 0.22, MAT.darkWood, false);
+        addBox(grpTF, xWall - 0.02, xWall + 0.18, roofY - 0.10, roofY + 0.02,
+          z + 0.62, z + 0.74, MAT.darkWood, false);
       }
-      // Fascia and gutter sit on the east low edge, aligned with the service downpipe.
-      const fascia = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.22, depth + 0.24), MAT.teak);
-      fascia.position.set(x1 + 0.12, roofY + 0.12, (z0 + z1) / 2);
-      fascia.castShadow = true; grpTF.add(fascia);
-      addBox(grpTF, x1 + 0.02, x1 + 0.18, roofY + 0.12, roofY + 0.24,
-        z0 - 0.12, z1 + 0.12, MAT.granite, false);
     }
-    // One selective eave protects the east service wall and feeds its rainwater downpipe.
-    // The west roof strip is intentionally omitted to keep the solar array unshaded.
-    addEastServiceEave(6.45, 7.45, -5.45, 5.45);
+    addWallTopTileRun(7.3, -4.95, 4.95, 1);
 
     // Terracotta jaali screens at the terrace's west/east edges:
     // filter low-angle sun and wind while retaining open views and ventilation.
@@ -1065,18 +1053,8 @@
     addBox(grpTF, -1.42, 1.12, H_TF + 0.012, H_TF + 0.080, -1.50, -1.34, drainStone, false, false, true);
     addBox(grpTF, -1.36, 1.06, H_TF + 0.081, H_TF + 0.096, -1.455, -1.385, drainWater, false, false, false);
 
-    // Rainwater downpipe on the east service edge links upper collection to
-    // the ground-level inspection/recharge point. It is deliberately visible.
-    const rainPipeMat = new THREE.MeshStandardMaterial({ color: 0x8c9b8d, roughness: 0.72, metalness: 0.18 });
-    // Continue the service downpipe up to the east eave gutter (not just to first-floor level).
-    const rainPipeHeight = roofY + 0.24;
-    const rainPipe = new THREE.Mesh(new THREE.CylinderGeometry(0.075, 0.075, rainPipeHeight, 12), rainPipeMat);
-    // Pipe centre is aligned directly below the east gutter collection line.
-    rainPipe.position.set(7.55, rainPipeHeight / 2, 4.90);
-    rainPipe.castShadow = true;
-    grpGF.add(rainPipe);
-    const pipeClips = [0.55, 2.0, 3.55, 5.1, 6.55];
-    for (const y of pipeClips) addBox(grpGF, 7.43, 7.67, y, y + 0.10, 4.78, 5.02, MAT.darkWood, false);
+    // Rain from the wall-top clay caps falls directly into the shallow exterior stone channel.
+    // No tall downpipe or overhead gutter is used in this conceptual detail.
     // Covered inspection chamber at pipe foot; removable cover is serviceable.
     addBox(grpGF, 7.05, 7.78, 0.03, 0.22, 4.35, 5.18, drainStone, false, false, true);
     addBox(grpGF, 7.12, 7.71, 0.22, 0.25, 4.42, 5.10, MAT.granite, false, false, true);
@@ -1406,7 +1384,7 @@
         rect(-8.55, -8.35, -2.2, 1.6, 'rgba(181,99,69,0.48)', '#d98a6c', 'Timber Entry Gate');
         rect(-7.98, -7.08, -1.78, 0.02, 'rgba(72,159,181,0.35)', '#489fb5', 'Water Pot / Tap');
         rect(-7.55, 7.35, -5.18, -4.98, 'rgba(72,159,181,0.25)', '#489fb5', 'North Collector');
-        rect(7.08, 7.30, -5.0, 4.65, 'rgba(72,159,181,0.25)', '#489fb5', 'East Drain');
+        rect(7.72, 7.92, -5.0, 4.65, 'rgba(72,159,181,0.25)', '#489fb5', 'East Drip Channel');
         rect(5.45, 7.15, 3.65, 5.05, 'rgba(93,161,73,0.30)', '#74c69d', 'Recharge Garden');
         rect(-1.5, 1.5, 1.8, 4.9, 'rgba(233,196,106,0.28)', '#e9c46a', 'Stairs ↑');
       } else if (planLevel === 1) {
@@ -1426,7 +1404,7 @@
       } else {
         rect(-7.3, 7.3, -5.0, 5.0, 'rgba(83,122,67,0.28)', '#8abf7c', 'Open Terrace + Selective Clay-Tile Wall Eaves');
         rect(-6.9, -3.3, 1.7, 4.7, 'rgba(29,43,68,0.65)', '#6f8ab8', 'Solar Canopy');
-        rect(6.45, 7.45, -5.45, 5.45, 'rgba(181,99,69,0.32)', '#d98a6c', 'East Rain Eave');
+        rect(7.30, 8.15, -4.95, 4.95, 'rgba(181,99,69,0.32)', '#d98a6c', 'Wall-top Clay Tiles');
         rect(-1.5, 1.2, -1.6, 1.4, 'rgba(116,198,157,0.25)', '#74c69d', 'Open Void');
         rect(-1.5, 1.5, 1.8, 4.9, 'rgba(233,196,106,0.32)', '#e9c46a', 'Stair Head');
       }
