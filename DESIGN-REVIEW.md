@@ -61,6 +61,7 @@ Each pass follows **Context → Direction → Action → Success → Growth**. R
 - [ ] Check rendered geometry for clashes, gaps, floating objects and incorrect labels, especially the 12-column grid against stair and courtyard openings.
 - [ ] Verify drainage visually and confirm no ponding or road discharge is implied.
 - [ ] Verify the published GitHub Pages build after the final commit; automated page access was unavailable during this review.
+- [x] Show the 3 × 4 conceptual column grid on the ground plan, highlighting the centreline positions for review.
 - [ ] Resolve structural coordination: the 12-column grid places centreline columns at the courtyard edge and stair opening; verify these against actual slab openings and stair geometry before accepting the beam layout.
 - [ ] Obtain architect/structural/civil review before treating the model as buildable.
 
