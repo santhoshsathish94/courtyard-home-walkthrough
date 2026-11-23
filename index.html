@@ -156,7 +156,7 @@
           <button id="btn-wind" class="active">Breeze paths</button>
         </div>
         <div class="room-readout" id="location-label">Overview · Drag to orbit, pinch to zoom</div>
-        <div class="sub">Natural Kadappa / Kota / Shahabad stone palette · reclaimed timber · terracotta jaali · clay roof tiles. Water paths are conceptual; levels and outlets require site survey.</div>
+        <div class="sub">Kadappa / Kota / Shahabad stone · reclaimed timber rafters · pitched terracotta tile wings · terracotta jaali. Open central sky court retained. Roof structure and drainage require engineering.</div>
       </div>
 
       <div class="card controls-panel" id="controls-panel">
@@ -910,6 +910,59 @@
     tank.castShadow = true;
     grpTF.add(tank);
 
+    // =========================================================================
+    // 7B. CLAY-TILE ROOF + RECLAIMED TIMBER + JAALI — ARCHITECTURAL PASS
+    // Two pitched roof wings shade the terrace edges while preserving the
+    // open-to-sky nadumuttam. This is a visual concept, not a roof framing design.
+    // =========================================================================
+    const roofY = H_TF + 3.05;
+    const roofWingMat = new THREE.MeshStandardMaterial({
+      color: 0xffffff, map: TEX.terracotta, roughness: 0.92,
+      side: THREE.DoubleSide
+    });
+    function addPitchedTileWing(x0, x1, z0, z1, slopeSign) {
+      const width = x1 - x0, depth = z1 - z0;
+      const panel = new THREE.Mesh(new THREE.BoxGeometry(width, 0.16, depth), roofWingMat);
+      panel.position.set((x0 + x1) / 2, roofY + 0.36, (z0 + z1) / 2);
+      panel.rotation.z = slopeSign * 0.13;
+      panel.castShadow = true; panel.receiveShadow = true; grpTF.add(panel);
+      // Reclaimed timber rafters visible below the tile plane.
+      for (let z = z0 + 0.18; z < z1; z += 0.72) {
+        const rafter = new THREE.Mesh(new THREE.BoxGeometry(width + 0.18, 0.12, 0.10), MAT.darkWood);
+        rafter.position.set((x0 + x1) / 2, roofY + 0.18, z);
+        rafter.rotation.z = slopeSign * 0.13;
+        rafter.castShadow = true; grpTF.add(rafter);
+      }
+      // Deep eaves and visible timber fascia.
+      const fascia = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.22, depth + 0.24), MAT.teak);
+      fascia.position.set(slopeSign < 0 ? x0 - 0.12 : x1 + 0.12, roofY - 0.02, (z0 + z1) / 2);
+      fascia.castShadow = true; grpTF.add(fascia);
+      // Continuous gutter at the low outer edge.
+      addBox(grpTF,
+        slopeSign < 0 ? x0 - 0.22 : x1 + 0.08,
+        slopeSign < 0 ? x0 - 0.08 : x1 + 0.22,
+        roofY - 0.20, roofY - 0.08, z0 - 0.12, z1 + 0.12, MAT.granite, false);
+    }
+    addPitchedTileWing(-7.45, -1.85, -5.45, 5.45, -1);
+    addPitchedTileWing(1.85, 7.45, -5.45, 5.45, 1);
+
+    // Terracotta jaali screens at the terrace's west/east edges:
+    // filter low-angle sun and wind while retaining open views and ventilation.
+    function addTerraceJaaliScreen(x, z0, z1, y0, y1, direction = 1) {
+      addBox(grpTF, x - 0.10, x + 0.10, y0, y0 + 0.10, z0, z1, MAT.darkWood, false);
+      addBox(grpTF, x - 0.10, x + 0.10, y1 - 0.10, y1, z0, z1, MAT.darkWood, false);
+      for (let z = z0; z <= z1 + 0.001; z += 0.34) {
+        addBox(grpTF, x - 0.055, x + 0.055, y0, y1, z - 0.045, z + 0.045, MAT.terracotta, false);
+      }
+      for (let y = y0 + 0.32; y < y1; y += 0.32) {
+        addBox(grpTF, x - 0.06, x + 0.06, y - 0.035, y + 0.035, z0, z1, MAT.terracotta, false);
+      }
+    }
+    addTerraceJaaliScreen(-7.05, -4.7, -2.0, H_TF + 0.98, H_TF + 2.25);
+    addTerraceJaaliScreen(7.05, 1.8, 4.7, H_TF + 0.98, H_TF + 2.25);
+
+    // Thinnai-side jaali privacy panels: breathable edges instead of solid enclosure.
+    addJaaliZ(grpGF, -5.02, -4.05, -2.82, 0.95, 2.05, MAT.terracotta, 5, 4);
 
     // =========================================================================
     // 7A. RAINWATER ARCHITECTURE — CONTINUOUS, ACCESSIBLE DRAINAGE ROUTES
@@ -1268,7 +1321,7 @@
         rect(1.5, 7.3, 2.0, 5.0, 'rgba(181,99,69,0.35)', '#d98a6c', 'Open Kitchen (SE)');
         rect(-1.5, 1.5, 1.8, 4.9, 'rgba(233,196,106,0.25)', '#e9c46a', 'Stairs + Jaali');
       } else {
-        rect(-7.3, 7.3, -5.0, 5.0, 'rgba(83,122,67,0.28)', '#8abf7c', 'Terrace Garden Deck');
+        rect(-7.3, 7.3, -5.0, 5.0, 'rgba(83,122,67,0.28)', '#8abf7c', 'Terrace Garden + Pitched Clay-Tile Wings');
         rect(-6.9, -3.3, 1.7, 4.7, 'rgba(29,43,68,0.65)', '#6f8ab8', 'Solar Canopy');
         rect(-1.5, 1.2, -1.6, 1.4, 'rgba(116,198,157,0.25)', '#74c69d', 'Open Void');
         rect(-1.5, 1.5, 1.8, 4.9, 'rgba(233,196,106,0.32)', '#e9c46a', 'Stair Head');
