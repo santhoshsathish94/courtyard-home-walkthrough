@@ -998,3 +998,252 @@
         controls.target.set(camera.position.x - Math.sin(yaw) * 4, camera.position.y - 0.5, camera.position.z - Math.cos(yaw) * 4);
       }
     }
+    btnOrbit.addEventListener('click', () => setWalkMode(false));
+    btnWalk.addEventListener('click', () => setWalkMode(true));
+
+    touchPad.querySelectorAll('button[data-move]').forEach(btn => {
+      const dir = btn.dataset.move;
+      const start = (e) => { e.preventDefault(); touchMove[dir] = true; };
+      const end = (e) => { e.preventDefault(); touchMove[dir] = false; };
+      btn.addEventListener('touchstart', start, { passive: false });
+      btn.addEventListener('touchend', end, { passive: false });
+      btn.addEventListener('touchcancel', end, { passive: false });
+      btn.addEventListener('mousedown', start); btn.addEventListener('mouseup', end); btn.addEventListener('mouseleave', end);
+    });
+
+    let lookTouchId = null, lastLookX = 0, lastLookY = 0;
+    renderer.domElement.addEventListener('touchstart', (e) => {
+      if (!walkMode || lookTouchId !== null) return;
+      const t = e.changedTouches[0]; lookTouchId = t.identifier; lastLookX = t.clientX; lastLookY = t.clientY;
+    }, { passive: true });
+    renderer.domElement.addEventListener('touchmove', (e) => {
+      if (!walkMode || lookTouchId === null) return;
+      for (const t of e.changedTouches) {
+        if (t.identifier === lookTouchId) {
+          yaw -= (t.clientX - lastLookX) * 0.005;
+          pitch = Math.max(-1.35, Math.min(1.35, pitch - (t.clientY - lastLookY) * 0.005));
+          camera.quaternion.setFromEuler(new THREE.Euler(pitch, yaw, 0, 'YXZ'));
+          lastLookX = t.clientX; lastLookY = t.clientY;
+        }
+      }
+    }, { passive: true });
+    renderer.domElement.addEventListener('touchend', (e) => {
+      for (const t of e.changedTouches) if (t.identifier === lookTouchId) lookTouchId = null;
+    });
+
+    window.addEventListener('keydown', (e) => {
+      keys[e.code] = true;
+      if (e.code === 'KeyF') setWalkMode(!walkMode);
+      if (e.code === 'KeyP') togglePlan();
+    });
+    window.addEventListener('keyup', (e) => { keys[e.code] = false; });
+    document.addEventListener('mousemove', (e) => {
+      if (!walkMode || document.pointerLockElement !== renderer.domElement) return;
+      yaw -= e.movementX * 0.0022;
+      pitch = Math.max(-1.35, Math.min(1.35, pitch - e.movementY * 0.0022));
+      camera.quaternion.setFromEuler(new THREE.Euler(pitch, yaw, 0, 'YXZ'));
+    });
+
+    function collidesAt(nx, nz, fy) {
+      const r = 0.28;
+      for (const c of colliders) {
+        if (fy + 1.55 <= c.y0 || fy + 0.35 >= c.y1) continue;
+        if (nx + r > c.x0 && nx - r < c.x1 && nz + r > c.z0 && nz - r < c.z1) return true;
+      }
+      return false;
+    }
+
+    function computeTargetFloorY(x, z, curY) {
+      if (x > -1.5 && x < 1.5 && z > 1.8 && z < 4.9) {
+        const k = Math.max(0, Math.min(1, (z - 1.8) / 2.3));
+        if (x < 0) {
+          const c0 = k * 1.6, c1 = H_1F + k * 1.6;
+          return Math.abs(curY - c0) < Math.abs(curY - c1) ? c0 : c1;
+        } else {
+          const c0 = 1.6 + (1 - k) * 1.6, c1 = H_1F + 1.6 + (1 - k) * 1.6;
+          return Math.abs(curY - c0) < Math.abs(curY - c1) ? c0 : c1;
+        }
+      }
+      if (curY > H_TF - 0.9) return H_TF;
+      if (curY > H_1F - 0.9) return H_1F;
+      return H_GF;
+    }
+
+    function updateWalk(dt) {
+      if (!walkMode) return;
+      const speed = (keys['ShiftLeft'] || keys['ShiftRight'] ? 6.0 : 3.4) * dt;
+      let fx = -Math.sin(yaw), fz = -Math.cos(yaw), rx = Math.cos(yaw), rz = -Math.sin(yaw);
+      let mx = 0, mz = 0;
+      if (keys['KeyW'] || keys['ArrowUp'] || touchMove.fwd) { mx += fx; mz += fz; }
+      if (keys['KeyS'] || keys['ArrowDown'] || touchMove.back) { mx -= fx; mz -= fz; }
+      if (keys['KeyD'] || keys['ArrowRight'] || touchMove.right) { mx += rx; mz += rz; }
+      if (keys['KeyA'] || keys['ArrowLeft'] || touchMove.left) { mx -= rx; mz -= rz; }
+      const len = Math.hypot(mx, mz);
+      if (len > 0) {
+        mx = (mx / len) * speed; mz = (mz / len) * speed;
+        const nx = camera.position.x + mx, nz = camera.position.z + mz;
+        if (!collidesAt(nx, camera.position.z, playerFeetY)) camera.position.x = nx;
+        if (!collidesAt(camera.position.x, nz, playerFeetY)) camera.position.z = nz;
+      }
+      const targetY = computeTargetFloorY(camera.position.x, camera.position.z, playerFeetY);
+      playerFeetY += (targetY - playerFeetY) * Math.min(1, dt * 14);
+      camera.position.y = playerFeetY + EYE_H;
+    }
+
+    // =========================================================================
+    // 10. JUMPS, LEVEL FILTERS, EXPLODE & COMPASS PLAN
+    // =========================================================================
+    const JUMPS = {
+      overview:    { pos: [-16.5, 11.8, 14.5], look: [0, 3.6, 0],     label: 'Overview · Traditional Courtyard Home' },
+      gf_garden:   { pos: [-5.5, 1.62, 0.2],   look: [0.5, 1.8, -0.2], label: 'Ground · Open Stilt Garden & Courtyard Tree' },
+      thinnai:     { pos: [-9.2, 1.75, -1.55], look: [-6.65, 0.75, -3.35], label: 'West Entrance · Shaded Thinnai, Reclaimed Timber & Drinking-Water Pot / Tap' },
+      courtyard:   { pos: [-2.4, 4.82, -0.3],  look: [0.2, 4.1, -0.2], label: '1F Courtyard · Open Nadumuttam & Shaded Eaves' },
+      living:      { pos: [-1.2, 4.82, -3.5],  look: [2.5, 4.6, -1.5], label: '1F Living Hall (N) · Charupadi & North Balcony' },
+      kitchen:     { pos: [3.2, 4.82, 3.3],    look: [0.2, 4.5, -0.5], label: '1F Open Kitchen (SE) · Facing Courtyard' },
+      pooja:       { pos: [4.2, 4.82, -3.6],   look: [6.4, 4.5, -4.0], label: '1F Pooja (NE) · Carved Jali Door & Morning Sun' },
+      master:      { pos: [-4.0, 4.82, 2.3],   look: [-6.0, 4.3, 4.0], label: '1F Master Suite (SW · North Entry) · Ensuite Access' },
+      parents:     { pos: [4.9, 4.82, -0.8],   look: [7.6, 4.6, -0.8], label: '1F Parents\' Room (E) · East Balcony' },
+      kids:        { pos: [-4.0, 4.82, -1.2],  look: [-6.4, 4.4, -2.2],label: '1F Kids\' Room (W) · Ensuite & West Breeze' },
+      study:       { pos: [-4.0, 4.82, -4.0],  look: [-6.6, 4.6, -4.0],label: '1F Library (NW) · Quiet West Study Opposite Pooja' },
+      common_bath: { pos: [-3.5, 4.82, 0.55],  look: [-4.6, 4.4, 0.55],label: 'Common Washroom · East Half + Courtyard Jaali Vent' },
+      terrace:     { pos: [-2.6, 8.02, -3.0],  look: [1.5, 7.3, 0.5],  label: 'Terrace Garden · Growing Beds & Open-Sky Courtyard' },
+    };
+
+    function jumpTo(key) {
+      const j = JUMPS[key];
+      if (!j) return;
+      camera.position.set(...j.pos);
+      playerFeetY = j.pos[1] - EYE_H;
+      if (walkMode) {
+        const m = new THREE.Matrix4().lookAt(camera.position, new THREE.Vector3(...j.look), new THREE.Vector3(0, 1, 0));
+        const e = new THREE.Euler().setFromRotationMatrix(m, 'YXZ');
+        yaw = e.y; pitch = e.x;
+        camera.quaternion.setFromEuler(new THREE.Euler(pitch, yaw, 0, 'YXZ'));
+      } else {
+        controls.target.set(...j.look);
+        controls.update();
+      }
+      document.getElementById('location-label').textContent = j.label;
+    }
+
+    document.querySelectorAll('#jump-bar button').forEach(b => b.addEventListener('click', () => jumpTo(b.dataset.jump)));
+    document.querySelectorAll('.lvl-btn').forEach(b => {
+      b.addEventListener('click', () => {
+        document.querySelectorAll('.lvl-btn').forEach(x => x.classList.remove('active'));
+        b.classList.add('active');
+        const l = b.dataset.lvl;
+        grpGF.visible = (l === 'all' || l === 'gf');
+        grpFF.visible = (l === 'all' || l === 'ff');
+        grpTF.visible = (l === 'all' || l === 'tf');
+      });
+    });
+
+    let exploded = false;
+    document.getElementById('btn-explode').addEventListener('click', (e) => {
+      exploded = !exploded;
+      e.target.classList.toggle('active', exploded);
+      grpFF.position.y = exploded ? 3.2 : 0;
+      grpTF.position.y = exploded ? 6.4 : 0;
+    });
+
+    document.getElementById('btn-wind').addEventListener('click', (e) => {
+      grpWind.visible = !grpWind.visible;
+      e.target.classList.toggle('active', grpWind.visible);
+    });
+
+    const planModal = document.getElementById('plan-modal');
+    const planCanvas = document.getElementById('plan-canvas');
+    const ctx = planCanvas.getContext('2d');
+    let planLevel = 1;
+
+    function togglePlan() {
+      planModal.classList.toggle('open');
+      document.getElementById('btn-plan').classList.toggle('active', planModal.classList.contains('open'));
+    }
+    document.getElementById('btn-plan').addEventListener('click', togglePlan);
+    document.querySelectorAll('.plan-lvl').forEach(b => {
+      b.addEventListener('click', () => {
+        document.querySelectorAll('.plan-lvl').forEach(x => x.classList.remove('active'));
+        b.classList.add('active');
+        planLevel = parseInt(b.dataset.pl, 10);
+      });
+    });
+
+    function drawPlan() {
+      if (!planModal.classList.contains('open')) return;
+      const W = planCanvas.width, H = planCanvas.height;
+      ctx.clearRect(0, 0, W, H);
+      const sx = (x) => ((x + 9.2) / 18.4) * W;
+      const sz = (z) => ((z + 6.8) / 13.6) * H;
+      const rect = (x0, x1, z0, z1, fill, stroke, label) => {
+        ctx.fillStyle = fill;
+        ctx.fillRect(sx(x0), sz(z0), sx(x1) - sx(x0), sz(z1) - sz(z0));
+        if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = 1.5; ctx.strokeRect(sx(x0), sz(z0), sx(x1) - sx(x0), sz(z1) - sz(z0)); }
+        if (label) {
+          ctx.fillStyle = '#e8efe9'; ctx.font = 'bold 11px sans-serif'; ctx.textAlign = 'center';
+          ctx.fillText(label, (sx(x0) + sx(x1)) / 2, (sz(z0) + sz(z1)) / 2 + 4);
+        }
+      };
+
+      ctx.fillStyle = '#91a196'; ctx.font = '12px sans-serif'; ctx.textAlign = 'center';
+      ctx.fillText('NORTH (51 ft)', W / 2, 16);
+      ctx.fillText('SOUTH (46 ft)', W / 2, H - 6);
+
+      if (planLevel === 0) {
+        rect(-8.4, 8.2, -5.5, 5.5, 'rgba(83,122,67,0.35)', '#6ea862', 'Open Stilt Garden');
+        rect(-1.5, 1.2, -1.6, 1.4, 'rgba(116,198,157,0.35)', '#74c69d', 'Courtyard Tree');
+        rect(-7.95, -5.05, -4.15, -3.05, 'rgba(181,99,69,0.42)', '#d98a6c', 'THINNAI');
+        rect(-8.35, -4.45, -2.35, 0.95, 'rgba(120,130,132,0.30)', '#a9b4b5', 'Stone Arrival Path');
+        rect(-7.98, -7.08, -1.78, 0.02, 'rgba(72,159,181,0.35)', '#489fb5', 'Water Pot / Tap');
+        rect(-1.5, 1.5, 1.8, 4.9, 'rgba(233,196,106,0.28)', '#e9c46a', 'Stairs ↑');
+      } else if (planLevel === 1) {
+        rect(-7.3, -3.3, -5.0, -3.0, 'rgba(160,135,100,0.30)', '#b79a70', 'Library (NW)');
+        rect(-7.3, -3.3, -3.0, -0.3, 'rgba(85,117,130,0.36)', '#9bb5bf', 'Kids (W)');
+        rect(-7.3, -4.8, -0.3, 1.7, 'rgba(130,170,180,0.34)', '#a9d6e5', 'Shared Ensuite');
+        rect(-4.8, -3.3, -0.3, 1.7, 'rgba(116,198,157,0.26)', '#74c69d', 'Common Bath');
+        rect(-7.3, -3.3, 1.7, 5.0, 'rgba(85,117,130,0.38)', '#9bb5bf', 'Master (SW)');
+        rect(-3.3, 3.5, -5.0, -1.6, 'rgba(216,210,195,0.22)', '#cfc9bb', 'Living Hall (N)');
+        rect(-3.1, 3.1, -6.0, -5.0, 'rgba(181,99,69,0.24)', '#d98a6c', 'N Balcony');
+        rect(-1.5, 1.2, -1.6, 1.4, 'rgba(93,161,73,0.35)', '#74c69d', 'Nadumuttam');
+        rect(1.2, 3.5, -1.6, 1.8, 'rgba(216,210,195,0.22)', '#cfc9bb', 'Dining');
+        rect(3.5, 7.3, -5.0, -2.5, 'rgba(233,196,106,0.32)', '#e9c46a', 'Pooja (NE)');
+        rect(3.5, 7.3, -2.5, 2.0, 'rgba(85,117,130,0.38)', '#9bb5bf', 'Parents (E)');
+        rect(1.5, 7.3, 2.0, 5.0, 'rgba(181,99,69,0.35)', '#d98a6c', 'Open Kitchen (SE)');
+        rect(-1.5, 1.5, 1.8, 4.9, 'rgba(233,196,106,0.25)', '#e9c46a', 'Stairs + Jaali');
+      } else {
+        rect(-7.3, 7.3, -5.0, 5.0, 'rgba(83,122,67,0.28)', '#8abf7c', 'Terrace Garden Deck');
+        rect(-6.9, -3.3, 1.7, 4.7, 'rgba(29,43,68,0.65)', '#6f8ab8', 'Solar Canopy');
+        rect(-1.5, 1.2, -1.6, 1.4, 'rgba(116,198,157,0.25)', '#74c69d', 'Open Void');
+        rect(-1.5, 1.5, 1.8, 4.9, 'rgba(233,196,106,0.32)', '#e9c46a', 'Stair Head');
+      }
+
+      ctx.fillStyle = '#74c69d';
+      ctx.beginPath();
+      ctx.arc(sx(camera.position.x), sz(camera.position.z), 6, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // =========================================================================
+    // 11. RENDER LOOP
+    // =========================================================================
+    const clock = new THREE.Clock();
+    function animate() {
+      requestAnimationFrame(animate);
+      const dt = Math.min(0.05, clock.getDelta());
+      updateWalk(dt);
+      updateWind(dt);
+      if (!walkMode) controls.update();
+      drawPlan();
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+  </script>
+</body>
+</html>
+</html>
