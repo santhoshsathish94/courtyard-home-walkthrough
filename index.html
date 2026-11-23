@@ -147,7 +147,7 @@
       <div class="card main-card">
         <h1>Traditional Courtyard <span class="badge">Thinnai · Water Point · Stone Floors · Nadumuttam</span></h1>
         <div class="sub hide-mobile">
-          <b>W33·S46·E33·N51</b> · 1,620 sq ft plot (West Road) · 12-column concept · Reclaimed timber · Natural stone floors · Selective east service eave · Rainwater-led landscape
+          <b>W33·S46·E33·N51</b> · 1,620 sq ft plot (West Road) · 12-column concept · Reclaimed timber · Natural stone floors · South-west breeze inlet · High-level exhaust · Wall-top clay tiles · Surface drainage
         </div>
         <div class="pill-row">
           <button id="btn-orbit" class="active">Orbit</button>
@@ -156,7 +156,7 @@
           <button id="btn-wind" class="active">Breeze paths</button>
         </div>
         <div class="room-readout" id="location-label">Overview · Drag to orbit, pinch to zoom</div>
-        <div class="sub">Kadappa / Kota / Shahabad stone · reclaimed timber rafters · selective terracotta tile eave · terracotta jaali. Open central sky court retained. Roof structure and drainage require engineering.</div>
+        <div class="sub">Kadappa / Kota / Shahabad stone · SW low-level breeze inlets · high-level jaali exhaust · individual clay tiles resting on exposed wall tops. Open central sky court retained.</div>
       </div>
 
       <div class="card controls-panel" id="controls-panel">
@@ -720,7 +720,7 @@
     // Small collection sump below the public tap; water is directed to planted soakaway, not the road.
     addBox(grpGF, -7.98, -7.08, 0.015, 0.045, -0.68, 0.02, MAT.water, false, false, false);
     addBox(grpGF, -7.12, -6.82, 0.035, 0.075, -1.72, 0.12, MAT.granite, false, false, true);
-    // Rainwater route markers: roof collection is to a screened downpipe, then a planted recharge zone.
+    // Small service marker beside the planted recharge zone; roof rain is not routed through a tall downpipe.
     addBox(grpGF, -8.18, -8.02, 0.0, 2.25, 4.45, 4.62, MAT.teak, false);
 
     // =========================================================================
@@ -1057,14 +1057,9 @@
     addBox(grpFF, -1.36, 1.06, H_1F + 0.071, H_1F + 0.085, -1.445, -1.385, drainWater, false, false, false);
     addBox(grpFF, 1.18, 1.32, H_1F + 0.012, H_1F + 0.070, -1.34, 1.35, drainStone, false, false, true);
 
-    // Terrace: visible perimeter gutters plus a courtyard-void collector.
-    addBox(grpTF, -7.18, 7.18, H_TF + 0.012, H_TF + 0.095, -5.04, -4.82, drainStone, false, false, true);
-    addBox(grpTF, -7.12, 7.12, H_TF + 0.096, H_TF + 0.112, -4.98, -4.90, drainWater, false, false, false);
-    addBox(grpTF, 7.02, 7.22, H_TF + 0.012, H_TF + 0.095, -4.82, 4.78, drainStone, false, false, true);
-    addBox(grpTF, 7.08, 7.16, H_TF + 0.096, H_TF + 0.112, -4.76, 4.70, drainWater, false, false, false);
-    // Join the east terrace collector to the eave gutter at the downpipe drop.
-    addBox(grpTF, 7.08, 7.64, H_TF + 0.012, H_TF + 0.095, 4.76, 5.02, drainStone, false, false, true);
-    addBox(grpTF, 7.14, 7.58, H_TF + 0.096, H_TF + 0.112, 4.82, 4.96, drainWater, false, false, false);
+    // Terrace: only a small open-to-sky courtyard sill channel remains; exposed wall rain falls outward.
+    addBox(grpTF, -1.42, 1.12, H_TF + 0.012, H_TF + 0.080, -1.50, -1.34, drainStone, false, false, true);
+    addSlopedWaterRun(grpTF, -1.36, 1.06, -1.455, -1.385, H_TF + 0.088, H_TF + 0.078, drainWater);
     addBox(grpTF, -1.42, 1.12, H_TF + 0.012, H_TF + 0.080, -1.50, -1.34, drainStone, false, false, true);
     addBox(grpTF, -1.36, 1.06, H_TF + 0.081, H_TF + 0.096, -1.455, -1.385, drainWater, false, false, false);
 
@@ -1397,7 +1392,7 @@
         rect(-8.35, -4.45, -2.35, 0.95, 'rgba(120,130,132,0.30)', '#a9b4b5', 'Stone Arrival Path');
         rect(-8.55, -8.35, -2.2, 1.6, 'rgba(181,99,69,0.48)', '#d98a6c', 'Timber Entry Gate');
         rect(-7.98, -7.08, -1.78, 0.02, 'rgba(72,159,181,0.35)', '#489fb5', 'Water Pot / Tap');
-        rect(-7.55, 7.35, -5.18, -4.98, 'rgba(72,159,181,0.25)', '#489fb5', 'North Collector');
+        rect(-7.55, 7.35, -5.18, -4.98, 'rgba(72,159,181,0.25)', '#489fb5', 'North Surface Channel');
         rect(7.72, 7.92, -5.0, 4.65, 'rgba(72,159,181,0.25)', '#489fb5', 'East Drip Channel');
         rect(5.45, 7.15, 3.65, 5.05, 'rgba(93,161,73,0.30)', '#74c69d', 'Recharge Garden');
         rect(-1.5, 1.5, 1.8, 4.9, 'rgba(233,196,106,0.28)', '#e9c46a', 'Stairs ↑');
