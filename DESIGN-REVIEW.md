@@ -35,7 +35,7 @@ Each pass follows **Context → Direction → Action → Success → Growth**. R
 ### Pass 4 — Openings, comfort and usability
 - [x] Add a dedicated low-level terracotta-jaali inlet at the south-west corner of the first-floor plan.
 - [x] Add high-level jaali exhaust openings at the north side and stairwell to express warm-air escape above occupied level.
-- [x] Rework breeze-path particles to show low SW entry, cross-room movement and rising exhaust; keep this as a conceptual airflow illustration, not CFD.
+- [x] Rework breeze-path particles to show low SW entry, cross-room movement and rising exhaust; route the particles to the actual north and south high-level openings. Keep this as a conceptual airflow illustration, not CFD.
 - [x] Add matching low-inlet and high-exhaust markers and airflow direction note to the first-floor compass plan.
 - [x] Add rain hoods above the low SW inlet and high-level exhausts without closing the jaali openings.
 - [x] Keep existing shaded window openings and courtyard void; preserve daylight and cross-ventilation paths.
