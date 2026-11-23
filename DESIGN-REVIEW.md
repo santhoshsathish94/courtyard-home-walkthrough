@@ -32,6 +32,7 @@ Each pass follows **Context → Direction → Action → Success → Growth**. R
 - [x] Add a dedicated low-level terracotta-jaali inlet at the south-west corner of the first-floor plan.
 - [x] Add high-level jaali exhaust openings at the north side and stairwell to express warm-air escape above occupied level.
 - [x] Rework breeze-path particles to show low SW entry, cross-room movement and rising exhaust; keep this as a conceptual airflow illustration, not CFD.
+- [x] Add matching low-inlet and high-exhaust markers and airflow direction note to the first-floor compass plan.
 - [x] Keep existing shaded window openings and courtyard void; preserve daylight and cross-ventilation paths.
 - [x] Add two visibly hinged inward-opening timber gate leaves and stone gate piers at the west-road compound entrance.
 - [ ] Check inlet/outlet free area, insect screens, rain protection, privacy and actual prevailing wind with an architect on site.
