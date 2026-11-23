@@ -1147,6 +1147,21 @@
     btnOrbit.addEventListener('click', () => setWalkMode(false));
     btnWalk.addEventListener('click', () => setWalkMode(true));
 
+    // Escape releases pointer lock in browsers. A canvas click lets desktop users
+    // resume mouse-look without having to leave and re-enter Walk mode.
+    renderer.domElement.addEventListener('click', () => {
+      if (walkMode && window.innerWidth > 768 && document.pointerLockElement !== renderer.domElement) {
+        renderer.domElement.requestPointerLock?.();
+      }
+    });
+
+    // Clear held movement when the tab loses focus so Walk mode cannot keep moving.
+    window.addEventListener('blur', () => {
+      Object.keys(keys).forEach(code => { keys[code] = false; });
+      Object.keys(touchMove).forEach(direction => { touchMove[direction] = false; });
+      lookTouchId = null;
+    });
+
     touchPad.querySelectorAll('button[data-move]').forEach(btn => {
       const dir = btn.dataset.move;
       const start = (e) => { e.preventDefault(); touchMove[dir] = true; };
