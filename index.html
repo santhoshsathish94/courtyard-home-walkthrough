@@ -576,6 +576,25 @@
     addWallX(grpSite, 5.6, -8.5, 8.2, 0, 1.35, 0.18, MAT.wallWarm, [], true);
     addWallZ(grpSite, 8.2, -5.6, 5.6, 0, 1.35, 0.18, MAT.wallWarm, [], true);
     addWallZ(grpSite, -8.5, -5.6, 5.6, 0, 1.35, 0.18, MAT.wallWarm, [{ start: -2.2, end: 1.6, sill: 0, head: 1.35 }], true);
+
+    // WEST ROAD ENTRANCE GATE: two hinged reclaimed-timber leaves in the compound-wall opening.
+    // Leaves are shown swung inward so the arrival path remains visibly accessible.
+    addBox(grpSite, -8.68, -8.30, 0, 1.65, -2.38, -2.02, MAT.granite, false); // north gate pier
+    addBox(grpSite, -8.68, -8.30, 0, 1.65, 1.42, 1.78, MAT.granite, false); // south gate pier
+    for (const [hingeZ, direction] of [[-2.2, 1], [1.6, -1]]) {
+      const leaf = new THREE.Group();
+      leaf.position.set(-8.5, 0.08, hingeZ);
+      leaf.rotation.y = direction * 0.82;
+      addBox(leaf, -0.065, 0.065, 0, 1.18, Math.min(0, direction * 1.82), Math.max(0, direction * 1.82), MAT.teak, false);
+      const gateInset = new THREE.Mesh(new THREE.BoxGeometry(0.035, 0.78, 1.48), MAT.darkWood);
+      gateInset.position.set(-0.085, 0.58, direction * 0.91);
+      leaf.add(gateInset);
+      for (let rail = 0; rail < 5; rail++) {
+        const z = direction * (0.22 + rail * 0.36);
+        addBox(leaf, -0.09, 0.09, 0.12, 1.08, z - 0.025, z + 0.025, MAT.teak, false);
+      }
+      grpSite.add(leaf);
+    }
     // Rubble-stone compound wall expression: irregular-looking stone base courses and coping.
     for (let x = -8.35; x <= 8.0; x += 0.82) {
       const h = 0.38 + ((Math.round((x + 9) * 7) % 3) * 0.035);
@@ -1384,6 +1403,7 @@
         rect(-1.5, 1.2, -1.6, 1.4, 'rgba(116,198,157,0.35)', '#74c69d', 'Courtyard Tree');
         rect(-7.95, -5.05, -4.15, -3.05, 'rgba(181,99,69,0.42)', '#d98a6c', 'THINNAI');
         rect(-8.35, -4.45, -2.35, 0.95, 'rgba(120,130,132,0.30)', '#a9b4b5', 'Stone Arrival Path');
+        rect(-8.55, -8.35, -2.2, 1.6, 'rgba(181,99,69,0.48)', '#d98a6c', 'Timber Entry Gate');
         rect(-7.98, -7.08, -1.78, 0.02, 'rgba(72,159,181,0.35)', '#489fb5', 'Water Pot / Tap');
         rect(-7.55, 7.35, -5.18, -4.98, 'rgba(72,159,181,0.25)', '#489fb5', 'North Collector');
         rect(7.08, 7.30, -5.0, 4.65, 'rgba(72,159,181,0.25)', '#489fb5', 'East Drain');
