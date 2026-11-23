@@ -28,7 +28,9 @@ assert.match(html, /const roofY = H_TF \+ 0\.95 \+ 0\.02/, 'Wall-top tiles must 
 assert.match(html, /Rain hoods specifically protect the low SW inlet/, 'Low and high jaali openings must have rain hoods');
 assert.match(html, /z = -3\.65 - k \* 1\.25/, 'Northbound airflow must reach the north high-level exhaust');
 assert.match(html, /z = 0\.75 \+ k \* 4\.15/, 'Courtyard stack airflow must reach the south stairwell exhaust');
-assert.match(html, /12 columns · centreline positions need stair \/ court coordination/, 'Ground plan must expose structural coordination points');
+assert.match(html, /12 conceptual columns · positions need stair \/ court coordination/, 'Ground plan must expose structural coordination points');
+assert.match(html, /stairLandingClash = cx === 0 && cz === 4\.85/, 'Known centre-column/stair-landing clash must be highlighted');
+assert.match(html, /CLASH: centre column at \(0, 4\.85\) overlaps stair landing/, 'Ground plan must disclose the stair-landing column clash');
 assert.match(html, /rect\(-7\.55, 7\.92, -5\.18, -4\.98/, 'Ground plan north drain must reach the east collector');
 assert.match(html, /SE Recharge Branch/, 'Ground plan must show the SE recharge branch');
 assert.match(html, /Courtyard Overflow/, 'Ground plan must show courtyard overflow route');
