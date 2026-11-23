@@ -136,8 +136,8 @@
   <div id="canvas-wrap"></div>
 <div id="material-legend">
   <strong>Natural material palette</strong>
-  Kadappa stone floors · Shahabad limestone · rough granite compound wall<br>
-  Terracotta clay tiles · lime-finish walls · reclaimed timber
+  Kadappa floors · Shahabad wet / balcony zones · lime-finish walls<br>
+  Local rough stone compound wall · terracotta tiles · reclaimed timber
 </div>
   <div id="crosshair"></div>
   <button id="btn-hide-ui">Hide UI</button>
@@ -1014,11 +1014,12 @@
     // Continue the service downpipe up to the east eave gutter (not just to first-floor level).
     const rainPipeHeight = roofY - 0.08;
     const rainPipe = new THREE.Mesh(new THREE.CylinderGeometry(0.075, 0.075, rainPipeHeight, 12), rainPipeMat);
-    rainPipe.position.set(7.42, rainPipeHeight / 2, 4.55);
+    // Pipe centre is aligned directly below the east gutter collection line.
+    rainPipe.position.set(7.55, rainPipeHeight / 2, 4.55);
     rainPipe.castShadow = true;
     grpGF.add(rainPipe);
     const pipeClips = [0.55, 2.0, 3.55, 5.1, 6.55];
-    for (const y of pipeClips) addBox(grpGF, 7.30, 7.54, y, y + 0.10, 4.43, 4.67, MAT.darkWood, false);
+    for (const y of pipeClips) addBox(grpGF, 7.43, 7.67, y, y + 0.10, 4.43, 4.67, MAT.darkWood, false);
     // Covered inspection chamber at pipe foot; removable cover is serviceable.
     addBox(grpGF, 7.05, 7.78, 0.03, 0.22, 4.08, 4.82, drainStone, false, false, true);
     addBox(grpGF, 7.12, 7.71, 0.22, 0.25, 4.15, 4.75, MAT.granite, false, false, true);
