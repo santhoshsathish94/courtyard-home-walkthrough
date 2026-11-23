@@ -309,6 +309,11 @@ New palette:
   - the open common-bath door crossed the lobby; it is now hinged at the south jamb, and the validator rule above was added
   - the stair balustrade collider reached into the first-floor pocket; it now follows the flight
 - **Polish:** a modern oak pooja cabinet, rugs, and a board-formed fin framing the balcony.
+- **Published** (6289236). Local results: validator 5,264 checks, mutation tests 31/31, Playwright 18 passed and 2 skipped (desktop + phone). GitHub Actions validation and Pages deployment both succeeded.
+- **Live site verified** (cache disabled):
+  - 16 columns, both gates, the 1,617 sq ft plot, 14 viewpoints and 7 doors, with no console errors
+  - the full walking route (road → front gate → straight stair → foyer → main door → hall → lobby → pocket → terrace run → terrace) works
+  - no sideways scroll at 412 px
 
 ### Growth (cycle 4)
 - **Move columns to the boundary and the plan opens up.** With the structure on the compound walls, the nine-square plan has no free-standing columns except the one deliberately exposed at the court.
