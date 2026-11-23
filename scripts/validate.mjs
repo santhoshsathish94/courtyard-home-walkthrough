@@ -22,6 +22,8 @@ assert.match(html, /High-level leeward exhaust/, 'High-level air exhaust must re
 assert.match(html, /WEST ROAD ENTRANCE GATE/, 'West entrance gate must remain');
 assert.match(html, /function addSlopedWaterRun/, 'Sloped surface-water geometry must remain');
 assert.match(html, /function addSlopedWaterRunX/, 'Cross-axis surface-water fall geometry must remain');
+assert.match(html, /6\.78, 7\.86, 4\.54, 4\.76, 0\.060, 0\.078/, 'SE recharge branch must overlap the east collector');
+assert.match(html, /1\.38, 5\.76, 3\.48, 3\.56, 0\.108, 0\.094/, 'Courtyard overflow branch must start at its upstream outlet level');
 assert.match(html, /const roofY = H_TF \+ 0\.95 \+ 0\.02/, 'Wall-top tiles must sit at terrace parapet height');
 assert.match(html, /Rain hoods specifically protect the low SW inlet/, 'Low and high jaali openings must have rain hoods');
 assert.match(html, /z = -3\.65 - k \* 1\.25/, 'Northbound airflow must reach the north high-level exhaust');
