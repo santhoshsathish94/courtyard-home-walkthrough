@@ -40,6 +40,7 @@ Each pass follows **Context → Direction → Action → Success → Growth**. R
 - [x] Add compass-plan indicators for the east eave, ground collector channels and recharge garden.
 - [x] Display all four stated boundary side lengths and label the boundary geometry as schematic, not surveyed.
 - [x] Compile-check the module script after removing its three import declarations; JavaScript syntax passed.
+- [x] Restore desktop mouse-look when the user clicks the canvas after Escape releases pointer lock; clear held movement on window blur.
 - [ ] Inspect orbit, walk and plan modes at ground, first-floor and terrace levels in a real browser.
 - [ ] Check rendered geometry for clashes, gaps, floating objects and incorrect labels.
 - [ ] Verify drainage visually and confirm no ponding or road discharge is implied.
