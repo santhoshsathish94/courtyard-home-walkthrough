@@ -966,7 +966,9 @@
     // 7B. WALL-TOP CLAY TILE CAPS + RECLAIMED TIMBER + JAALI — ARCHITECTURAL PASS
     // Individual tiles protect the exposed service wall without a continuous roof frame.
     // =========================================================================
-    const roofY = H_TF + WALL_H + 0.02;
+    // Terrace parapet top is H_TF + 0.95 m; tile caps bear on this wall top,
+    // not at the first-floor wall height or floating above the terrace.
+    const roofY = H_TF + 0.95 + 0.02;
     // Individual clay-tile rain caps sit directly on the exposed east service wall.
     // No continuous roof deck, long rafters, fascia, gutter or freestanding roof frame.
     function addWallTopTileRun(xWall, z0, z1, outward = 1) {
