@@ -188,6 +188,34 @@ Cycle 1 numbers were revised once the validator and the browser walk exposed con
 - **Keep test helpers out of app behaviour.** The test-only `renderNow` helper moved the camera because it called `orbit.update()` in walk mode.
 - **Test against the slowest renderer.** Make motion frame-rate independent and test with software GL, which behaves like a slow phone.
 
+## Cycle 3 — owner direction (2026-11-23, 15:04–15:33)
+Verbatim intent, in order of priority:
+1. **"Modern house with traditional values, not a traditional looking house."** (top priority)
+2. Stairs on the **north** side (vastu); **SW entrance** for easy car parking and entry.
+3. First floor **half open**: small **pooja**, **open living**, **open kitchen with a U island**. No separate dining table; one leg of the U is for sitting, the other two hold the stove and the sink, plus the fridge.
+4. The **S + W "L" holds 3 bedrooms**. No space wasted on corridors; circulation happens only in the open space.
+5. The court opens to the hall, stairs and kitchen; **bedroom walls (with windows) form the court's other walls.**
+6. Work in short Clover cycles; don't over-plan; fix in later cycles.
+
+### Direction (cycle 3a: layout)
+- **Topology finding.** With bedrooms on the court's S and W sides and open space on the N and E, the L's corner room (SW) has no frontage. So the SW belongs to the master suite (entered from the north end of the W arm), and the third bedroom sits at the far (east) end of the S arm. With the kitchen in the east centre, every bedroom door opens directly off open space and there are no corridors.
+- **Plan ("pinwheel").** Dog-leg stair in the north centre (between grid lines B and C), with a 0.99 m hall strip along the court's north edge. The NW holds the master bath and the common bath (common bath door off the stair landing; one shared wet wall). The master suite runs W + SW (a wardrobe wall separates the dressing zone; court window). Parents on the S (court window, door east of the court), kids SE. A U kitchen sits east of the family space. Living + pooja cabinet NE (idols face W). On the ground: SW car bay behind a **sliding** timber gate (2.95 m), a porch with twin thinnai, and the main door facing west into the stair hall.
+- **Structure.** Grid x A −5.70 · B −2.20 · C 2.19 · D 6.30; rows −4.25 · 1.465 · 4.25. Row 2 is the bedroom wing's north wall (the court's S edge); line B is the master's east wall (the court's W edge). Column C2 shifts 110 mm south to hide in the bedroom partition.
+
+### Verification controls changed in cycle 3 (disclose to the owner)
+- **Spans.** "Grid spans ≤ 5.0 m" became "grid spans ≤ 6.0 m and every beam span/depth ≤ 11". The 5.715 m north–south bays carry 230 × 550 beams; all others stay 230 × 450.
+- **Verandahs.** "Verandahs wrap the court (≥ 3)" became the new brief: the court's open sides face the hall/family (≥ 0.95 m clear), and its other sides are bedroom walls with a court window (sill ≥ 0.85 m with a grille).
+- **Gate.** "Swing leaves open inward" became "sliding leaf stays inside the compound, clears the opening, columns, furniture, recharge pit and silt trap". The clear width rule rose from 2.4 m to 2.7 m for a car.
+- **Thinnai.** The flank rule now measures along the main door's own wall (the door faces west now).
+- **Added:** car bay reachable by a 1.9 m wide car; counter sink/stove ranges must lie on their counter.
+
+### Outcome log (cycle 3)
+- **3a, local.** Validator: all checks pass (3,800+).
+- **3a, browser review** found and fixed:
+  - The hall and the gate yard were sealed off by the water point + column A2 + the parked car (the footwash moved to the porch).
+  - The master was unreachable (the reading chair plus the wardrobe wall closed the dressing zone; master-bath fixtures left a 0.4 m gap).
+  - A sink was floating in the court void because counter `sink`/`stove` are world ranges, not offsets (a validator check was added).
+
 ## Open questions for the owner
 1. Survey or FMB sketch: which is right, the side lengths or the 1,620 sq ft? What are the corner angles?
 2. Local setback and coverage rules for the site. The current margins are a design choice.

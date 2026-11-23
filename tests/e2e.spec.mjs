@@ -22,7 +22,7 @@ test('loads the model without errors and renders a real image', async ({ page })
   const stats = await page.evaluate(() => window.__app.stats);
   expect(stats.meshes).toBeGreaterThan(80);
   expect(stats.triangles).toBeGreaterThan(15000);
-  expect(stats.doors).toBe(9);
+  expect(stats.doors).toBe(7);
   const px = await page.evaluate(() => {
     window.__app.renderNow();
     const src = document.getElementById('scene'), c = document.createElement('canvas');
@@ -47,34 +47,42 @@ test('the canvas fills the screen and the page does not scroll sideways', async 
   expect(m.sw).toBeLessThanOrEqual(m.w);
 });
 
-test('walk from the road through the gate and up the stair to the first floor and terrace', async ({ page }) => {
+test('walk from the road through the gate and main door, up the stair to the first floor and terrace', async ({ page }) => {
   await boot(page);
   const r = await page.evaluate(() => {
     const a = window.__app, w = a.walker.state, out = {};
+    // yaw: 0 = north (−z), π = south, π/2 = west, −π/2 = east.
     a.jump('gate');
     out.start = { level: a.walker.level, feet: w.feet };
-    let s = a.walkStep(1, 6);
+    w.yaw = -Math.PI / 2; let s = a.walkStep(1, 1.75);          // through the sliding gate
+    out.inside = { x: s.x };
+    w.yaw = 0; s = a.walkStep(1, 4.1);                          // north along the front yard
+    out.yard = { z: s.z };
+    w.z = -3.125; w.yaw = -Math.PI / 2; s = a.walkStep(1, 3.6); // between the thinnai, through the main door
     out.hall = { x: s.x, feet: s.feet };
     a.jump('stair');
-    s = a.walkStep(1, 2.2); out.mid = s.feet;
-    w.yaw = Math.PI; a.walkStep(1, 0.8);
+    s = a.walkStep(1, 2.2); out.mid = s.feet;                   // flight 1 east to the mid landing
+    w.yaw = 0; a.walkStep(1, 0.8);                              // across to the north lane
     w.yaw = Math.PI / 2; s = a.walkStep(1, 3.2); out.first = { feet: s.feet, level: s.level };
-    w.yaw = 0; s = a.walkStep(1, 1.4); out.verandah = { z: s.z, level: s.level };
-    w.x = -1.6; w.z = 2.65; w.yaw = -Math.PI / 2; a.walkStep(1, 2.2);
-    w.yaw = Math.PI; a.walkStep(1, 0.8);
+    w.yaw = Math.PI; s = a.walkStep(1, 1.4); out.hallFirst = { z: s.z, level: s.level };
+    w.x = -1.6; w.z = -2.7; w.yaw = -Math.PI / 2; a.walkStep(1, 2.2);
+    w.yaw = 0; a.walkStep(1, 0.8);
     w.yaw = Math.PI / 2; a.walkStep(1, 3.2);
-    w.yaw = 0; w.x = -1.55; s = a.walkStep(1, 2.0); out.terrace = { feet: s.feet, level: s.level, z: s.z };
+    w.yaw = Math.PI; w.x = -1.55; s = a.walkStep(1, 2.0); out.terrace = { feet: s.feet, level: s.level, z: s.z };
     return out;
   });
   expect(r.start.level).toBe('ground');
   expect(r.start.feet).toBeLessThan(0);
+  expect(r.inside.x).toBeGreaterThan(-6.7);
+  expect(r.yard.z).toBeLessThan(-2.5);
   expect(r.hall.x).toBeGreaterThan(-2.0);
   expect(r.mid).toBeCloseTo(1.6, 1);
   expect(r.first.level).toBe('first');
   expect(r.first.feet).toBeCloseTo(3.21, 1);
-  expect(r.verandah.z).toBeLessThan(2.13);
+  expect(r.hallFirst.z).toBeGreaterThan(-2.14);
+  expect(r.hallFirst.level).toBe('first');
   expect(r.terrace.level).toBe('terrace');
-  expect(r.terrace.z).toBeLessThan(2.0);
+  expect(r.terrace.z).toBeGreaterThan(-2.0);
 });
 
 test('every walk viewpoint stands on a floor at eye height', async ({ page }) => {
@@ -91,22 +99,23 @@ test('doors: a closed door blocks, an open one does not, and clicking the gate t
   await boot(page);
   const r = await page.evaluate(() => {
     const a = window.__app, w = a.walker.state;
-    a.jump('verandah');
-    w.x = -1.6; w.z = -0.75; w.feet = 3.21; w.yaw = Math.PI / 2;
+    // Common bath, entered from the stair's floor landing (the door starts closed).
+    a.jump('hall');
+    w.x = -1.6; w.z = -3.55; w.feet = 3.21; w.yaw = Math.PI / 2;
     const closed = a.walkStep(1, 1.5).x;
-    a.toggleDoor('bath-door');
+    a.toggleDoor('cbath-door');
     for (let i = 0; i < 40; i++) a.world.update(0.05);
-    w.x = -1.6; w.z = -0.75;
+    w.x = -1.6; w.z = -3.55;
     return { closed, open: a.walkStep(1, 1.5).x };
   });
   expect(r.closed).toBeGreaterThan(-2.0);
   expect(r.open).toBeLessThan(-2.4);
-  // Back to orbit, then click/tap a gate leaf on screen (real input through the UI).
+  // Back to orbit, then click/tap the sliding gate leaf on screen (real input through the UI).
   await page.evaluate(() => window.__app.jump('overview'));
   const pt = await page.evaluate(() => {
     const a = window.__app;
     a.renderNow();
-    const lf = a.world.gate.leaves[1], p = lf.pivot.position, ry = lf.pivot.rotation.y;
+    const lf = a.world.gate.leaves[0], p = lf.pivot.position, ry = lf.pivot.rotation.y;
     const v = a.camera.position.clone().set(p.x + Math.cos(ry) * lf.w * 0.5, 0.85, p.z - Math.sin(ry) * lf.w * 0.5).project(a.camera);
     return { x: ((v.x + 1) / 2) * innerWidth, y: ((1 - v.y) / 2) * innerHeight };
   });

@@ -51,8 +51,10 @@ export const boundaryX = (side, z) => {
 
 // Compound wall: local rubble stone on the boundary, inside the plot.
 export const COMPOUND = { t: 0.30, h: 1.50, coping: 0.08 };
-// West gate: two reclaimed-timber leaves opening inward; z range along the W boundary.
-export const GATE = { z0: 1.70, z1: 4.20, leafH: 1.55, openDeg: 90, pierW: 0.42, pierH: 1.85, t: 0.06 };
+// West gate: one reclaimed-timber leaf sliding north on a track inside the compound wall,
+// so a car can turn in from the road and nothing swings into the parking or the columns.
+// z0/z1 = clear opening along the W boundary.
+export const GATE = { z0: 1.30, z1: 4.25, leafH: 1.55, pierW: 0.42, pierH: 1.85, t: 0.06, track: 0.10, type: 'sliding' };
 export const ROAD = { width: 6.0, drop: 0.15 };   // indicative only
 
 // ----------------------------------------------------------------- house ----
@@ -62,11 +64,16 @@ export const HOUSE = { x0: -5.85, x1: 6.45, z0: -4.40, z1: 4.40 };
 export const WALL_T = { exterior: 0.30, grid: 0.23, partition: 0.15, parapet: 0.23 };
 
 // --------------------------------------------- 12-column structural grid ----
+// Four column lines (A–D, west → east) × three rows (1–3, north → south).
+// Row 2 carries the bedroom wing's north wall, which is also the court's south edge;
+// line B carries the master suite's east wall, which is also the court's west edge.
 export const GRID = {
-  x: { A: -5.70, B: -2.20, C: 2.60, D: 6.30 },
-  z: { 1: -4.25, 2: 0.0, 3: 4.25 },
+  x: { A: -5.70, B: -2.20, C: 2.19, D: 6.30 },
+  z: { 1: -4.25, 2: 1.465, 3: 4.25 },
   column: 0.30,
 };
+// Beams spanning rows 1–2 (5.7 m) are 230 × 550 mm; all others 230 × 450 mm.
+export const DEEP_BEAM = 0.55;
 export const COLUMNS = [];
 // Columns hide inside the walls (230 × 450 mm in 9-inch walls, 300 mm at the corners),
 // the usual Indian RCC practice, so no column projects into a room.
@@ -77,10 +84,13 @@ const colSize = (xl, zl) => {
   if (extX) return [0.30, 0.45];
   return [0.23, 0.45];
 };
+// C2 sits where the bedroom partition meets row 2; it is shifted 110 mm south so it
+// hides in that partition instead of projecting into the family space.
+const COL_SHIFT = { C2: [0, 0.11] };
 for (const [xl, x] of Object.entries(GRID.x)) {
   for (const [zl, z] of Object.entries(GRID.z)) {
-    const [w, d] = colSize(xl, zl);
-    COLUMNS.push({ id: `${xl}${zl}`, x, z, w, d });
+    const [w, d] = colSize(xl, zl), [dx, dz] = COL_SHIFT[`${xl}${zl}`] || [0, 0];
+    COLUMNS.push({ id: `${xl}${zl}`, x: x + dx, z: z + dz, w, d });
   }
 }
 // Inner wall faces used throughout (derived from the grid and wall thicknesses).
@@ -88,33 +98,39 @@ export const FACE = {
   A: GRID.x.A + WALL_T.exterior / 2,   // −5.55
   Bw: GRID.x.B - WALL_T.grid / 2,      // −2.315
   Be: GRID.x.B + WALL_T.grid / 2,      // −2.085
-  Cw: GRID.x.C - WALL_T.grid / 2,      //  2.485
-  Ce: GRID.x.C + WALL_T.grid / 2,      //  2.715
+  Cw: GRID.x.C - WALL_T.grid / 2,      //  2.075
+  Ce: GRID.x.C + WALL_T.grid / 2,      //  2.305
   D: GRID.x.D - WALL_T.exterior / 2,   //  6.15
   N: GRID.z[1] + WALL_T.exterior / 2,  // −4.10
   S: GRID.z[3] - WALL_T.exterior / 2,  //  4.10
+  R2n: GRID.z[2] - WALL_T.grid / 2,    //  1.35  (court side of the bedroom wing)
+  R2s: GRID.z[2] + WALL_T.grid / 2,    //  1.58
 };
-const { A: fA, Bw: fBw, Be: fBe, Cw: fCw, Ce: fCe, D: fD, N: fN, S: fS } = FACE;
+const { A: fA, Bw: fBw, Be: fBe, Cw: fCw, Ce: fCe, D: fD, N: fN, S: fS, R2n, R2s } = FACE;
 
 // ------------------------------------------------- nadumuttam (open court) ----
-// 2.4 m × 2.4 m void from the ground garden to the sky, in the centre bay.
-export const COURT = { x0: -1.00, x1: 1.40, z0: -1.35, z1: 1.05 };
+// Open from the ground garden to the sky. Its west and south edges are the bedroom
+// walls (with windows onto the court); its north and east edges open to the hall,
+// the stair and the family/kitchen space behind a 1.0 m guard.
+export const COURT = { x0: fBe, x1: 0.85, z0: -1.05, z1: R2n };
 
 // --------------------------------------------------------------- stair ----
-// Dog-leg in the centre bay, south of the court. 18 equal risers per storey and
-// 8 treads per flight. Flight 1 rises east in the north lane; flight 2 rises
-// west in the south lane. The next storey repeats directly above.
+// Dog-leg in the north-centre bay (between lines B and C). 18 equal risers per storey,
+// 8 treads per flight. Flight 1 rises east in the south lane (next to the hall); flight 2
+// rises west in the north lane. Every storey starts and arrives on the west floor landing,
+// and the next storey repeats directly above.
 export const STAIR = {
   risers: 18,
   riser: (LEVELS.first - LEVELS.ground) / 18,   // 0.1778 m
   tread: 0.27,
-  laneN: { z0: 2.20, z1: 3.10 },                // clear flight width 0.90 m
-  laneS: { z0: 3.20, z1: 4.10 },
-  floorLanding: { x0: fBe, x1: -1.025 },        // start/arrival landing (west end), 1.06 m
-  flight: { x0: -1.025, x1: 1.135 },            // 8 treads × 0.27 m
-  midLanding: { x0: 1.135, x1: fCw },           // 1.35 m
-  box: { x0: fBe, x1: fCw, z0: 2.20, z1: fS },
-  opening: { x0: -1.025, x1: fCw, z0: 2.20, z1: fS }, // slab opening per floor; the floor landing stays solid
+  lane1: { z0: -3.10, z1: -2.20 },              // flight 1, clear width 0.90 m
+  lane2: { z0: fN, z1: -3.20 },                 // flight 2
+  spineZ: -3.15,                                // perforated spine between the lanes
+  floorLanding: { x0: fBe, x1: -1.085 },        // start/arrival landing (west end), 1.00 m
+  flight: { x0: -1.085, x1: 1.075 },            // 8 treads × 0.27 m
+  midLanding: { x0: 1.075, x1: fCw },           // 1.00 m
+  box: { x0: fBe, x1: fCw, z0: fN, z1: -2.20 },
+  opening: { x0: -1.085, x1: fCw, z0: fN, z1: -2.20 }, // slab opening per floor; the floor landing stays solid
   waist: 0.15,
   storeys: [{ from: 'ground', to: 'first' }, { from: 'first', to: 'terrace' }],
 };
@@ -123,23 +139,22 @@ export const STAIR = {
 // A smooth line through the nosings (±0.08 m of each tread) keeps the eye steady.
 export function stairWalkY(x, z, y0) {
   const s = STAIR, half = s.risers / 2;
-  const inN = z >= s.laneN.z0 && z <= s.laneN.z1, inS = z >= s.laneS.z0 && z <= s.laneS.z1;
-  const inGap = z > s.laneN.z1 && z < s.laneS.z0;
-  if (x >= s.midLanding.x0 && x <= s.midLanding.x1 && (inN || inS || inGap)) return y0 + half * s.riser;
+  const in1 = z >= s.lane1.z0 && z <= s.lane1.z1, in2 = z >= s.lane2.z0 && z <= s.lane2.z1;
+  if (x >= s.midLanding.x0 && x <= s.midLanding.x1 && z >= s.box.z0 && z <= s.box.z1) return y0 + half * s.riser;
   if (x < s.flight.x0 || x > s.flight.x1) return null;
   const run = (x - s.flight.x0) / (s.flight.x1 - s.flight.x0);
-  if (inN) return y0 + run * half * s.riser;
-  if (inS) return y0 + half * s.riser + (1 - run) * half * s.riser;
+  if (in1) return y0 + run * half * s.riser;
+  if (in2) return y0 + half * s.riser + (1 - run) * half * s.riser;
   return null;
 }
 // Treads for one storey starting at y0: 9 risers per flight (8 treads + landing riser).
 export function stairTreads(y0) {
   const s = STAIR, T = s.tread, r = s.riser, half = s.risers / 2, out = [];
   for (let k = 1; k < half; k++) {
-    out.push({ flight: 1, k, x0: s.flight.x0 + (k - 1) * T, x1: s.flight.x0 + k * T, z0: s.laneN.z0, z1: s.laneN.z1, top: y0 + k * r });
+    out.push({ flight: 1, k, x0: s.flight.x0 + (k - 1) * T, x1: s.flight.x0 + k * T, z0: s.lane1.z0, z1: s.lane1.z1, top: y0 + k * r });
   }
   for (let k = 1; k < half; k++) {
-    out.push({ flight: 2, k, x0: s.flight.x1 - k * T, x1: s.flight.x1 - (k - 1) * T, z0: s.laneS.z0, z1: s.laneS.z1, top: y0 + (half + k) * r });
+    out.push({ flight: 2, k, x0: s.flight.x1 - k * T, x1: s.flight.x1 - (k - 1) * T, z0: s.lane2.z0, z1: s.lane2.z1, top: y0 + (half + k) * r });
   }
   return out;
 }
@@ -154,91 +169,92 @@ export function stairTreads(y0) {
 //   vent: jaali transom above the head.
 //   lowJaali: [y0, y1] low inlet band under a window.
 //   role: inlet | exhaust.
+//   court: true for windows that look into the open court (they carry a grille).
 // Heights are relative to the wall's own floor level.
 const Wl = (id, level, a, b, t, kind, openings = [], extra = {}) => ({ id, level, a, b, t, kind, openings, ...extra });
 const H1 = LEVELS.terrace - LEVELS.first - SLAB;     // 3.05 m first-floor clear height
 const HM = LEVELS.mumtyRoof - LEVELS.terrace - SLAB; // 2.45 m stair-head clear height
 const xs = HOUSE.x0, xe = HOUSE.x1;
 const pIn = WALL_T.parapet / 2;
+const yMumtyS = STAIR.box.z1 + WALL_T.grid / 2;     // −2.085: south face line of the stair box walls
 
 export const WALLS = [
   // ---------------- first floor: exterior walls (0.30 m, on grid lines) ----------------
   Wl('ff-N', 'first', [xs, GRID.z[1]], [xe, GRID.z[1]], WALL_T.exterior, 'exterior', [
-    { id: 'kids-n-win', type: 'window', s: 0.85, w: 1.40, sill: 0.75, head: 2.25, vent: true },
-    { id: 'living-n-win1', type: 'window', s: 4.45, w: 1.60, sill: 0.60, head: 2.25, vent: true },
-    { id: 'living-n-win2', type: 'window', s: 6.65, w: 1.20, sill: 0.60, head: 2.25, vent: true },
-    { id: 'library-n-win', type: 'window', s: 8.95, w: 1.00, sill: 0.90, head: 2.25, vent: true },
-    { id: 'pooja-n-win', type: 'window', s: 10.85, w: 0.80, sill: 0.95, head: 2.10 },
+    { id: 'mbath-n-win', type: 'window', s: 0.55, w: 0.80, sill: 1.50, head: 2.25 },
+    { id: 'cbath-n-win', type: 'window', s: 2.25, w: 0.80, sill: 1.50, head: 2.25 },
+    { id: 'stair-n-jaali', type: 'jaali', s: 4.15, w: 3.40, sill: 0.30, head: 2.70 },
+    { id: 'living-n-win', type: 'window', s: 8.55, w: 1.80, sill: 0.45, head: 2.25, vent: true },
   ]),
   Wl('ff-E', 'first', [GRID.x.D, fN], [GRID.x.D, fS], WALL_T.exterior, 'exterior', [
-    { id: 'pooja-e-exhaust', type: 'jaali', s: 0.30, w: 1.00, sill: 2.15, head: 2.80, role: 'exhaust', hood: true },
-    { id: 'parents-e-win', type: 'window', s: 2.60, w: 1.20, sill: 0.75, head: 2.25, vent: true },
-    { id: 'parents-e-exhaust', type: 'jaali', s: 4.40, w: 0.75, sill: 2.15, head: 2.80, role: 'exhaust', hood: true },
-    { id: 'kitchen-e-win', type: 'window', s: 6.10, w: 1.20, sill: 1.05, head: 2.25 },
-    { id: 'kitchen-e-exhaust', type: 'jaali', s: 7.50, w: 0.55, sill: 2.15, head: 2.80, role: 'exhaust', hood: true },
+    { id: 'pooja-e-exhaust', type: 'jaali', s: 0.25, w: 0.80, sill: 2.00, head: 2.60, role: 'exhaust', hood: true },
+    { id: 'living-e-win', type: 'window', s: 1.40, w: 1.00, sill: 0.60, head: 2.25, vent: true },
+    { id: 'kitchen-e-win', type: 'window', s: 2.85, w: 0.90, sill: 1.05, head: 2.25 },
+    { id: 'kitchen-e-exhaust', type: 'jaali', s: 4.25, w: 0.80, sill: 2.00, head: 2.60, role: 'exhaust', hood: true },
+    { id: 'kids-e-win', type: 'window', s: 6.30, w: 1.20, sill: 0.75, head: 2.25, vent: true },
   ]),
   Wl('ff-S', 'first', [xs, GRID.z[3]], [xe, GRID.z[3]], WALL_T.exterior, 'exterior', [
-    { id: 'master-s-win', type: 'window', s: 0.60, w: 1.00, sill: 0.75, head: 2.25, lowJaali: [0.15, 0.60], role: 'inlet', hood: true },
-    { id: 'stair-s-jaali', type: 'jaali', s: 3.90, w: 4.30, sill: 0.60, head: 2.80 },
-    { id: 'kitchen-s-win', type: 'window', s: 9.30, w: 0.80, sill: 1.05, head: 2.25, vent: true },
+    { id: 'master-s-win', type: 'window', s: 0.95, w: 1.20, sill: 0.75, head: 2.25, lowJaali: [0.15, 0.60], role: 'inlet', hood: true },
+    { id: 'parents-s-win', type: 'window', s: 5.25, w: 1.20, sill: 0.75, head: 2.25, vent: true },
+    { id: 'kids-s-win', type: 'window', s: 9.25, w: 1.00, sill: 0.75, head: 2.25, vent: true },
   ]),
   Wl('ff-W', 'first', [GRID.x.A, fN], [GRID.x.A, fS], WALL_T.exterior, 'exterior', [
-    { id: 'kids-w-win', type: 'window', s: 0.60, w: 1.10, sill: 0.75, head: 2.25, vent: true },
-    { id: 'ensuite-w-jaali', type: 'jaali', s: 3.00, w: 0.80, sill: 1.80, head: 2.40 },
-    { id: 'master-w-win', type: 'window', s: 5.80, w: 1.20, sill: 0.75, head: 2.25, lowJaali: [0.15, 0.60], role: 'inlet', hood: true },
+    { id: 'mbath-w-jaali', type: 'jaali', s: 0.40, w: 0.80, sill: 1.60, head: 2.25 },
+    { id: 'dress-w-win', type: 'window', s: 2.40, w: 0.80, sill: 0.90, head: 2.25 },
+    { id: 'master-w-win', type: 'window', s: 4.20, w: 1.00, sill: 0.75, head: 2.25, lowJaali: [0.15, 0.60], role: 'inlet', hood: true },
   ]),
-  // ---------------- first floor: interior walls on grid lines (0.23 m) ----------------
+  // ---------------- first floor: walls on grid lines (0.23 m) ----------------
+  // Line B: common-bath door off the stair landing, master-suite door off the hall,
+  // and the master bedroom's window onto the court.
   Wl('ff-B', 'first', [GRID.x.B, fN], [GRID.x.B, fS], WALL_T.grid, 'grid', [
-    { id: 'kids-door', type: 'door', s: 1.75, w: 0.80, head: 2.10, swing: 'W', hinge: 'S', vent: true, room: 'kids' },
-    { id: 'bath-door', type: 'door', s: 2.95, w: 0.80, head: 2.10, swing: 'E', hinge: 'S', vent: true, room: 'bath', defaultOpen: false },
-    { id: 'master-door', type: 'door', s: 5.05, w: 0.80, head: 2.10, swing: 'W', hinge: 'N', vent: true, room: 'master' },
+    { id: 'cbath-door', type: 'door', s: 0.15, w: 0.75, head: 2.10, swing: 'E', hinge: 'N', room: 'cbath', defaultOpen: false },
+    { id: 'master-door', type: 'door', s: 2.05, w: 0.80, head: 2.10, swing: 'W', hinge: 'N', vent: true, room: 'master' },
+    { id: 'master-court-win', type: 'window', s: 4.00, w: 1.20, sill: 0.90, head: 2.25, court: true },
   ]),
-  Wl('ff-C', 'first', [GRID.x.C, fN], [GRID.x.C, fS], WALL_T.grid, 'grid', [
-    { id: 'library-arch', type: 'arch', s: 0.50, w: 1.00, head: 2.40 },
-    { id: 'parents-door', type: 'door', s: 4.35, w: 0.80, head: 2.10, swing: 'E', hinge: 'S', vent: true, room: 'parents' },
-    { id: 'kitchen-arch', type: 'arch', s: 5.42, w: 0.80, head: 2.10, vent: true },
+  // Row 2: the bedroom wing's north wall = the court's south edge.
+  Wl('ff-row2', 'first', [fBe, GRID.z[2]], [fD, GRID.z[2]], WALL_T.grid, 'grid', [
+    { id: 'parents-court-win', type: 'window', s: 0.235, w: 2.40, sill: 0.90, head: 2.25, court: true },
+    { id: 'parents-door', type: 'door', s: 3.26, w: 0.80, head: 2.10, swing: 'S', hinge: 'E', vent: true, room: 'parents' },
+    { id: 'kids-door', type: 'door', s: 4.49, w: 0.80, head: 2.10, swing: 'S', hinge: 'W', vent: true, room: 'kids' },
   ]),
+  // Line C: the stair's east wall (a tall jaali to the living) and the parents/kids partition.
+  Wl('ff-C-n', 'first', [GRID.x.C, fN], [GRID.x.C, -2.14], WALL_T.grid, 'grid', [
+    { id: 'stair-e-jaali', type: 'jaali', s: 0.20, w: 1.40, sill: 0.90, head: 2.70 },
+  ]),
+  Wl('ff-C-s', 'first', [GRID.x.C, R2s], [GRID.x.C, fS], WALL_T.grid, 'grid'),
   // ---------------- first floor: partitions (0.15 m) ----------------
-  Wl('ff-p-kids-bath', 'first', [fA, -1.425], [fBw, -1.425], WALL_T.partition, 'partition', [
-    { id: 'ensuite-door-kids', type: 'door', s: 1.025, w: 0.70, head: 2.10, swing: 'N', hinge: 'E', room: 'ensuite', defaultOpen: false },
+  Wl('ff-p-nw', 'first', [fA, -2.125], [fBw, -2.125], WALL_T.partition, 'partition', [
+    { id: 'mbath-door', type: 'door', s: 0.70, w: 0.70, head: 2.10, swing: 'S', hinge: 'E', room: 'mbath', defaultOpen: false },
   ]),
-  Wl('ff-p-bath-master', 'first', [fA, 0.825], [fBw, 0.825], WALL_T.partition, 'partition', [
-    { id: 'ensuite-door-master', type: 'door', s: 1.025, w: 0.70, head: 2.10, swing: 'S', hinge: 'E', room: 'ensuite', defaultOpen: false },
-  ]),
-  Wl('ff-p-ensuite-bath', 'first', [-3.75, -1.35], [-3.75, 0.75], WALL_T.partition, 'partition'),
-  Wl('ff-p-pooja-parents', 'first', [fCe, -2.225], [fD, -2.225], WALL_T.partition, 'partition'),
-  Wl('ff-p-library-pooja', 'first', [4.525, fN], [4.525, -2.30], WALL_T.partition, 'partition', [
-    { id: 'pooja-door', type: 'door', s: 0.50, w: 0.75, head: 2.10, swing: 'W', hinge: 'N', leaves: 2, jali: true, vent: true, room: 'pooja' },
-  ]),
-  Wl('ff-p-parents-kitchen', 'first', [fCe, 1.225], [fD, 1.225], WALL_T.partition, 'partition'),
-  // Full-height teak jaali screen guarding the flights and the mid landing. The floor
-  // landing stays open to the south verandah.
-  Wl('ff-stair-screen', 'first', [STAIR.flight.x0, 2.165], [fCw, 2.165], 0.06, 'screen'),
+  // Shared wet wall: both baths plumb into one stack.
+  Wl('ff-p-baths', 'first', [-3.975, fN], [-3.975, -2.20], WALL_T.partition, 'partition'),
+  // Terracotta jaali screen guarding the flights and the mid landing; the floor landing
+  // stays open to the hall.
+  Wl('ff-stair-screen', 'first', [STAIR.flight.x0, -2.17], [fCw, -2.17], 0.06, 'screen'),
 
   // ---------------- ground: stair-hall enclosure (the house entrance) ----------------
-  Wl('gf-stair-N', 'ground', [fBw, 2.085], [fCe, 2.085], WALL_T.grid, 'grid', [
-    { id: 'stair-gf-n-jaali', type: 'jaali', s: 1.60, w: 2.50, sill: 1.00, head: 2.30 },
+  Wl('gf-stair-N', 'ground', [fBe, GRID.z[1]], [fCw, GRID.z[1]], WALL_T.exterior, 'exterior', [
+    { id: 'stair-gf-n-jaali', type: 'jaali', s: 1.085, w: 2.50, sill: 1.00, head: 2.30 },
   ]),
-  Wl('gf-stair-W', 'ground', [GRID.x.B, 2.20], [GRID.x.B, fS], WALL_T.grid, 'grid', [
-    { id: 'main-door', type: 'door', s: 0.35, w: 1.05, head: 2.20, swing: 'W', hinge: 'N', leaves: 2, vent: true, main: true, room: 'stair' },
+  Wl('gf-stair-W', 'ground', [GRID.x.B, fN], [GRID.x.B, STAIR.box.z1], WALL_T.grid, 'grid', [
+    { id: 'main-door', type: 'door', s: 0.475, w: 1.00, head: 2.20, swing: 'W', hinge: 'N', leaves: 2, vent: true, main: true, room: 'g-stair' },
   ]),
-  Wl('gf-stair-E', 'ground', [GRID.x.C, 2.20], [GRID.x.C, fS], WALL_T.grid, 'grid', [
-    { id: 'stair-gf-e-jaali', type: 'jaali', s: 0.45, w: 1.20, sill: 1.40, head: 2.30 },
+  Wl('gf-stair-E', 'ground', [GRID.x.C, fN], [GRID.x.C, STAIR.box.z1], WALL_T.grid, 'grid', [
+    { id: 'stair-gf-e-jaali', type: 'jaali', s: 0.40, w: 1.20, sill: 1.40, head: 2.30 },
   ]),
-  Wl('gf-stair-S', 'ground', [fBe, GRID.z[3]], [fCw, GRID.z[3]], WALL_T.exterior, 'exterior', [
-    { id: 'stair-gf-s-jaali', type: 'jaali', s: 0.40, w: 3.40, sill: 1.30, head: 2.40 },
+  Wl('gf-stair-S', 'ground', [fBw, yMumtyS], [fCe, yMumtyS], WALL_T.grid, 'grid', [
+    { id: 'stair-gf-s-jaali', type: 'jaali', s: 1.515, w: 2.50, sill: 1.30, head: 2.40 },
   ]),
-  Wl('gf-thinnai-back', 'ground', [-4.40, 1.475], [-2.40, 1.475], 0.15, 'low', [], { h: 0.95 }),
   // Perforated terracotta spine between the two flights (ground to terrace handrail).
-  Wl('stair-spine', 'ground', [STAIR.flight.x0, 3.15], [STAIR.flight.x1, 3.15], 0.10, 'spine', [], { h: LEVELS.terrace + 1.0 }),
+  Wl('stair-spine', 'ground', [STAIR.flight.x0, STAIR.spineZ], [STAIR.flight.x1, STAIR.spineZ], 0.10, 'spine', [], { h: LEVELS.terrace + 1.0 }),
 
   // ---------------- terrace: parapets, court guard and stair head (mumty) ----------------
-  Wl('tr-N', 'terrace', [xs, HOUSE.z0 + pIn], [xe, HOUSE.z0 + pIn], WALL_T.parapet, 'parapet'),
-  Wl('tr-S', 'terrace', [xs, HOUSE.z1 - pIn], [fBw, HOUSE.z1 - pIn], WALL_T.parapet, 'parapet'),
-  Wl('tr-S2', 'terrace', [fCe, HOUSE.z1 - pIn], [4.20, HOUSE.z1 - pIn], WALL_T.parapet, 'parapet'),
+  Wl('tr-N', 'terrace', [xs, HOUSE.z0 + pIn], [fBw, HOUSE.z0 + pIn], WALL_T.parapet, 'parapet'),
+  Wl('tr-N2', 'terrace', [fCe, HOUSE.z0 + pIn], [xe, HOUSE.z0 + pIn], WALL_T.parapet, 'parapet'),
+  Wl('tr-S', 'terrace', [xs, HOUSE.z1 - pIn], [4.20, HOUSE.z1 - pIn], WALL_T.parapet, 'parapet'),
   // At the wash area the washer and counter stand against the parapet, so the guard
   // rises to 1.8 m with a terracotta jaali above the 1.0 m solid parapet (child safety).
-  Wl('tr-S2-wash', 'terrace', [4.20, HOUSE.z1 - pIn], [xe, HOUSE.z1 - pIn], WALL_T.parapet, 'parapet', [], { h: 1.80, jaaliAbove: PARAPET_H }),
+  Wl('tr-S-wash', 'terrace', [4.20, HOUSE.z1 - pIn], [xe, HOUSE.z1 - pIn], WALL_T.parapet, 'parapet', [], { h: 1.80, jaaliAbove: PARAPET_H }),
   Wl('tr-W', 'terrace', [xs + pIn, HOUSE.z0 + 2 * pIn], [xs + pIn, HOUSE.z1 - 2 * pIn], WALL_T.parapet, 'parapet'),
   Wl('tr-E', 'terrace', [xe - pIn, HOUSE.z0 + 2 * pIn], [xe - pIn, 2.00], WALL_T.parapet, 'parapet'),
   Wl('tr-E-wash', 'terrace', [xe - pIn, 2.00], [xe - pIn, HOUSE.z1 - 2 * pIn], WALL_T.parapet, 'parapet', [], { h: 1.80, jaaliAbove: PARAPET_H }),
@@ -246,15 +262,15 @@ export const WALLS = [
   Wl('tr-court-S', 'terrace', [COURT.x0 - 2 * pIn, COURT.z1 + pIn], [COURT.x1 + 2 * pIn, COURT.z1 + pIn], WALL_T.parapet, 'guard'),
   Wl('tr-court-W', 'terrace', [COURT.x0 - pIn, COURT.z0], [COURT.x0 - pIn, COURT.z1], WALL_T.parapet, 'guard'),
   Wl('tr-court-E', 'terrace', [COURT.x1 + pIn, COURT.z0], [COURT.x1 + pIn, COURT.z1], WALL_T.parapet, 'guard'),
-  Wl('tr-mumty-N', 'terrace', [fBw, 2.085], [fCe, 2.085], WALL_T.grid, 'mumty', [
-    { id: 'mumty-door', type: 'door', s: 0.37, w: 0.80, head: 2.10, swing: 'N', hinge: 'W', room: 'terrace' },
-    { id: 'mumty-n-exhaust', type: 'jaali', s: 2.415, w: 1.80, sill: 1.70, head: 2.30, role: 'exhaust', hood: true },
-  ], { h: HM }),
-  Wl('tr-mumty-W', 'terrace', [GRID.x.B, 2.20], [GRID.x.B, HOUSE.z1 - 2 * pIn], WALL_T.grid, 'mumty', [], { h: HM }),
-  Wl('tr-mumty-E', 'terrace', [GRID.x.C, 2.20], [GRID.x.C, HOUSE.z1 - 2 * pIn], WALL_T.grid, 'mumty', [
+  Wl('tr-mumty-N', 'terrace', [fBw, HOUSE.z0 + pIn], [fCe, HOUSE.z0 + pIn], WALL_T.parapet, 'mumty', [], { h: HM }),
+  Wl('tr-mumty-W', 'terrace', [GRID.x.B, HOUSE.z0 + 2 * pIn], [GRID.x.B, STAIR.box.z1], WALL_T.grid, 'mumty', [], { h: HM }),
+  Wl('tr-mumty-E', 'terrace', [GRID.x.C, HOUSE.z0 + 2 * pIn], [GRID.x.C, STAIR.box.z1], WALL_T.grid, 'mumty', [
     { id: 'mumty-e-exhaust', type: 'jaali', s: 0.40, w: 1.30, sill: 1.70, head: 2.30, role: 'exhaust', hood: true },
   ], { h: HM }),
-  Wl('tr-mumty-S', 'terrace', [fBw, HOUSE.z1 - pIn], [fCe, HOUSE.z1 - pIn], WALL_T.parapet, 'mumty', [], { h: HM }),
+  Wl('tr-mumty-S', 'terrace', [fBw, yMumtyS], [fCe, yMumtyS], WALL_T.grid, 'mumty', [
+    { id: 'mumty-door', type: 'door', s: 0.30, w: 0.80, head: 2.10, swing: 'N', hinge: 'W', room: 'terrace' },
+    { id: 'mumty-s-exhaust', type: 'jaali', s: 2.20, w: 1.80, sill: 1.70, head: 2.30, role: 'exhaust', hood: true },
+  ], { h: HM }),
 ];
 for (const w of WALLS) {
   if (w.h === undefined) w.h = w.level === 'first' ? H1 : w.level === 'ground' ? LEVELS.first - BEAM.d : PARAPET_H;
@@ -264,35 +280,35 @@ for (const w of WALLS) {
   }
 }
 
-// Guard around the court void on the first floor: vertical teak balusters on a kerb, 1.0 m high.
+// Guard on the court's open sides (north = hall, east = family/kitchen): vertical teak
+// balusters on a kerb, 1.0 m high. The west and south sides are bedroom walls.
 export const GUARDS = [
-  { id: 'ff-court-guard', level: 'first', x0: COURT.x0, x1: COURT.x1, z0: COURT.z0, z1: COURT.z1, h: PARAPET_H, kerb: 0.12, t: 0.10 },
+  { id: 'ff-court-guard', level: 'first', x0: COURT.x0, x1: COURT.x1, z0: COURT.z0, z1: COURT.z1, h: PARAPET_H, kerb: 0.12, t: 0.10, sides: ['N', 'E'] },
 ];
 
 // ------------------------------------------------------------------ rooms ----
 const R = (id, level, name, x0, x1, z0, z1, use, extra = {}) => ({ id, level, name, x0, x1, z0, z1, use, ...extra });
+const guardT = GUARDS[0].t;
 export const ROOMS = [
-  R('kids', 'first', 'Kids', fA, fBw, fN, -1.50, 'bedroom', { dir: 'NW' }),
-  R('ensuite', 'first', 'Shared bath', fA, -3.825, -1.35, 0.75, 'bath', { dir: 'W' }),
-  // No exterior wall: jaali transom to the open court plus an exhaust duct to the terrace.
-  R('bath', 'first', 'Common bath', -3.675, fBw, -1.35, 0.75, 'bath', { dir: 'W', ventilation: 'transom-to-court+duct' }),
-  R('master', 'first', 'Master', fA, fBw, 0.90, fS, 'bedroom', { dir: 'SW' }),
-  R('living', 'first', 'Living', fBe, fCw, fN, COURT.z0, 'living', { dir: 'N' }),
-  R('library', 'first', 'Library alcove', fCe, 4.45, fN, -2.30, 'study', { dir: 'NE' }),
-  R('pooja', 'first', 'Pooja', 4.60, fD, fN, -2.30, 'pooja', { dir: 'NE' }),
-  R('parents', 'first', 'Parents', fCe, fD, -2.15, 1.15, 'bedroom', { dir: 'E' }),
-  R('kitchen', 'first', 'Kitchen + dining', fCe, fD, 1.30, fS, 'kitchen', { dir: 'SE' }),
-  R('ver-w', 'first', 'Verandah', fBe, COURT.x0, COURT.z0, COURT.z1, 'verandah'),
-  R('ver-e', 'first', 'Verandah', COURT.x1, fCw, COURT.z0, COURT.z1, 'verandah'),
-  R('ver-s', 'first', 'Verandah', fBe, fCw, COURT.z1, 2.13, 'verandah'),
+  // first floor: the bedroom "L" (west + south) wraps the court; the open half (north + east) holds the rest.
+  R('master', 'first', 'Master suite', fA, fBw, -2.05, fS, 'bedroom', { dir: 'SW' }),
+  R('mbath', 'first', 'Master bath', fA, -4.05, fN, -2.20, 'bath', { dir: 'NW' }),
+  R('cbath', 'first', 'Common bath', -3.90, fBw, fN, -2.20, 'bath', { dir: 'NW' }),
+  R('parents', 'first', 'Parents', fBe, fCw, R2s, fS, 'bedroom', { dir: 'S' }),
+  R('kids', 'first', 'Kids', fCe, fD, R2s, fS, 'bedroom', { dir: 'SE' }),
+  R('hall', 'first', 'Hall', fBe, fCw, -2.14, COURT.z0 - guardT, 'hall', { dir: 'N' }),
+  R('living', 'first', 'Living + pooja', fCe, fD, fN, -1.45, 'living', { dir: 'NE' }),
+  R('kitchen', 'first', 'Open kitchen', 3.35, fD, -1.45, R2n, 'kitchen', { dir: 'E' }),
+  R('family', 'first', 'Family', COURT.x1 + guardT, 3.35, COURT.z0 - guardT, R2n, 'family', { dir: 'E' }),
   R('court', 'first', 'Nadumuttam', COURT.x0, COURT.x1, COURT.z0, COURT.z1, 'void'),
   R('stair', 'first', 'Stair', STAIR.box.x0, STAIR.box.x1, STAIR.box.z0, STAIR.box.z1, 'stair'),
   // ground floor (open stilt garden)
   R('g-stair', 'ground', 'Stair hall', STAIR.box.x0, STAIR.box.x1, STAIR.box.z0, STAIR.box.z1, 'stair'),
   R('g-court', 'ground', 'Courtyard garden', COURT.x0 - 0.15, COURT.x1 + 0.15, COURT.z0 - 0.15, COURT.z1 + 0.15, 'garden'),
-  R('g-thinnai-n', 'ground', 'Thinnai', -4.40, -2.40, 1.55, 2.35, 'thinnai'),
-  R('g-thinnai-s', 'ground', 'Thinnai', -5.40, -2.50, 3.90, 4.715, 'thinnai'),
-  R('g-parking', 'ground', 'Cycle + two-wheeler', -5.40, -2.50, -3.80, -1.00, 'parking'),
+  R('g-thinnai-n', 'ground', 'Thinnai', -4.60, -2.95, -4.05, -3.55, 'thinnai'),
+  R('g-thinnai-s', 'ground', 'Thinnai', -4.60, -2.95, -2.70, -2.25, 'thinnai'),
+  R('g-car', 'ground', 'Car', -5.45, -0.85, 1.80, 4.05, 'parking', { vehicle: 'car' }),
+  R('g-bikes', 'ground', 'Two-wheelers', -5.20, -3.30, -0.45, 0.95, 'parking', { vehicle: 'two-wheeler' }),
   // terrace
   R('t-mumty', 'terrace', 'Stair head', STAIR.box.x0, STAIR.box.x1, STAIR.box.z0, STAIR.box.z1, 'stair'),
   R('t-wash', 'terrace', 'Wash + drying', 4.40, 6.22, 2.40, 4.17, 'utility'),
@@ -300,28 +316,27 @@ export const ROOMS = [
 
 // ---------------------------------------------------------------- beams ----
 // Primary beams run on grid lines; none cross the court void or the stairwell.
-// Trimmers frame both openings. y0 = soffit, y1 = top of slab.
+// The court's west and south edges are primary beams (lines B and row 2); trimmers
+// frame its north and east edges and the stair opening. y0 = soffit, y1 = top of slab.
 const bx = GRID.x, bz = GRID.z, hb = BEAM.w / 2;
 export const BEAMS = [];
 for (const lvl of ['first', 'terrace']) {
-  const top = LEVELS[lvl], y0 = top - BEAM.d;
-  const add = (id, x0, x1, z0, z1) => BEAMS.push({ id: `${lvl}-${id}`, level: lvl, x0, x1, z0, z1, y0, y1: top });
+  const top = LEVELS[lvl];
+  const add = (id, x0, x1, z0, z1, d = BEAM.d, span = null) => BEAMS.push({ id: `${lvl}-${id}`, level: lvl, x0, x1, z0, z1, y0: top - d, y1: top, d, span });
   // Perimeter beams match the 300 mm exterior walls; interior beams are 230 mm.
   const he = WALL_T.exterior / 2;
-  add('row1', bx.A - he, bx.D + he, bz[1] - he, bz[1] + he);
-  add('row3', bx.A - he, bx.D + he, bz[3] - he, bz[3] + he);
-  add('row2-west', bx.A, bx.B, bz[2] - hb, bz[2] + hb);
-  add('row2-east', bx.C, bx.D, bz[2] - hb, bz[2] + hb);
+  add('row1', bx.A - he, bx.D + he, bz[1] - he, bz[1] + he, BEAM.d, Math.max(bx.B - bx.A, bx.C - bx.B, bx.D - bx.C));
+  add('row2', bx.A, bx.D, bz[2] - hb, bz[2] + hb, BEAM.d, Math.max(bx.B - bx.A, bx.C - bx.B, bx.D - bx.C));
+  add('row3', bx.A - he, bx.D + he, bz[3] - he, bz[3] + he, BEAM.d, Math.max(bx.B - bx.A, bx.C - bx.B, bx.D - bx.C));
   for (const k of ['A', 'B', 'C', 'D']) {
     const hw = k === 'A' || k === 'D' ? he : hb;
-    add(`col${k}`, bx[k] - hw, bx[k] + hw, bz[1], bz[3]);
+    add(`col${k}-12`, bx[k] - hw, bx[k] + hw, bz[1], bz[2], DEEP_BEAM, bz[2] - bz[1]);
+    add(`col${k}-23`, bx[k] - hw, bx[k] + hw, bz[2], bz[3], BEAM.d, bz[3] - bz[2]);
   }
-  add('court-trim-N', fBe, fCw, COURT.z0 - BEAM.w, COURT.z0);
-  add('court-trim-S', fBe, fCw, COURT.z1, COURT.z1 + BEAM.w);
-  add('court-edge-W', COURT.x0 - BEAM.w, COURT.x0, COURT.z0, COURT.z1);
-  add('court-edge-E', COURT.x1, COURT.x1 + BEAM.w, COURT.z0, COURT.z1);
-  add('stair-trim-N', fBe, fCw, STAIR.opening.z0 - BEAM.w, STAIR.opening.z0);
-  add('stair-trim-W', STAIR.opening.x0 - BEAM.w, STAIR.opening.x0, STAIR.opening.z0, STAIR.opening.z1);
+  add('court-trim-N', fBe, fCw, COURT.z0 - BEAM.w, COURT.z0, BEAM.d, fCw - fBe);
+  add('court-edge-E', COURT.x1, COURT.x1 + BEAM.w, COURT.z0, COURT.z1, BEAM.d, COURT.z1 - COURT.z0);
+  add('stair-trim-S', fBe, fCw, STAIR.opening.z1, STAIR.opening.z1 + BEAM.w, BEAM.d, fCw - fBe);
+  add('stair-trim-W', STAIR.opening.x0 - BEAM.w, STAIR.opening.x0, STAIR.opening.z0, STAIR.opening.z1, BEAM.d, STAIR.opening.z1 - STAIR.opening.z0);
 }
 
 // ------------------------------------------------------- terrace & roof ----
@@ -330,16 +345,16 @@ export const TERRACE = {
   // Light steel frame carrying PV over the west wing, tilted to face south.
   solar: { x0: -5.40, x1: -2.50, z0: -3.90, z1: 3.60, h: 2.40, tiltDeg: 11,
     posts: [[-5.40, -3.90], [-2.50, -3.90], [-5.40, -0.15], [-2.50, -0.15], [-5.40, 3.60], [-2.50, 3.60]] },
-  tank: { x: 0.20, z: 3.15, r: 0.56, h: 1.30, litres: 1000 },
+  tank: { x: 0.00, z: -3.15, r: 0.56, h: 1.30, litres: 1000 },
   planters: [
-    { x0: -1.70, x1: 1.70, z0: -3.55, z1: -3.10, h: 0.45 },
-    { x0: 2.40, x1: 5.60, z0: -3.55, z1: -3.10, h: 0.45 },
+    { x0: 2.60, x1: 5.60, z0: -3.55, z1: -3.10, h: 0.45 },
     { x0: 5.15, x1: 5.60, z0: -2.60, z1: 1.60, h: 0.45 },
+    { x0: -1.70, x1: 0.60, z0: 3.10, z1: 3.55, h: 0.45 },
   ],
   washCanopy: { x0: 4.40, x1: 6.22, z0: 2.40, z1: 4.17, h: 2.30, posts: [[4.45, 2.45], [6.17, 2.45], [4.45, 4.12]] },
 };
 // Stair head (mumty) on the terrace; its roof carries the 1,000 L tank.
-export const MUMTY = { x0: fBw, x1: fCe, z0: 2.085 - WALL_T.grid / 2, z1: HOUSE.z1, roofTop: LEVELS.mumtyRoof };
+export const MUMTY = { x0: fBw, x1: fCe, z0: HOUSE.z0, z1: yMumtyS + WALL_T.grid / 2, roofTop: LEVELS.mumtyRoof };
 // Individual clay coping tiles on every wall top exposed to rain.
 export const COPING = { tile: 0.24, gap: 0.012, h: 0.035, overhang: 0.03, on: ['parapet', 'guard', 'compound'] };
 
@@ -379,109 +394,109 @@ export const SCUPPERS = [
 
 // -------------------------------------------------------------- airflow ----
 // Conceptual stack and cross ventilation; an illustration, not CFD. Cool air
-// enters LOW at the south-west and crosses the house through doorways. Warm air
-// leaves HIGH through the open court, the stair stack (mumty jaali) and the
-// leeward NE vents.
+// enters LOW at the south-west (master suite and the shaded stilts), crosses the
+// court and the open half of the house, and leaves HIGH through the open court,
+// the stair stack (mumty jaali) and the leeward east vents.
 const yF = LEVELS.first, yT = LEVELS.terrace;
-const swEntry = [[-4.75, yF + 0.38, 4.60], [-4.50, yF + 0.70, 3.40], [-3.30, yF + 1.20, 1.50], [-2.20, yF + 1.50, 1.35]];
+const swEntry = [[-4.30, yF + 0.38, GRID.z[3]], [-4.10, yF + 0.70, 3.40], [-3.40, yF + 1.10, 1.80], [-2.70, yF + 1.40, 0.70], [GRID.x.B, yF + 1.50, 0.50]];
 export const AIRFLOW = {
   windFrom: 'SW',
   inlets: [
-    { id: 'master-s-low', opening: 'master-s-win', at: [-4.75, yF + 0.38, GRID.z[3]] },
-    { id: 'master-w-low', opening: 'master-w-win', at: [GRID.x.A, yF + 0.38, 2.30] },
-    { id: 'stilt-sw', at: [-6.60, 0.80, 3.10] },
+    { id: 'master-s-low', opening: 'master-s-win', at: [-4.30, yF + 0.38, GRID.z[3]] },
+    { id: 'master-w-low', opening: 'master-w-win', at: [GRID.x.A, yF + 0.38, 0.60] },
+    { id: 'stilt-sw', at: [-6.60, 0.80, 2.60] },
   ],
   exhausts: [
-    { id: 'court-sky', at: [0.20, yT + 2.30, -0.15] },
-    { id: 'mumty-e', opening: 'mumty-e-exhaust', at: [GRID.x.C, yT + 2.00, 3.25] },
-    { id: 'parents-e-high', opening: 'parents-e-exhaust', at: [GRID.x.D, yF + 2.47, 0.675] },
-    { id: 'pooja-e-high', opening: 'pooja-e-exhaust', at: [GRID.x.D, yF + 2.47, -3.30] },
+    { id: 'court-sky', at: [-0.60, yT + 2.30, 0.15] },
+    { id: 'mumty-e', opening: 'mumty-e-exhaust', at: [GRID.x.C, yT + 2.00, -3.10] },
+    { id: 'kitchen-e-high', opening: 'kitchen-e-exhaust', at: [GRID.x.D, yF + 2.30, 0.55] },
+    { id: 'pooja-e-high', opening: 'pooja-e-exhaust', at: [GRID.x.D, yF + 2.30, -3.45] },
   ],
   paths: [
-    { id: 'sw-court', from: 'master-s-low', to: 'court-sky', pts: [...swEntry, [-1.40, yF + 1.60, 0.90], [-0.40, yF + 1.90, 0.30], [0.20, yF + 2.40, -0.10], [0.20, yT + 0.60, -0.15], [0.20, yT + 2.30, -0.15]] },
-    { id: 'sw-stair', from: 'master-w-low', to: 'mumty-e', pts: [[-6.05, yF + 0.38, 2.30], [-4.80, yF + 0.70, 1.90], [-3.30, yF + 1.20, 1.45], [-2.20, yF + 1.45, 1.35], [-1.60, yF + 1.55, 1.65], [-1.55, yF + 1.80, 2.70], [-0.30, yF + 2.40, 2.75], [1.00, yT + 0.80, 2.75], [1.80, yT + 1.70, 3.10], [GRID.x.C, yT + 2.00, 3.25], [3.20, yT + 2.05, 3.25]] },
-    { id: 'stilt-court', from: 'stilt-sw', to: 'court-sky', pts: [[-6.60, 0.80, 3.10], [-5.10, 0.90, 1.20], [-3.20, 1.00, 0.70], [-1.60, 1.10, 0.40], [-0.20, 1.30, 0.10], [0.20, 2.40, -0.10], [0.20, yF + 1.80, -0.15], [0.20, yT + 2.30, -0.15]] },
-    { id: 'court-parents', from: 'master-s-low', to: 'parents-e-high', pts: [...swEntry, [-0.60, yF + 1.60, 1.60], [1.90, yF + 1.60, 0.80], [GRID.x.C, yF + 1.70, 0.65], [4.20, yF + 2.10, 0.66], [GRID.x.D, yF + 2.47, 0.675], [6.90, yF + 2.55, 0.675]] },
-    { id: 'living-pooja', from: 'master-s-low', to: 'pooja-e-high', pts: [...swEntry, [-1.50, yF + 1.60, 0.20], [-1.50, yF + 1.70, -1.80], [1.50, yF + 1.80, -3.00], [GRID.x.C, yF + 1.85, -3.20], [3.80, yF + 1.90, -3.20], [4.525, yF + 1.90, -3.20], [5.50, yF + 2.20, -3.30], [GRID.x.D, yF + 2.47, -3.30], [6.90, yF + 2.55, -3.30]] },
+    { id: 'sw-court', from: 'master-s-low', to: 'court-sky', pts: [...swEntry, [-1.20, yF + 1.80, 0.30], [-0.60, yF + 2.60, 0.15], [-0.60, yT + 0.60, 0.15], [-0.60, yT + 2.30, 0.15]] },
+    { id: 'sw-stair', from: 'master-w-low', to: 'mumty-e', pts: [[GRID.x.A, yF + 0.38, 0.60], [-5.00, yF + 0.60, 0.40], [-3.60, yF + 1.00, -0.80], [-2.80, yF + 1.30, -1.55], [GRID.x.B, yF + 1.50, -1.65], [-1.60, yF + 1.70, -1.80], [-0.60, yF + 2.20, -2.50], [0.40, yF + 2.90, -2.80], [1.20, yT + 0.40, -2.90], [1.80, yT + 1.60, -3.05], [GRID.x.C, yT + 2.00, -3.10], [2.80, yT + 2.05, -3.10]] },
+    { id: 'stilt-court', from: 'stilt-sw', to: 'court-sky', pts: [[-6.60, 0.80, 2.60], [-5.20, 0.90, 1.00], [-3.20, 1.00, 0.60], [-1.60, 1.10, 0.40], [-0.60, 1.40, 0.20], [-0.60, 2.40, 0.15], [-0.60, yF + 1.80, 0.15], [-0.60, yT + 2.30, 0.15]] },
+    { id: 'sw-kitchen', from: 'master-s-low', to: 'kitchen-e-high', pts: [...swEntry, [-1.20, yF + 1.60, 0.40], [0.90, yF + 1.70, 0.45], [2.80, yF + 1.80, 0.50], [4.80, yF + 2.10, 0.55], [GRID.x.D, yF + 2.30, 0.55], [6.90, yF + 2.40, 0.55]] },
+    { id: 'sw-pooja', from: 'master-s-low', to: 'pooja-e-high', pts: [...swEntry, [-1.00, yF + 1.60, 0.20], [0.60, yF + 1.70, -0.40], [1.80, yF + 1.80, -1.20], [3.20, yF + 1.85, -2.40], [4.80, yF + 1.90, -3.30], [5.80, yF + 2.10, -3.45], [GRID.x.D, yF + 2.30, -3.45], [6.90, yF + 2.40, -3.45]] },
   ],
 };
 
 // ------------------------------------------------------------ furniture ----
 // Boxes used by the 3D builder (detailed by type), the plans and collision.
 // `face` = the direction a seat faces; `head` = the bed-head wall.
+// Counter `sink`/`stove` = world-coordinate ranges along the counter's length.
 const F = (id, level, type, x0, x1, z0, z1, h, extra = {}) => ({ id, level, type, x0, x1, z0, z1, h, ...extra });
 export const FURNITURE = [
-  // living, library alcove, pooja
-  F('diwan', 'first', 'diwan', -1.80, 0.20, -4.05, -3.30, 0.42),
-  F('oonjal', 'first', 'swing', -0.60, 0.90, -2.55, -2.05, 0.45, { hang: true, passable: true }),
-  F('cane-1', 'first', 'chair', -1.95, -1.40, -3.10, -2.55, 0.85, { face: 'E' }),
-  F('cane-2', 'first', 'chair', 1.30, 1.85, -3.10, -2.55, 0.85, { face: 'W' }),
-  F('living-cabinet', 'first', 'cabinet', 0.55, 1.85, fN, -3.75, 0.80),
-  F('lib-seat', 'first', 'bookseat', 3.00, 4.40, fN, -3.68, 0.45),
-  F('lib-shelf', 'first', 'bookshelf', 3.25, 4.40, -2.60, -2.30, 2.10),
-  F('altar', 'first', 'altar', 5.70, fD, -3.80, -2.60, 0.85, { face: 'W' }),
-  // parents
-  F('parents-bed', 'first', 'bed', 3.90, 5.40, -0.85, 1.15, 0.50, { head: 'S' }),
-  F('parents-wardrobe', 'first', 'wardrobe', 4.20, 6.10, -2.15, -1.55, 2.10),
-  F('parents-side', 'first', 'sidetable', 5.45, 5.90, 0.70, 1.15, 0.55),
-  F('parents-chair', 'first', 'chair', 2.80, 3.30, -2.10, -1.60, 0.85, { face: 'E' }),
-  // kitchen and dining
-  F('kit-counter-e', 'first', 'counter', 5.55, fD, 1.30, fS, 0.85, { sink: [2.25, 2.95], back: 'E' }),
-  F('kit-counter-s', 'first', 'counter', 3.45, 5.55, 3.50, fS, 0.85, { stove: [4.40, 5.20], back: 'S' }),
-  F('fridge', 'first', 'fridge', 2.75, 3.40, 3.45, fS, 1.80),
-  F('dining', 'first', 'table', 3.55, 4.75, 1.70, 2.50, 0.75, { chairs: 4 }),
-  // kids
-  F('kids-bed', 'first', 'bed', -4.265, fBw, -4.05, -3.10, 0.45, { head: 'E', single: true }),
-  F('kids-desk', 'first', 'desk', fA, -5.00, -3.60, -2.30, 0.75, { face: 'W' }),
-  F('kids-wardrobe', 'first', 'wardrobe', fA, -4.60, -2.10, -1.50, 2.10),
-  // master
-  F('master-bed', 'first', 'bed', -4.315, fBw, 2.25, 3.75, 0.50, { head: 'E' }),
-  F('master-wardrobe', 'first', 'wardrobe', fA, -4.60, 0.90, 1.50, 2.10),
-  F('master-side', 'first', 'sidetable', -2.80, -2.35, 1.80, 2.20, 0.55),
+  // living + pooja (NE). The pooja is a closed teak cabinet with jaali doors; the idols face west.
+  F('sofa', 'first', 'diwan', 2.55, 4.55, -4.05, -3.30, 0.42),
+  F('oonjal', 'first', 'swing', 2.75, 4.25, -2.75, -2.25, 0.45, { hang: true, passable: true }),
+  F('living-chair', 'first', 'chair', 4.85, 5.40, -2.55, -2.00, 0.85, { face: 'W' }),
+  F('pooja-unit', 'first', 'poojaunit', 5.45, fD, -4.05, -3.05, 1.95, { face: 'W' }),
+  // open kitchen: U with the mouth to the north. West leg = breakfast counter with stools
+  // (no separate dining table), south leg = sink + fridge, east leg = stove under the exhaust.
+  F('kit-bar', 'first', 'bar', 2.95, 4.25, -1.00, 0.70, 0.90, { back: 'E', seat: 'W', stools: 3 }),
+  F('fridge', 'first', 'fridge', 3.65, 4.35, 0.70, R2n, 1.80),
+  F('kit-counter-s', 'first', 'counter', 4.35, 5.55, 0.75, R2n, 0.85, { sink: [4.60, 5.30], back: 'S' }),
+  F('kit-counter-e', 'first', 'counter', 5.55, fD, -1.45, R2n, 0.85, { stove: [0.15, 0.95], back: 'E' }),
+  // parents (S)
+  F('parents-bed', 'first', 'bed', fBe, -0.085, 2.10, 3.60, 0.50, { head: 'W' }),
+  F('parents-side', 'first', 'sidetable', fBe, -1.685, 1.62, 2.02, 0.55),
+  F('parents-side2', 'first', 'sidetable', fBe, -1.685, 3.68, 4.08, 0.55),
+  F('parents-wardrobe', 'first', 'wardrobe', 1.475, fCw, 2.55, fS, 2.10),
+  // kids (SE)
+  F('kids-bed', 'first', 'bed', 4.15, fD, 2.95, fS, 0.45, { head: 'E', single: true }),
+  F('kids-desk', 'first', 'desk', 4.40, 5.80, R2s, 2.18, 0.75, { face: 'N' }),
+  F('kids-wardrobe', 'first', 'wardrobe', fCe, 2.905, 2.55, fS, 2.10),
+  // master suite (W + SW): a wardrobe wall divides the dressing zone from the bedroom.
+  F('master-bed', 'first', 'bed', fA, -3.55, 2.15, 3.65, 0.50, { head: 'W' }),
+  F('master-side', 'first', 'sidetable', fA, -5.10, 1.72, 2.10, 0.55),
+  F('master-side2', 'first', 'sidetable', fA, -5.10, 3.70, 4.08, 0.55),
+  F('master-wardrobe', 'first', 'wardrobe', fA, -3.25, -0.85, -0.25, 2.10, { back: 'S' }),
+  F('master-chair', 'first', 'chair', -2.95, -2.40, 0.60, 1.15, 0.85, { face: 'E' }),
   // baths
-  F('en-shower', 'first', 'shower', fA, -4.70, -1.35, -0.45, 0.04, { passable: true }),
-  F('en-basin', 'first', 'basin', fA, -5.10, -0.40, 0.00, 0.85),
-  F('en-wc', 'first', 'wc', fA, -4.95, 0.05, 0.75, 0.42),
-  F('cb-shower', 'first', 'shower', -3.675, -2.85, -1.35, -0.80, 0.04, { passable: true }),
-  F('cb-basin', 'first', 'basin', -3.675, -3.25, -0.60, -0.10, 0.85),
-  F('cb-wc', 'first', 'wc', -3.675, -3.15, 0.10, 0.75, 0.42),
+  F('mb-shower', 'first', 'shower', fA, -4.05, fN, -3.45, 0.04, { passable: true }),
+  F('mb-wc', 'first', 'wc', fA, -4.95, -2.90, -2.25, 0.42),
+  F('mb-basin', 'first', 'basin', fA, -5.05, -3.40, -2.95, 0.85),
+  F('cb-shower', 'first', 'shower', -3.90, -3.00, fN, -3.30, 0.04, { passable: true }),
+  F('cb-wc', 'first', 'wc', -3.90, -3.30, -3.00, -2.30, 0.42),
+  F('cb-basin', 'first', 'basin', -3.15, -2.65, -2.65, -2.20, 0.85),
   // ground
-  F('thinnai-n', 'ground', 'thinnai', -4.40, -2.40, 1.55, 2.35, 0.45, { back: 'N' }),
-  F('thinnai-s', 'ground', 'thinnai', -5.40, -2.50, 3.90, 4.715, 0.45, { back: 'S' }),
-  F('water-point', 'ground', 'waterpot', -6.45, -5.95, 0.75, 1.25, 0.95),
-  F('scooter', 'ground', 'scooter', -4.70, -3.00, -3.30, -2.65, 1.10),
-  F('cycle', 'ground', 'cycle', -4.90, -3.20, -2.05, -1.80, 0.95),
-  F('tulsi', 'ground', 'tulsi', 0.80, 1.30, 0.30, 0.80, 0.85),
-  F('uruli', 'ground', 'uruli', -0.65, 0.05, 0.25, 0.95, 0.25),
-  F('store-understair', 'ground', 'store', -0.40, fCw, 3.22, fS, 1.20),
-  F('store-midlanding', 'ground', 'store', STAIR.midLanding.x0, fCw, 2.20, 3.22, 1.20),
+  F('thinnai-n', 'ground', 'thinnai', -4.60, -2.95, -4.05, -3.55, 0.45, { back: 'N' }),
+  F('thinnai-s', 'ground', 'thinnai', -4.60, -2.95, -2.70, -2.25, 0.45, { back: 'S' }),
+  F('water-point', 'ground', 'waterpot', -5.45, -4.95, -1.95, -1.45, 0.95),
+  F('car', 'ground', 'car', -5.40, -0.90, 2.05, 3.85, 1.50),
+  F('scooter', 'ground', 'scooter', -5.10, -3.40, 0.15, 0.80, 1.10),
+  F('cycle', 'ground', 'cycle', -5.10, -3.40, -0.30, -0.05, 0.95),
+  F('tulsi', 'ground', 'tulsi', 0.25, 0.75, 0.70, 1.20, 0.85),
+  F('uruli', 'ground', 'uruli', -0.10, 0.60, -0.70, 0.00, 0.25),
+  F('store-understair', 'ground', 'store', -0.40, fCw, fN, -3.22, 1.20),
+  F('store-midlanding', 'ground', 'store', STAIR.midLanding.x0, fCw, -3.22, STAIR.box.z1, 1.20),
   // terrace
   F('wash-counter', 'terrace', 'counter', 5.62, 6.22, 2.60, 4.17, 0.85, { sink: [3.00, 3.60], back: 'E' }),
   F('washer', 'terrace', 'washer', 4.90, 5.50, 3.57, 4.17, 0.85),
-  F('t-chair-1', 'terrace', 'chair', -0.20, 0.40, -2.80, -2.20, 0.85, { face: 'N' }),
-  F('t-chair-2', 'terrace', 'chair', 0.80, 1.40, -2.80, -2.20, 0.85, { face: 'N' }),
+  F('t-chair-1', 'terrace', 'chair', -0.20, 0.40, 2.20, 2.80, 0.85, { face: 'N' }),
+  F('t-chair-2', 'terrace', 'chair', 0.80, 1.40, 2.20, 2.80, 0.85, { face: 'N' }),
 ];
-export const COURT_TREE = { x: 0.10, z: -0.45, h: 4.6, canopy: 0.85 };
+export const COURT_TREE = { x: -1.30, z: 0.55, h: 4.6, canopy: 0.85 };
 export const PALM = { x: -6.90, z: -4.05, h: 7.5 };
 
 // --------------------------------------------------- viewpoints (jumps) ----
 // pos/look are [x, y, z]. For walk viewpoints, y = floor level + eye height.
 export const VIEWPOINTS = [
   { id: 'overview', label: 'Overview', mode: 'orbit', pos: [-17.5, 13.5, 15.5], look: [0.3, 3.2, 0] },
-  { id: 'gate', label: 'West gate', mode: 'walk', pos: [-8.9, EYE - ROAD.drop, 3.10], look: [-2.0, 1.4, 3.10] },
-  { id: 'thinnai', label: 'Thinnai + main door', mode: 'walk', pos: [-5.40, EYE, 3.10], look: [-2.2, 1.3, 3.05] },
-  { id: 'court-garden', label: 'Courtyard garden', mode: 'walk', pos: [-1.75, EYE, -1.90], look: [0.4, 3.6, -0.1] },
-  { id: 'stair', label: 'Stair hall', mode: 'walk', pos: [-1.65, EYE, 2.65], look: [1.2, 1.4, 2.65] },
-  { id: 'verandah', label: 'Verandah + nadumuttam', mode: 'walk', pos: [-1.55, yF + EYE, 1.65], look: [0.4, yF + 0.6, -0.4] },
-  { id: 'living', label: 'Living (N)', mode: 'walk', pos: [1.90, yF + EYE, -1.75], look: [-1.2, yF + 1.2, -3.6] },
-  { id: 'library', label: 'Library alcove', mode: 'walk', pos: [1.55, yF + EYE, -3.45], look: [4.4, yF + 1.3, -3.2] },
-  { id: 'pooja', label: 'Pooja (NE)', mode: 'walk', pos: [3.85, yF + EYE, -3.25], look: [6.2, yF + 1.0, -3.2] },
-  { id: 'kitchen', label: 'Kitchen + dining (SE)', mode: 'walk', pos: [3.05, yF + EYE, 1.75], look: [5.6, yF + 1.0, 3.4] },
-  { id: 'parents', label: 'Parents (E)', mode: 'walk', pos: [3.10, yF + EYE, 0.55], look: [5.6, yF + 1.0, -1.2] },
-  { id: 'master', label: 'Master (SW)', mode: 'walk', pos: [-2.75, yF + EYE, 1.55], look: [-5.2, yF + 0.9, 3.2] },
-  { id: 'kids', label: 'Kids (NW)', mode: 'walk', pos: [-2.75, yF + EYE, -1.95], look: [-5.2, yF + 1.0, -3.6] },
-  { id: 'bath', label: 'Common bath', mode: 'walk', pos: [-1.60, yF + EYE, -0.75], look: [-3.4, yF + 1.1, -0.2], open: ['bath-door'] },
-  { id: 'terrace', label: 'Terrace garden', mode: 'walk', pos: [-1.55, yT + EYE, 1.65], look: [2.8, yT + 0.6, -2.6] },
+  { id: 'gate', label: 'West gate', mode: 'walk', pos: [-8.9, EYE - ROAD.drop, 2.75], look: [-2.0, 1.4, 2.4] },
+  { id: 'entrance', label: 'Thinnai + main door', mode: 'walk', pos: [-5.20, EYE, -3.125], look: [-2.2, 1.3, -3.125] },
+  { id: 'court-garden', label: 'Courtyard garden', mode: 'walk', pos: [1.90, EYE, 0.10], look: [-0.6, 3.4, 0.1] },
+  { id: 'stair', label: 'Stair hall', mode: 'walk', pos: [-1.60, EYE, -2.70], look: [1.2, 1.4, -2.65] },
+  { id: 'hall', label: 'Hall + nadumuttam', mode: 'walk', pos: [-1.55, yF + EYE, -1.60], look: [0.2, yF + 0.6, 0.4] },
+  { id: 'living', label: 'Living + pooja (NE)', mode: 'walk', pos: [2.70, yF + EYE, -1.90], look: [5.6, yF + 1.0, -3.6] },
+  { id: 'kitchen', label: 'Open kitchen (U)', mode: 'walk', pos: [2.00, yF + EYE, -0.20], look: [5.5, yF + 0.9, 0.4] },
+  { id: 'family', label: 'Family + court view', mode: 'walk', pos: [2.60, yF + EYE, 1.00], look: [-1.0, yF + 1.0, -0.2] },
+  { id: 'parents', label: 'Parents (S)', mode: 'walk', pos: [1.40, yF + EYE, 2.20], look: [-1.0, yF + 1.0, 3.0] },
+  { id: 'kids', label: 'Kids (SE)', mode: 'walk', pos: [2.85, yF + EYE, 2.30], look: [5.5, yF + 1.0, 3.3] },
+  { id: 'master', label: 'Master suite (SW)', mode: 'walk', pos: [-2.85, yF + EYE, -1.55], look: [-4.6, yF + 1.0, 2.6] },
+  { id: 'bath', label: 'Common bath', mode: 'walk', pos: [-1.55, yF + EYE, -3.55], look: [-3.2, yF + 1.1, -3.0], open: ['cbath-door'] },
+  { id: 'terrace', label: 'Terrace garden', mode: 'walk', pos: [-1.55, yT + EYE, -1.60], look: [2.8, yT + 0.6, 1.6] },
 ];
 
 // -------------------------------------------------------------- helpers ----
@@ -552,27 +567,30 @@ export function distanceToBoundary([x, z]) {
   }
   return best;
 }
-// The court guard occupies a band of slab just outside the void edge.
+// The court guard occupies a band of slab just outside the void edge, on its open
+// sides only (g.sides; default all four).
 export function guardBands(g) {
-  const t = g.t;
-  return [
-    { id: `${g.id}-N`, x0: g.x0 - t, x1: g.x1 + t, z0: g.z0 - t, z1: g.z0 },
-    { id: `${g.id}-S`, x0: g.x0 - t, x1: g.x1 + t, z0: g.z1, z1: g.z1 + t },
-    { id: `${g.id}-W`, x0: g.x0 - t, x1: g.x0, z0: g.z0, z1: g.z1 },
-    { id: `${g.id}-E`, x0: g.x1, x1: g.x1 + t, z0: g.z0, z1: g.z1 },
-  ];
+  const t = g.t, sides = g.sides || ['N', 'S', 'W', 'E'];
+  const ex0 = sides.includes('W') ? t : 0, ex1 = sides.includes('E') ? t : 0;
+  const all = {
+    N: { x0: g.x0 - ex0, x1: g.x1 + ex1, z0: g.z0 - t, z1: g.z0 },
+    S: { x0: g.x0 - ex0, x1: g.x1 + ex1, z0: g.z1, z1: g.z1 + t },
+    W: { x0: g.x0 - t, x1: g.x0, z0: g.z0, z1: g.z1 },
+    E: { x0: g.x1, x1: g.x1 + t, z0: g.z0, z1: g.z1 },
+  };
+  return sides.map((k) => ({ id: `${g.id}-${k}`, ...all[k] }));
 }
-// Gate leaves: hinged at the inner faces of the piers, closing along the (slanted)
-// west boundary and opening inward, perpendicular to it.
+// Gate leaf: slides along a track just inside the (slanted) west compound wall.
+// closed = [p0, p1] spanning the opening; open = the same leaf parked north of it.
+// dir = unit vector along the leaf (south-going), w = leaf length.
 export function gateLeaves() {
-  const p0 = [boundaryX('W', GATE.z0) + COMPOUND.t, GATE.z0], p1 = [boundaryX('W', GATE.z1) + COMPOUND.t, GATE.z1];
-  const len = Math.hypot(p1[0] - p0[0], p1[1] - p0[1]);
-  const u = [(p1[0] - p0[0]) / len, (p1[1] - p0[1]) / len];
-  const inward = [u[1], -u[0]];          // perpendicular toward +x (into the plot)
-  return [
-    { id: 'gate-n', hinge: p0, closedDir: u, openDir: inward, w: len / 2 },
-    { id: 'gate-s', hinge: p1, closedDir: [-u[0], -u[1]], openDir: inward, w: len / 2 },
-  ];
+  const at = (z) => [boundaryX('W', z) + COMPOUND.t + GATE.track, z];
+  const p0 = at(GATE.z0), p1 = at(GATE.z1);
+  const w = Math.hypot(p1[0] - p0[0], p1[1] - p0[1]);
+  const u = [(p1[0] - p0[0]) / w, (p1[1] - p0[1]) / w];
+  const shift = w + 0.10;
+  const q0 = [p0[0] - u[0] * shift, p0[1] - u[1] * shift];
+  return [{ id: 'gate-leaf', sliding: true, closed: [p0, p1], open: [q0, [q0[0] + u[0] * w, q0[1] + u[1] * w]], dir: u, w }];
 }
 // Slab openings per floor level (rectangles open to below).
 export const SLAB_OPENINGS = {

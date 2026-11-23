@@ -126,6 +126,19 @@ Each pass follows **Context → Direction → Action → Success → Growth**. R
   - a frame-rate-dependent walking speed
 - [ ] Professional review (unchanged): site survey or FMB sketch, setbacks, soil and percolation tests, structural design, drainage sizing and approvals.
 
+### Pass 7 — North stair, half-open first floor, three-bedroom "L" (cycle 3a, 2026-11-23)
+Owner's brief: stairs on the north (vastu), a SW entrance and car parking, a half-open first floor (small pooja, open living, open kitchen with a U counter, no dining table), three bedrooms in the S + W "L" with no corridors, and a court open to the hall/stair/kitchen whose other walls are bedroom walls with windows. Top priority: **modern house with traditional values, not a traditional-looking house** (styling is the next pass).
+
+- [x] **Topology.** The L's corner (SW) has no frontage on open space, so it belongs to the master suite. The suite is entered from the north end of the W arm via the hall strip, and a wardrobe wall divides the dressing zone. The third bedroom (kids) takes the east end of the S arm; the kitchen moves to the east centre. Every bedroom door opens off the open space.
+- [x] **Stair.** Dog-leg in the north centre, between grid lines B and C. The floor landing is at the west end on every storey; the common bath opens off it, and a 0.99 m hall strip runs along the court's north edge.
+- [x] **Court.** 2.94 × 2.40 m. Its W edge is the master's wall (court window) and its S edge is the parents' wall (2.4 m court window). The N and E sides have a 1.0 m teak guard facing the hall and the family/kitchen space. The validator encodes this rule.
+- [x] **Kitchen.** U with its mouth facing north. West leg = breakfast counter with three stools (faces the family space and the court); south leg = sink + fridge (SW corner); east leg = stove under the high exhaust jaali (the cook faces east).
+- [x] **Living + pooja (NE).** The pooja is a closed teak cabinet with jaali doors, the idols facing west, and an exhaust jaali above it on the east wall.
+- [x] **Ground.** Car bay under the master suite. A 2.95 m sliding reclaimed-timber gate (swinging leaves would hit columns A2/A3 and the car). Two-wheelers under the master's north half. A porch with twin thinnai and a foot-wash in front of the west-facing main door.
+- [x] **Structure.** Grid x A −5.70 · B −2.20 · C 2.19 · D 6.30; rows −4.25 · 1.465 · 4.25. The court's W and S edges are primary beams (line B, row 2); trimmers frame the N/E edges and the stair. The 5.7 m bays use 230 × 550 beams (span/depth ≤ 11). Column C2 is shifted 110 mm to hide in the bedroom partition.
+- [x] **Verification.** The validator (3,800+ checks) and mutation tests (23 regressions, including the new rules) pass. Playwright, desktop + phone: 18/18. The walk route now goes road → gate → front yard → between the thinnai → main door → stair → first-floor hall → terrace.
+- [ ] Modern restyle (Pass 8): material palette, openings, railings, furniture.
+
 ## Critical dimension check before any build-ready review
 
 **Resolved in Pass 6.** Before, the compound wall was 16.7 × 11.2 m (about 2,020 sq ft), larger than the plot.

@@ -338,30 +338,33 @@ function buildDoors(M, groups) {
 }
 
 // ---------------------------------------------------------------- gate ----
+// One sliding leaf: vertical reclaimed-timber battens on two rails, running on a
+// track inside the compound wall. Leaves expose apply(t) so the mover loop can
+// animate slides and swings alike (t = 0 closed, 1 open).
 function buildGate(M, group) {
   const leaves = D.gateLeaves().map((lf) => {
-    const pivot = new THREE.Group(), w = lf.w - 0.03, h = GATE.leafH;
-    pivot.position.set(lf.hinge[0], 0.05, lf.hinge[1]);
-    const closed = angleOf(lf.closedDir), open = closed + deltaAngle(closed, angleOf(lf.openDir));
+    const pivot = new THREE.Group(), w = lf.w, h = GATE.leafH;
     const g = new THREE.Group();
     const n = Math.floor(w / 0.115);
     for (let i = 0; i < n; i++) {
       const x0 = i * (w / n) + 0.006, x1 = (i + 1) * (w / n) - 0.006, top = h - (i % 2) * 0.03;
-      g.add(new THREE.Mesh(boxG(x0, x1, 0, top, -0.0175, 0.0175), M.teakDark));
+      g.add(new THREE.Mesh(boxG(x0, x1, 0.06, top, -0.0175, 0.0175), M.teakDark));
     }
     for (const yy of [0.22, h - 0.32]) g.add(new THREE.Mesh(boxG(0, w, yy, yy + 0.1, -0.045, -0.0175), M.teak));
-    for (const yy of [0.26, h - 0.28]) g.add(new THREE.Mesh(boxG(0, w * 0.55, yy, yy + 0.05, 0.0175, 0.026), M.iron));
-    const br = new THREE.Mesh(new THREE.BoxGeometry(Math.hypot(w, h - 0.64), 0.09, 0.025), M.teak);
-    br.rotation.z = Math.atan2(h - 0.64, w);
-    br.position.set(w / 2, h / 2 - 0.02, -0.03);
-    g.add(br);
+    g.add(new THREE.Mesh(boxG(0.02, w - 0.02, 0, 0.06, -0.03, 0.03), M.iron));
+    for (const u of [0.25, w - 0.25]) g.add(new THREE.Mesh(boxG(u - 0.06, u + 0.06, -0.04, 0.02, -0.025, 0.025), M.iron));
     g.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
     pivot.add(g);
+    pivot.rotation.y = angleOf(lf.dir);
     group.add(pivot);
-    return { pivot, closed, open, w, hinge: lf.hinge };
+    const a = new THREE.Vector3(lf.closed[0][0], 0.04, lf.closed[0][1]), c = new THREE.Vector3(lf.open[0][0], 0.04, lf.open[0][1]);
+    return { pivot, w, apply: (t) => pivot.position.lerpVectors(a, c, t) };
   });
-  const gate = { id: 'gate', label: 'West gate', level: 'ground', y0: 0, open: true, t: 1, leaves, openDeg: GATE.openDeg };
-  for (const lf of leaves) { lf.pivot.rotation.y = lf.open; lf.pivot.traverse((m) => { if (m.isMesh) m.userData.door = gate; }); }
+  // Steel track along the full travel (closed + parked).
+  const lf0 = D.gateLeaves()[0], tr = segBoxG(lf0.open[0], lf0.closed[1], 0.0, 0.03, 0.08);
+  group.add(new THREE.Mesh(tr, M.iron));
+  const gate = { id: 'gate', label: 'West gate', level: 'ground', y0: 0, open: true, t: 1, leaves, sliding: true };
+  for (const lf of leaves) { lf.apply(1); lf.pivot.traverse((m) => { if (m.isMesh) m.userData.door = gate; }); }
   return gate;
 }
 
@@ -657,6 +660,91 @@ function buildFurnitureItem(b, M, f, dyn) {
       b.add('glassDark', worldUV(g));
       break;
     }
+    case 'bar': {
+      // Breakfast counter = the U's seating leg. Back (v = 0) faces the cook; the
+      // 300 mm overhang and the stools face the family space and the court.
+      const base = 0.6, top = f.h, seatV = Dp - 0.2;
+      F.box(b, 'teak', 0, W, 0.1, top - 0.04, 0, base);
+      F.box(b, 'kadappa', 0, W, 0, 0.1, 0.02, base - 0.02);
+      F.box(b, 'kadappa', 0, W, top - 0.04, top, -0.02, base + 0.3);
+      const n = Math.max(2, Math.round(W / 0.5));
+      for (let i = 0; i < n; i++) F.box(b, 'teakDark', (W / n) * i + 0.02, (W / n) * (i + 1) - 0.02, 0.14, top - 0.08, -0.015, 0);
+      F.box(b, 'teakDark', 0, W, 0.1, top - 0.04, base, base + 0.015);
+      for (let i = 0; i < (f.stools || 3); i++) {
+        const u = (W * (i + 0.5)) / (f.stools || 3);
+        F.cyl(b, 'steel', u, seatV, 0.16, 0, 0.02, 16);
+        F.cyl(b, 'steel', u, seatV, 0.025, 0.02, 0.62, 8);
+        F.cyl(b, 'teak', u, seatV, 0.17, 0.62, 0.66, 18);
+        F.cyl(b, 'steel', u, seatV, 0.13, 0.24, 0.255, 14);
+      }
+      break;
+    }
+    case 'poojaunit': {
+      // Closed teak pooja cabinet: storage below, a lit niche with the idols facing
+      // `face`, jaali doors folded open, and a stepped crown.
+      F.box(b, 'teak', 0, W, 0.06, 0.78, 0, Dp);
+      F.box(b, 'teakDark', 0.02, W - 0.02, 0, 0.06, 0.02, Dp - 0.02);
+      for (const [u0, u1] of [[0.03, W / 2 - 0.01], [W / 2 + 0.01, W - 0.03]]) F.box(b, 'teakDark', u0, u1, 0.12, 0.72, Dp, Dp + 0.012);
+      F.box(b, 'graniteBlack', 0, W, 0.78, 1.62, 0, 0.04);
+      for (const u of [0, W - 0.05]) F.box(b, 'teak', u, u + 0.05, 0.78, 1.62, 0, Dp);
+      F.box(b, 'teak', 0, W, 1.62, 1.70, 0, Dp);
+      F.box(b, 'teak', 0.08, W - 0.08, 1.70, 1.80, 0.04, Dp - 0.06);
+      F.box(b, 'teak', 0.22, W - 0.22, 1.80, f.h, 0.08, Dp - 0.14);
+      for (const [u, s] of [[W * 0.3, 0.75], [W * 0.5, 1], [W * 0.7, 0.75]]) {
+        F.cyl(b, 'idol', u, 0.16, 0.045 * s, 0.8, 0.8 + 0.22 * s, 10, 0.03 * s);
+        F.cyl(b, 'idol', u, 0.16, 0.035 * s, 0.8 + 0.22 * s, 0.8 + 0.3 * s, 10, 0.012);
+      }
+      for (const u of [0.12, W - 0.12]) {
+        F.cyl(b, 'brass', u, Dp * 0.62, 0.05, 0.78, 0.8, 12);
+        F.cyl(b, 'brass', u, Dp * 0.62, 0.01, 0.8, 1.12, 8);
+        F.cyl(b, 'brass', u, Dp * 0.62, 0.06, 1.12, 1.14, 12, 0.045);
+        F.cyl(b, 'flame', u + 0.04, Dp * 0.62, 0.007, 1.14, 1.17, 6, 0.001);
+      }
+      for (let i = 0; i < 7; i++) F.cyl(b, i % 2 ? 'marigold' : 'jasmine', W * (0.2 + i * 0.1), Dp * 0.45, 0.022, 0.78, 0.815, 8);
+      // Jaali doors, folded back against the cabinet sides.
+      for (const [u0, sgn] of [[0, -1], [W, 1]]) {
+        const [ax, az] = F.P(u0, Dp), [cx, cz] = F.P(u0 + sgn * 0.02, Dp + W / 2 - 0.04);
+        b.box('jaaliTeak', Math.min(ax, cx), Math.max(ax, cx), y + 0.8, y + 1.6, Math.min(az, cz), Math.max(az, cz));
+      }
+      F.cyl(b, 'brass', W / 2, Dp * 0.5, 0.05, 1.42, 1.56, 12, 0.02);
+      break;
+    }
+    case 'car': {
+      // A compact hatchback parked nose-in (nose = +x when the bay runs east–west).
+      const along = (f.x1 - f.x0) > (f.z1 - f.z0);
+      const L = (along ? f.x1 - f.x0 : f.z1 - f.z0) - 0.1, Wd = (along ? f.z1 - f.z0 : f.x1 - f.x0) - 0.05, cx = (f.x0 + f.x1) / 2, cz = (f.z0 + f.z1) / 2;
+      const bx = (s0, s1, y0, y1, n0, n1, key) => {
+        const a = along ? [cx + s0, cz + n0] : [cx + n0, cz + s0], c = along ? [cx + s1, cz + n1] : [cx + n1, cz + s1];
+        b.box(key, Math.min(a[0], c[0]), Math.max(a[0], c[0]), y + y0, y + y1, Math.min(a[1], c[1]), Math.max(a[1], c[1]));
+      };
+      const hL = L / 2, hW = Wd / 2;
+      for (const s of [-hL + 0.75, hL - 0.8]) for (const n of [-hW + 0.13, hW - 0.13]) {
+        const g = new THREE.CylinderGeometry(0.31, 0.31, 0.2, 20);
+        g.rotateX(Math.PI / 2);
+        if (!along) g.rotateY(Math.PI / 2);
+        const p = along ? [cx + s, cz + n] : [cx + n, cz + s];
+        g.translate(p[0], y + 0.31, p[1]);
+        b.add('rubber', worldUV(g));
+        const r = new THREE.CylinderGeometry(0.19, 0.19, 0.205, 14);
+        r.rotateX(Math.PI / 2);
+        if (!along) r.rotateY(Math.PI / 2);
+        r.translate(p[0], y + 0.31, p[1]);
+        b.add('steel', worldUV(r));
+      }
+      bx(-hL + 0.05, hL - 0.05, 0.16, 0.28, -hW + 0.2, hW - 0.2, 'iron');
+      bx(-hL, hL, 0.28, 0.82, -hW, hW, 'white');
+      bx(hL - 1.15, hL - 0.05, 0.82, 0.9, -hW + 0.04, hW - 0.04, 'white');
+      bx(-hL + 0.25, hL - 1.15, 0.82, 1.38, -hW + 0.06, hW - 0.06, 'glassDark');
+      bx(-hL + 0.35, hL - 1.35, 1.38, 1.46, -hW + 0.1, hW - 0.1, 'white');
+      for (const s of [-hL + 0.28, -0.2, hL - 1.2]) bx(s, s + 0.08, 0.82, 1.4, -hW + 0.05, hW - 0.05, 'white');
+      for (const sgn of [-1, 1]) {
+        bx(hL - 0.02, hL + 0.01, 0.6, 0.72, sgn > 0 ? hW - 0.32 : -hW + 0.08, sgn > 0 ? hW - 0.08 : -hW + 0.32, 'porcelain');
+        bx(-hL - 0.01, -hL + 0.02, 0.62, 0.76, sgn > 0 ? hW - 0.3 : -hW + 0.06, sgn > 0 ? hW - 0.06 : -hW + 0.3, 'paintRed');
+      }
+      bx(hL - 0.02, hL + 0.05, 0.28, 0.44, -hW + 0.02, hW - 0.02, 'iron');
+      bx(-hL - 0.05, -hL + 0.02, 0.28, 0.44, -hW + 0.02, hW - 0.02, 'iron');
+      break;
+    }
     default:
       F.box(b, 'teak', 0, W, 0, f.h, 0, Dp);
   }
@@ -813,13 +901,14 @@ export function buildWorld(M) {
   // ---- slabs, floor finishes, terrace surface ----
   for (const r of rectMinus(HOUSE, D.SLAB_OPENINGS.first)) B.L1.box('lime', r.x0, r.x1, yF - SLAB, yF, r.z0, r.z1);
   for (const r of rectMinus(HOUSE, D.SLAB_OPENINGS.terrace)) B.L2.box('lime', r.x0, r.x1, yT - SLAB, yT, r.z0, r.z1);
-  const finishOf = { bedroom: 'redOxide', study: 'redOxide', kitchen: 'redOxide', living: 'athangudi', verandah: 'athangudi', pooja: 'athangudi', bath: 'bathTile' };
+  // One continuous Kota floor through the open half (hall, living, family, kitchen);
+  // bedrooms and baths get their own finish on top (slightly thicker, so no z-fighting).
+  for (const r of rectMinus({ x0: FACE.A, x1: FACE.D, z0: FACE.N, z1: FACE.S }, D.SLAB_OPENINGS.first)) B.L1.box('kota', r.x0, r.x1, yF, yF + 0.010, r.z0, r.z1);
+  const finishOf = { bedroom: 'redOxide', study: 'redOxide', bath: 'bathTile' };
   for (const r of ROOMS) {
     if (r.level !== 'first') continue;
-    if (finishOf[r.use]) B.L1.box(finishOf[r.use], r.x0, r.x1, yF, yF + 0.012, r.z0, r.z1);
+    if (finishOf[r.use]) B.L1.box(finishOf[r.use], r.x0, r.x1, yF, yF + 0.014, r.z0, r.z1);
   }
-  B.L1.box('kota', STAIR.floorLanding.x0, STAIR.floorLanding.x1, yF, yF + 0.012, STAIR.box.z0, STAIR.box.z1);
-  B.L1.box('kota', STAIR.floorLanding.x0, STAIR.floorLanding.x1, yF, yF + 0.012, 2.13, STAIR.box.z0);
   B.L0.box('kota', STAIR.floorLanding.x0, STAIR.box.x1, 0, 0.014, STAIR.box.z0, STAIR.box.z1);
   B.L2.box('kota', STAIR.floorLanding.x0, STAIR.floorLanding.x1, yT, yT + 0.012, STAIR.box.z0, STAIR.box.z1);
   // Slab drip bands: a 100 mm projecting edge at each slab casts a crisp shadow line.
@@ -909,8 +998,8 @@ export function buildWorld(M) {
 
   // ---- furniture ----
   for (const f of FURNITURE) buildFurnitureItem(furnBatch(f.level), M, f, dyn);
-  // Potted plants (terracotta pots) beside the thinnai, on the verandahs and the terrace.
-  for (const [x, z, y, s] of [[-2.75, 1.85, 0, 0.6], [-2.75, 4.35, 0, 0.55], [-1.75, -1.15, yF, 0.55], [2.2, -1.15, yF, 0.5], [-5.2, -3.85, yT, 0.6], [4.6, -2.75, yT, 0.55]]) {
+  // Potted plants (terracotta pots) beside the thinnai, around the court and on the terrace.
+  for (const [x, z, y, s] of [[-4.85, -3.80, 0, 0.6], [-4.85, -2.45, 0, 0.55], [1.20, 0.30, yF, 0.55], [5.85, -1.70, yF, 0.5], [-5.2, -3.85, yT, 0.6], [4.6, -2.75, yT, 0.55]]) {
     const pot = new THREE.LatheGeometry([[0, 0], [0.14, 0], [0.19, 0.3], [0.21, 0.33], [0.2, 0.36]].map(([r, h]) => new THREE.Vector2(r, h)), 16);
     pot.translate(x, y, z);
     const fb = furnBatch(y === 0 ? 'ground' : y === yF ? 'first' : 'terrace');
@@ -939,7 +1028,7 @@ export function buildWorld(M) {
       const target = d.open ? 1 : 0;
       if (Math.abs(d.t - target) > 1e-3) {
         d.t += Math.sign(target - d.t) * Math.min(Math.abs(target - d.t), dt * 1.6);
-        for (const lf of d.leaves) lf.pivot.rotation.y = lf.closed + (lf.open - lf.closed) * easeInOut(d.t);
+        for (const lf of d.leaves) { if (lf.apply) lf.apply(easeInOut(d.t)); else lf.pivot.rotation.y = lf.closed + (lf.open - lf.closed) * easeInOut(d.t); }
         active = true;
       }
     }
@@ -999,19 +1088,19 @@ export function buildWorld(M) {
     }
     // Waist slabs under both flights.
     for (const fl of [1, 2]) {
-      const L = (half - 1) * T, len = Math.hypot(L, (half - 1) * r), g = new THREE.BoxGeometry(len, S.waist, fl === 1 ? S.laneN.z1 - S.laneN.z0 : S.laneS.z1 - S.laneS.z0);
+      const L = (half - 1) * T, len = Math.hypot(L, (half - 1) * r), g = new THREE.BoxGeometry(len, S.waist, fl === 1 ? S.lane1.z1 - S.lane1.z0 : S.lane2.z1 - S.lane2.z0);
       g.rotateZ(fl === 1 ? th : -th);
       const xm = (S.flight.x0 + S.flight.x1) / 2, ym = fl === 1 ? y0 + ((half - 1) * r) / 2 : y0 + half * r + ((half - 1) * r) / 2;
-      const zm = fl === 1 ? (S.laneN.z0 + S.laneN.z1) / 2 : (S.laneS.z0 + S.laneS.z1) / 2;
+      const zm = fl === 1 ? (S.lane1.z0 + S.lane1.z1) / 2 : (S.lane2.z0 + S.lane2.z1) / 2;
       g.translate(xm, ym - (S.waist / 2) / cosT, zm);
       b.add('lime', worldUV(g));
     }
     const ym = y0 + half * r;
-    b.box('lime', S.midLanding.x0, S.midLanding.x1, ym - 0.15, ym - 0.035, S.laneN.z0, S.laneS.z1);
-    b.box('kota', S.midLanding.x0 - 0.02, S.midLanding.x1, ym - 0.035, ym, S.laneN.z0, S.laneS.z1);
+    b.box('lime', S.midLanding.x0, S.midLanding.x1, ym - 0.15, ym - 0.035, S.box.z0, S.box.z1);
+    b.box('kota', S.midLanding.x0 - 0.02, S.midLanding.x1, ym - 0.035, ym, S.box.z0, S.box.z1);
     // Teak handrails on the spine, 0.9 m above the nosing line.
     const run = S.flight.x1 - S.flight.x0;
-    for (const [fl, z] of [[1, S.laneN.z1 - 0.03], [2, S.laneS.z0 + 0.03]]) {
+    for (const [fl, z] of [[1, S.lane1], [2, S.lane2]].map(([k, L]) => [k, L.z0 > S.spineZ ? L.z0 + 0.03 : L.z1 - 0.03])) {
       const ya = fl === 1 ? y0 + r + 0.9 : y0 + S.risers * r + 0.9, yb = fl === 1 ? ya + run * (r / T) : y0 + (half + 1) * r + 0.9;
       const g = new THREE.BoxGeometry(Math.hypot(run, yb - ya), 0.06, 0.05);
       g.rotateZ(Math.atan2(yb - ya, run));

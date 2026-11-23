@@ -165,15 +165,14 @@ function drawSite(T, level) {
       text(T, `${k} ${ft}′ · ${(ft * FT).toFixed(2)} m`, mid[0], mid[1], { size: 0.14, color: C.ink, rot, bg: 'rgba(247,242,231,0.85)' });
     }
   }
-  // Gate leaves (open).
+  // Sliding gate: leaf parked open (solid), closed position dashed, travel arrow.
   for (const lf of D.gateLeaves()) {
-    const end = [lf.hinge[0] + lf.openDir[0] * lf.w, lf.hinge[1] + lf.openDir[1] * lf.w];
-    line(T, [lf.hinge, end], { stroke: '#6b4126', width: 2 });
-    const pts = [];
-    for (let k = 0; k <= 16; k++) { const a = (Math.PI / 2) * (k / 16); pts.push([lf.hinge[0] + lf.w * (lf.closedDir[0] * Math.cos(a) + lf.openDir[0] * Math.sin(a)), lf.hinge[1] + lf.w * (lf.closedDir[1] * Math.cos(a) + lf.openDir[1] * Math.sin(a))]); }
-    line(T, pts, { stroke: C.soft, width: 0.6, dash: [2, 2] });
+    line(T, lf.open, { stroke: '#6b4126', width: 2.4 });
+    line(T, lf.closed, { stroke: C.soft, width: 0.7, dash: [3, 2] });
+    const m = [(lf.closed[0][0] + lf.closed[1][0]) / 2 + 0.25, (lf.closed[0][1] + lf.closed[1][1]) / 2];
+    arrow(T, m, [m[0] - lf.dir[0] * 1.2, m[1] - lf.dir[1] * 1.2], { stroke: '#6b4126', width: 1, head: 0.14 });
   }
-  if (!T.compact && level === 'ground') text(T, 'Timber gate', D.boundaryX('W', (D.GATE.z0 + D.GATE.z1) / 2) - 0.75, (D.GATE.z0 + D.GATE.z1) / 2, { size: 0.12, rot: -Math.PI / 2, color: '#6b4126' });
+  if (!T.compact && level === 'ground') text(T, 'Sliding timber gate', D.boundaryX('W', (D.GATE.z0 + D.GATE.z1) / 2) - 0.75, (D.GATE.z0 + D.GATE.z1) / 2, { size: 0.12, rot: -Math.PI / 2, color: '#6b4126' });
 }
 function drawColumns(T) {
   for (const c of D.COLUMNS) {
@@ -238,7 +237,7 @@ function drawWalker(T, wk) {
 // ---------------------------------------------------------------- levels ----
 function drawGround(T, overlays) {
   poly(T, rectPts(D.HOUSE), { stroke: C.soft, width: 0.9, dash: [5, 4] });
-  if (!T.compact) text(T, 'first floor above', D.HOUSE.x1 - 1.1, D.HOUSE.z0 + 0.25, { size: 0.1, color: C.soft, weight: '500' });
+  if (!T.compact) text(T, 'first floor above', D.HOUSE.x1 - 1.3, D.HOUSE.z1 - 0.3, { size: 0.1, color: C.soft, weight: '500' });
   const cb = D.DRAINAGE.courtBasin;
   poly(T, rectPts(cb), { fill: C.greenFill, stroke: C.green, width: 1 });
   const tr = D.COURT_TREE;
@@ -248,8 +247,8 @@ function drawGround(T, overlays) {
   for (const w of D.WALLS) if (w.level === 'ground') drawWall(T, w, w.kind === 'low' ? '#7a5a44' : C.poche);
   drawColumns(T);
   for (const r of D.ROOMS.filter((r) => r.level === 'ground')) if (r.use !== 'stair') text(T, r.name, (r.x0 + r.x1) / 2, (r.z0 + r.z1) / 2 + (r.use === 'garden' ? 0.75 : 0), { size: 0.13, bg: 'rgba(247,242,231,0.8)' });
-  text(T, 'Stair hall', -1.55, 3.15, { size: 0.11, bg: 'rgba(247,242,231,0.8)' });
-  if (!T.compact) text(T, '12 columns · 230 × 450 mm hidden in walls · spans ≤ 4.8 m', (D.HOUSE.x0 + D.HOUSE.x1) / 2, D.HOUSE.z1 + 1.5, { size: 0.11, color: C.grid, weight: '600' });
+  text(T, 'Stair hall', (D.STAIR.floorLanding.x0 + D.STAIR.floorLanding.x1) / 2, (D.STAIR.box.z0 + D.STAIR.box.z1) / 2, { size: 0.1, bg: 'rgba(247,242,231,0.8)' });
+  if (!T.compact) text(T, `12 columns · hidden in walls · max span ${Math.max(...D.BEAMS.map((b) => b.span || 0)).toFixed(1)} m (230 × ${Math.round(D.DEEP_BEAM * 1000)} mm beams)`, (D.HOUSE.x0 + D.HOUSE.x1) / 2, D.HOUSE.z1 + 1.5, { size: 0.11, color: C.grid, weight: '600' });
   if (!overlays) return;
   for (const c of D.DRAINAGE.channels) {
     const a = [c.from[0], c.from[2]], b = [c.to[0], c.to[2]];
@@ -264,7 +263,7 @@ function drawGround(T, overlays) {
   if (T.compact) return;
   text(T, 'Recharge pit', pit.x + 0.2, pit.z - pit.r - 0.22, { size: 0.11, color: C.water, bg: 'rgba(247,242,231,0.85)' });
   text(T, 'Silt trap', st.x + 0.62, st.z, { size: 0.1, color: C.water, align: 'left', bg: 'rgba(247,242,231,0.85)' });
-  text(T, 'Courtyard overflow', -3.6, -0.92, { size: 0.11, color: C.water, bg: 'rgba(247,242,231,0.85)' });
+  text(T, 'Courtyard overflow', -4.4, -0.88, { size: 0.11, color: C.water, bg: 'rgba(247,242,231,0.85)' });
   text(T, 'Gate intercept (grated)', D.boundaryX('W', 2.6) + 0.95, 2.4, { size: 0.1, color: C.water, rot: -Math.PI / 2, bg: 'rgba(247,242,231,0.85)' });
 }
 function drawStair(T, y0, level) {
@@ -272,8 +271,8 @@ function drawStair(T, y0, level) {
   const treadsHere = level === 'terrace' ? [] : D.stairTreads(y0);
   poly(T, rectPts(S.box), { fill: 'rgba(255,255,255,0.4)' });
   for (const t of treadsHere) poly(T, rectPts(t), { stroke: C.soft, width: 0.6 });
-  poly(T, rectPts({ x0: S.midLanding.x0, x1: S.midLanding.x1, z0: S.laneN.z0, z1: S.laneS.z1 }), { stroke: C.soft, width: 0.6 });
-  const zN = (S.laneN.z0 + S.laneN.z1) / 2, zS = (S.laneS.z0 + S.laneS.z1) / 2;
+  poly(T, rectPts({ x0: S.midLanding.x0, x1: S.midLanding.x1, z0: S.box.z0, z1: S.box.z1 }), { stroke: C.soft, width: 0.6 });
+  const zN = (S.lane1.z0 + S.lane1.z1) / 2, zS = (S.lane2.z0 + S.lane2.z1) / 2;
   if (level === 'ground') { arrow(T, [S.flight.x0 + 0.15, zN], [S.flight.x1 - 0.1, zN], { stroke: C.ink, width: 1, head: 0.14 }); text(T, 'UP', S.flight.x0 + 0.5, zN - 0.24, { size: 0.1 }); }
   if (level === 'first') {
     arrow(T, [S.flight.x0 + 0.15, zN], [S.flight.x1 - 0.1, zN], { stroke: C.ink, width: 1, head: 0.14 }); text(T, 'UP', S.flight.x0 + 0.5, zN - 0.24, { size: 0.1 });
@@ -282,7 +281,7 @@ function drawStair(T, y0, level) {
 }
 function drawFirst(T, overlays) {
   const yF = D.LEVELS.first;
-  for (const r of D.ROOMS.filter((r) => r.level === 'first' && r.use !== 'void' && r.use !== 'stair')) poly(T, rectPts(r), { fill: r.use === 'verandah' ? 'rgba(214,170,110,0.16)' : r.use === 'bath' ? 'rgba(160,190,200,0.18)' : 'rgba(255,255,255,0.5)' });
+  for (const r of D.ROOMS.filter((r) => r.level === 'first' && r.use !== 'void' && r.use !== 'stair')) poly(T, rectPts(r), { fill: ['hall', 'living', 'family', 'kitchen'].includes(r.use) ? 'rgba(214,170,110,0.14)' : r.use === 'bath' ? 'rgba(160,190,200,0.18)' : 'rgba(255,255,255,0.5)' });
   poly(T, rectPts(D.COURT), { fill: C.court, stroke: C.water, width: 1 });
   line(T, [[D.COURT.x0, D.COURT.z0], [D.COURT.x1, D.COURT.z1]], { stroke: C.water, width: 0.6 });
   line(T, [[D.COURT.x1, D.COURT.z0], [D.COURT.x0, D.COURT.z1]], { stroke: C.water, width: 0.6 });
@@ -294,7 +293,6 @@ function drawFirst(T, overlays) {
   for (const r of D.ROOMS.filter((r) => r.level === 'first' && !['void', 'stair', 'verandah'].includes(r.use))) roomLabel(T, r);
   text(T, 'NADUMUTTAM', (D.COURT.x0 + D.COURT.x1) / 2, (D.COURT.z0 + D.COURT.z1) / 2 - 0.12, { size: 0.13, color: C.water, weight: '700', bg: 'rgba(247,242,231,0.8)' });
   if (!T.compact) text(T, 'open to sky', (D.COURT.x0 + D.COURT.x1) / 2, (D.COURT.z0 + D.COURT.z1) / 2 + 0.12, { size: 0.1, color: C.water, weight: '500' });
-  if (!T.compact) text(T, 'Verandah', -1.55, 0.2, { size: 0.1, color: C.soft, rot: -Math.PI / 2 });
   if (!overlays) return;
   for (const p of D.AIRFLOW.paths) {
     const pts = p.pts.filter((q) => q[1] < D.LEVELS.terrace + 0.5 && q[1] > yF - 0.5).map((q) => [q[0], q[2]]);
@@ -322,17 +320,17 @@ function drawTerrace(T, overlays) {
   for (const w of D.WALLS) if (w.level === 'terrace') drawWall(T, w, w.jaaliAbove ? '#7a4a30' : C.poche);
   const tk = D.TERRACE.tank;
   T.ctx.beginPath(); const [kx, ky] = T.P(tk.x, tk.z); T.ctx.arc(kx, ky, tk.r * T.s, 0, Math.PI * 2); T.ctx.strokeStyle = C.soft; T.ctx.lineWidth = 0.8 * T.dpr; T.ctx.setLineDash([3 * T.dpr, 2 * T.dpr]); T.ctx.stroke(); T.ctx.setLineDash([]);
-  text(T, 'Stair head', (D.MUMTY.x0 + D.MUMTY.x1) / 2 - 1.0, 3.25, { size: 0.11, bg: 'rgba(247,242,231,0.8)' });
+  text(T, 'Stair head', (D.MUMTY.x0 + D.MUMTY.x1) / 2 - 1.0, (D.MUMTY.z0 + D.MUMTY.z1) / 2 + 0.2, { size: 0.11, bg: 'rgba(247,242,231,0.8)' });
   if (!T.compact) text(T, '1,000 L tank above', tk.x + 0.2, tk.z + 0.75, { size: 0.095, color: C.soft });
   text(T, 'PV pergola', (so.x0 + so.x1) / 2, (so.z0 + so.z1) / 2, { size: 0.12, color: '#2b3a67', rot: -Math.PI / 2, bg: 'rgba(247,242,231,0.7)' });
   text(T, 'Wash + drying', (D.TERRACE.washCanopy.x0 + D.TERRACE.washCanopy.x1) / 2, 2.95, { size: 0.1 });
-  text(T, 'Terrace garden', 2.2, -2.4, { size: 0.13 });
+  text(T, 'Terrace garden', 3.7, -1.5, { size: 0.13 });
   if (!overlays) return;
   for (const [x, z] of D.SCUPPERS) {
     const inX = Math.abs(x - D.COURT.x0) < 0.01 ? 1 : Math.abs(x - D.COURT.x1) < 0.01 ? -1 : 0, inZ = inX ? 0 : Math.abs(z - D.COURT.z0) < 0.01 ? 1 : -1;
     arrow(T, [x - inX * 0.45, z - inZ * 0.45], [x + inX * 0.35, z + inZ * 0.35], { stroke: C.water, width: 1.4, head: 0.13 });
   }
-  for (const [x, z] of [[-4.2, -3.0], [-4.2, 2.6], [0.2, -3.2], [4.6, -3.0], [4.6, -0.2], [4.0, 1.6], [-3.8, -0.15]]) {
+  for (const [x, z] of [[-4.2, -3.0], [-4.2, 2.6], [0.2, 3.0], [4.6, -3.0], [4.6, -0.2], [4.0, 1.6], [-3.8, -0.15]]) {
     const tx = Math.min(Math.max(x, D.COURT.x0 - 0.5), D.COURT.x1 + 0.5), tz = Math.min(Math.max(z, D.COURT.z0 - 0.5), D.COURT.z1 + 0.5);
     const d = Math.hypot(tx - x, tz - z), L = Math.min(1.1, d);
     if (d > 0.3) arrow(T, [x, z], [x + ((tx - x) / d) * L, z + ((tz - z) / d) * L], { stroke: 'rgba(47,127,196,0.75)', width: 1.1, head: 0.13 });

@@ -181,7 +181,9 @@ for (const c of D.COLUMNS) {
 }
 const gx = Object.values(D.GRID.x).sort((a, b) => a - b), gz = Object.values(D.GRID.z).sort((a, b) => a - b);
 const maxSpan = Math.max(...gx.slice(1).map((v, i) => v - gx[i]), ...gz.slice(1).map((v, i) => v - gz[i]));
-check(maxSpan <= 5.0, `Grid spans ≤ 5.0 m for 230 × 450 mm beams (max ${fx(maxSpan)} m)`);
+check(maxSpan <= 6.0, `Grid spans ≤ 6.0 m (max ${fx(maxSpan)} m)`);
+// Spans over 5.0 m need deeper beams: every beam must keep span/depth ≤ 11.
+for (const b of D.BEAMS) if (b.span) check(b.span / b.d <= 11 + EPS, `Beam ${b.id}: span/depth ≤ 11 (${fx(b.span)} m on ${fx(b.d * 1000, 0)} mm)`);
 
 // ---- B4 beams and load paths ---------------------------------------------------
 for (const b of D.BEAMS) {
@@ -214,7 +216,7 @@ check(S.tread >= 0.25 - EPS, `Tread ≥ 250 mm (${fx(S.tread * 1000, 0)} mm)`);
 const blondel = 2 * S.riser + S.tread;
 check(blondel >= 0.60 && blondel <= 0.65, `2R + T within 600–650 mm (${fx(blondel * 1000, 0)} mm)`);
 check(Math.abs(S.flight.x1 - S.flight.x0 - (S.risers / 2 - 1) * S.tread) < EPS, 'Each flight must be exactly (risers/2 − 1) treads long');
-const laneW = Math.min(S.laneN.z1 - S.laneN.z0, S.laneS.z1 - S.laneS.z0);
+const laneW = Math.min(S.lane1.z1 - S.lane1.z0, S.lane2.z1 - S.lane2.z0);
 check(laneW >= 0.90 - EPS, `Flight width ≥ 0.90 m (${fx(laneW)})`);
 check(S.midLanding.x1 - S.midLanding.x0 >= laneW && S.floorLanding.x1 - S.floorLanding.x0 >= laneW, 'Landings must be at least as deep as the flight width');
 check(Math.abs(S.floorLanding.x1 - S.flight.x0) < EPS && Math.abs(S.flight.x1 - S.midLanding.x0) < EPS, 'Landings must abut the flights');
@@ -223,7 +225,7 @@ for (const y0 of [D.LEVELS.ground, D.LEVELS.first]) {
   const treads = D.stairTreads(y0);
   check(treads.length === S.risers - 2, 'Tread count per storey');
   check(Math.abs(Math.max(...treads.map((t) => t.top)) - (y0 + (S.risers - 1) * S.riser)) < EPS, 'Top tread is one riser below the next floor');
-  const zN = (S.laneN.z0 + S.laneN.z1) / 2, zS = (S.laneS.z0 + S.laneS.z1) / 2;
+  const zN = (S.lane1.z0 + S.lane1.z1) / 2, zS = (S.lane2.z0 + S.lane2.z1) / 2;
   check(Math.abs(D.stairWalkY(S.flight.x0, zN, y0) - y0) < 0.01, 'Walking line starts at the floor (flight 1)');
   check(Math.abs(D.stairWalkY(S.flight.x0, zS, y0) - (y0 + storeyH)) < 0.01, 'Walking line arrives at the next floor (flight 2)');
 }
@@ -239,20 +241,20 @@ function lowestAbove(x, z, y) {
   if (inRect(x, z, D.MUMTY, -0.001)) take(D.MUMTY.roofTop - D.SLAB);
   for (const st of [D.LEVELS.ground, D.LEVELS.first]) {
     if (x > S.flight.x0 && x < S.flight.x1) {
-      if (z > S.laneN.z0 && z < S.laneN.z1) take(soffit(1, x, st));
-      if (z > S.laneS.z0 && z < S.laneS.z1) take(soffit(2, x, st));
+      if (z > S.lane1.z0 && z < S.lane1.z1) take(soffit(1, x, st));
+      if (z > S.lane2.z0 && z < S.lane2.z1) take(soffit(2, x, st));
     }
-    if (x > S.midLanding.x0 && x < S.midLanding.x1 && z > S.laneN.z0 && z < S.laneS.z1) take(st + half * S.riser - S.waist);
+    if (x > S.midLanding.x0 && x < S.midLanding.x1 && z > S.box.z0 && z < S.box.z1) take(st + half * S.riser - S.waist);
   }
   return best;
 }
 let minHead = Infinity, minAt = null;
 const probe = (x, z, y) => { const hr = lowestAbove(x, z, y) - y; if (hr < minHead) { minHead = hr; minAt = [x, z, y]; } };
 for (const st of [D.LEVELS.ground, D.LEVELS.first]) {
-  for (const [fl, lane] of [[1, S.laneN], [2, S.laneS]]) {
+  for (const [fl, lane] of [[1, S.lane1], [2, S.lane2]]) {
     for (let x = S.flight.x0 + 0.005; x < S.flight.x1; x += 0.02) for (const z of [lane.z0 + 0.03, (lane.z0 + lane.z1) / 2, lane.z1 - 0.03]) probe(x, z, pitch(fl, x, st));
   }
-  for (let x = S.midLanding.x0 + 0.01; x < S.midLanding.x1; x += 0.05) for (let z = S.laneN.z0 + 0.03; z < S.laneS.z1; z += 0.1) probe(x, z, st + half * S.riser);
+  for (let x = S.midLanding.x0 + 0.01; x < S.midLanding.x1; x += 0.05) for (let z = S.box.z0 + 0.03; z < S.box.z1; z += 0.1) probe(x, z, st + half * S.riser);
 }
 for (const lvl of ['ground', 'first', 'terrace']) {
   for (let x = S.floorLanding.x0 + 0.01; x < S.floorLanding.x1; x += 0.05) for (let z = S.box.z0 + 0.03; z < S.box.z1; z += 0.1) probe(x, z, D.LEVELS[lvl]);
@@ -261,7 +263,7 @@ check(minHead >= 2.20, `Stair headroom ≥ 2.20 m on flights and landings (min $
 facts.push(`Stair ${S.risers} risers × ${fx(S.riser * 1000, 0)} mm, treads ${fx(S.tread * 1000, 0)} mm, 2R+T ${fx(blondel * 1000, 0)} mm, flights ${fx(laneW)} m, min headroom ${fx(minHead)} m`);
 
 // ---- B6 rooms -------------------------------------------------------------------
-const minByUse = { bedroom: [7.5, 2.4], living: [9.5, 2.4], kitchen: [5.0, 1.8], bath: [2.8, 1.2], study: [2.5, 1.2], pooja: [1.5, 1.0] };
+const minByUse = { bedroom: [7.5, 2.4], living: [9.5, 2.4], kitchen: [5.0, 1.8], bath: [2.8, 1.2], study: [2.5, 1.2], pooja: [1.5, 1.0], family: [4.0, 1.8] };
 for (const r of D.ROOMS) {
   const a = D.roomArea(r), w = Math.min(r.x1 - r.x0, r.z1 - r.z0), m = minByUse[r.use];
   if (m) {
@@ -405,6 +407,10 @@ for (const { w, o, leaves } of doors) {
 // ---- B9 furniture -----------------------------------------------------------------------
 for (const f of D.FURNITURE) {
   check(f.x1 > f.x0 && f.z1 > f.z0 && f.h > 0, `Furniture ${f.id} must have a positive size`);
+  for (const k of ['sink', 'stove']) if (f[k]) {
+    const alongX = f.back === 'N' || f.back === 'S', lo = alongX ? f.x0 : f.z0, hi = alongX ? f.x1 : f.z1;
+    check(f[k][0] >= lo - EPS && f[k][1] <= hi + EPS && f[k][1] > f[k][0], `${f.id} ${k} range [${f[k]}] must lie along the counter (${fx(lo)}–${fx(hi)})`);
+  }
   const corners = [[f.x0, f.z0], [f.x1, f.z0], [f.x1, f.z1], [f.x0, f.z1]];
   if (f.level === 'ground') check(corners.every((p) => pip(p, V) && distB(p) >= D.COMPOUND.t - 0.001), `${f.id} must sit inside the compound wall`);
   else check(f.x0 >= H.x0 && f.x1 <= H.x1 && f.z0 >= H.z0 && f.z1 <= H.z1, `${f.id} must sit inside the house`);
@@ -443,7 +449,7 @@ for (const f of climbables) for (const g of guardsFor(f.level)) {
 
 // ---- B10 circulation (grid flood-fill with body clearance) --------------------------------
 const RES = 0.05, GX0 = -8.0, GZ0 = -5.2, NX = Math.ceil(16 / RES), NZ = Math.ceil(10.4 / RES);
-function freeGrid(level, r) {
+function freeGrid(level, r, skip = []) {
   const blocked = new Uint8Array(NX * NZ);
   const block = (rc, infl = r) => {
     const e = expand(rc, infl);
@@ -465,13 +471,14 @@ function freeGrid(level, r) {
     if (y0 > ly + 0.3 || y1 <= ly + 0.3) continue;
     for (const s of wallSolids(w)) block(s);
   }
-  for (const f of D.FURNITURE) if (f.level === level && !f.passable && !f.hang) block(f);
+  for (const f of D.FURNITURE) if (f.level === level && !f.passable && !f.hang && !skip.includes(f.id)) block(f);
   if (level === 'ground') {
     for (const c of D.COLUMNS) block(colRect(c));
     const cb = D.DRAINAGE.courtBasin;
     block(cb);
     block({ x0: S.flight.x0, x1: S.box.x1, z0: S.box.z0, z1: S.box.z1 });
-    for (const lf of D.gateLeaves()) for (const p of sampleSeg(lf.hinge, [lf.hinge[0] + lf.openDir[0] * lf.w, lf.hinge[1] + lf.openDir[1] * lf.w], 0.05)) block({ x0: p[0] - 0.03, x1: p[0] + 0.03, z0: p[1] - 0.03, z1: p[1] + 0.03 });
+    // The gate is open by default: block the parked leaf.
+    for (const lf of D.gateLeaves()) for (const p of sampleSeg(lf.open[0], lf.open[1], 0.05)) block({ x0: p[0] - 0.03, x1: p[0] + 0.03, z0: p[1] - 0.03, z1: p[1] + 0.03 });
   } else {
     block(D.COURT);
     block(S.opening);
@@ -484,8 +491,8 @@ function freeGrid(level, r) {
   return blocked;
 }
 const cellOf = (x, z) => [Math.floor((x - GX0) / RES), Math.floor((z - GZ0) / RES)];
-function reachable(level, r, from, targets) {
-  const blocked = freeGrid(level, r);
+function reachable(level, r, from, targets, skip = []) {
+  const blocked = freeGrid(level, r, skip);
   const nearestFree = ([x, z], rad = 0.6) => {
     const [ci, cj] = cellOf(x, z), k = Math.ceil(rad / RES);
     let best = null, bd = Infinity;
@@ -518,22 +525,36 @@ const roomTarget = (id) => { const r = D.ROOMS.find((x) => x.id === id); return 
 const gateIn = [westX((D.GATE.z0 + D.GATE.z1) / 2) + D.COMPOUND.t + 0.5, (D.GATE.z0 + D.GATE.z1) / 2];
 const mainDoor = doors.find((d) => d.o.main);
 const md = D.openingSpan(mainDoor.w, mainDoor.o);
+// A point `d` metres in front of a door, on its swing side.
+const doorFront = (dr, d) => { const sp = D.openingSpan(dr.w, dr.o), sw = SW[dr.o.swing]; return [(sp.p0[0] + sp.p1[0]) / 2 + sw[0] * (dr.w.t / 2 + d), (sp.p0[1] + sp.p1[1]) / 2 + sw[1] * (dr.w.t / 2 + d)]; };
+// A point in front of a seat (the side opposite its back).
+const seatFront = (f) => { const bk = SW[f.back || 'N'], c = [(f.x0 + f.x1) / 2, (f.z0 + f.z1) / 2], hd = Math.abs(bk[0]) ? (f.x1 - f.x0) / 2 : (f.z1 - f.z0) / 2; return [c[0] - bk[0] * (hd + 0.4), c[1] - bk[1] * (hd + 0.4)]; };
+const waterPt = D.FURNITURE.find((f) => f.type === 'waterpot');
 for (const t of reachable('ground', 0.3, gateIn, [
-  { id: 'main door (outside)', p: [md.p0[0] - 0.45, (md.p0[1] + md.p1[1]) / 2] },
+  { id: 'main door (outside)', p: doorFront(mainDoor, 0.6) },
   { id: 'stair-hall landing', p: [(S.floorLanding.x0 + S.floorLanding.x1) / 2, (S.box.z0 + S.box.z1) / 2] },
-  { id: 'courtyard garden edge', p: [D.COURT.x0 - 0.6, D.COURT.z0 - 0.5] },
-  { id: 'thinnai (N)', p: [-3.5, 2.6] }, { id: 'thinnai (S)', p: [-3.9, 3.6] },
-  { id: 'water point', p: [-5.6, 1.0] },
+  { id: 'courtyard garden edge', p: [D.COURT.x1 + 0.6, (D.COURT.z0 + D.COURT.z1) / 2] },
+  ...D.FURNITURE.filter((f) => f.type === 'thinnai').map((f) => ({ id: `thinnai ${f.id}`, p: seatFront(f), rad: 0.3 })),
+  ...(waterPt ? [{ id: 'water point', p: [waterPt.x1 + 0.4, (waterPt.z0 + waterPt.z1) / 2] }] : []),
 ])) check(t.ok, `Ground: ${t.id} must be reachable on foot from the gate`);
-for (const t of reachable('ground', 0.45, gateIn, [{ id: 'two-wheeler parking', p: [-3.9, -1.15], rad: 0.2 }])) check(t.ok, `Ground: ${t.id} must be reachable from the gate with a two-wheeler (0.9 m)`);
+for (const r of D.ROOMS.filter((r) => r.level === 'ground' && r.vehicle === 'two-wheeler')) {
+  for (const t of reachable('ground', 0.45, gateIn, [{ ...roomTarget(r.id), rad: 0.3 }], D.FURNITURE.filter((f) => f.type === 'scooter' || f.type === 'cycle').map((f) => f.id))) check(t.ok, `Ground: ${t.id} must be reachable from the gate with a two-wheeler (0.9 m)`);
+}
+const carBay = D.ROOMS.find((r) => r.level === 'ground' && r.vehicle === 'car');
+check(!!carBay, 'The ground floor must provide a car bay');
+if (carBay) {
+  // A 1.8 m wide car with 50 mm clearance each side, driven in from the gate.
+  for (const t of reachable('ground', 0.95, gateIn, [{ ...roomTarget(carBay.id), rad: 0.3 }], D.FURNITURE.filter((f) => f.type === 'car').map((f) => f.id))) check(t.ok, `Ground: the car bay must be reachable from the gate by a 1.9 m wide car`);
+  const car = D.FURNITURE.find((f) => f.type === 'car');
+  check(!!car && inRect(car.x0, car.z0, carBay) && inRect(car.x1, car.z1, carBay), 'The parked car must sit inside the car bay');
+}
 const ffLanding = [(S.floorLanding.x0 + S.floorLanding.x1) / 2, (S.box.z0 + S.box.z1) / 2];
 for (const t of reachable('first', 0.25, ffLanding, D.ROOMS.filter((r) => r.level === 'first' && !['void', 'stair'].includes(r.use)).map((r) => roomTarget(r.id)))) {
   check(t.ok, `First floor: ${t.id} must be reachable from the stair landing (0.5 m body)`);
 }
 const mumtyDoor = doors.find((d) => d.o.id === 'mumty-door');
-const mdp = D.openingSpan(mumtyDoor.w, mumtyDoor.o);
 for (const t of reachable('terrace', 0.25, ffLanding, [
-  { id: 'terrace via stair-head door', p: [(mdp.p0[0] + mdp.p1[0]) / 2, mdp.p0[1] - 0.6] },
+  { id: 'terrace via stair-head door', p: doorFront(mumtyDoor, 0.6) },
   roomTarget('t-wash'), { id: 'terrace NE corner', p: [5.0, -2.8] }, { id: 'terrace NW (solar)', p: [-4.0, -2.0] },
 ])) check(t.ok, `Terrace: ${t.id} must be reachable from the stair (0.5 m body)`);
 
@@ -626,12 +647,16 @@ facts.push(`Drainage: terrace → ${D.SCUPPERS.length} scuppers → court rain g
 
 // ---- B13 gate --------------------------------------------------------------------------------
 const G = D.GATE;
-check(G.z1 - G.z0 >= 2.4, `Gate clear width ≥ 2.4 m (${fx(G.z1 - G.z0)} m)`);
+check(G.z1 - G.z0 >= 2.7, `Gate clear width ≥ 2.7 m for a car turning in from the road (${fx(G.z1 - G.z0)} m)`);
 check(G.z0 - G.pierW > -D.PLOT_HZ + D.COMPOUND.t && G.z1 + G.pierW < D.PLOT_HZ - D.COMPOUND.t, 'Gate and piers must sit within the west boundary');
 for (const lf of D.gateLeaves()) {
-  const pts = sectorPts(lf, G.openDeg);
-  check(pts.every((p) => pip(p, V)), `Gate leaf ${lf.id} must open inward (inside the plot)`);
-  for (const f of D.FURNITURE.filter((f) => f.level === 'ground')) check(!pts.some(([x, z]) => inRect(x, z, f, -0.005)), `Gate leaf ${lf.id} must clear ${f.id}`);
+  const travel = [...sampleSeg(lf.open[0], lf.open[1], 0.05), ...sampleSeg(lf.closed[0], lf.closed[1], 0.05)];
+  check(travel.every((p) => pip(p, V) && distB(p) >= D.COMPOUND.t - 0.001), `Gate leaf ${lf.id} must slide inside the compound wall`);
+  check(Math.max(lf.open[0][1], lf.open[1][1]) <= G.z0 - 0.05, `Gate leaf ${lf.id} must clear the whole opening when open`);
+  for (const f of D.FURNITURE.filter((f) => f.level === 'ground')) check(!travel.some(([x, z]) => inRect(x, z, f, 0.05)), `Gate leaf ${lf.id} travel must clear ${f.id}`);
+  for (const c of D.COLUMNS) check(!travel.some(([x, z]) => inRect(x, z, colRect(c), 0.05)), `Gate leaf ${lf.id} travel must clear column ${c.id}`);
+  const pitR = D.DRAINAGE.rechargePit, st = D.DRAINAGE.siltTrap;
+  check(!travel.some(([x, z]) => Math.hypot(x - pitR.x, z - pitR.z) < pitR.r + 0.05 || (Math.abs(x - st.x) < st.size / 2 + 0.05 && Math.abs(z - st.z) < st.size / 2 + 0.05)), `Gate leaf ${lf.id} travel must clear the recharge pit and silt trap`);
 }
 
 // ---- B14 viewpoints -----------------------------------------------------------------------
@@ -653,17 +678,43 @@ for (const v of D.VIEWPOINTS) {
   if (lvl === 'first') check(!inRect(x, z, D.COURT, 0.15), `Viewpoint ${v.id} must not stand in the court void`);
 }
 
-// ---- B15 thinnai, verandah, court ------------------------------------------------------------
+// ---- B15 thinnai, court edges --------------------------------------------------------------
 const thinnai = D.FURNITURE.filter((f) => f.type === 'thinnai');
 check(thinnai.length >= 2 && thinnai.every((t) => t.h >= 0.40 && t.h <= 0.50), 'Twin thinnai with 400–500 mm seat height must flank the entrance');
-check(thinnai.some((t) => t.z1 <= md.p0[1] + 0.25) && thinnai.some((t) => t.z0 >= md.p1[1] - 0.35), 'Thinnai must flank the path to the main door');
-check(D.ROOMS.filter((r) => r.use === 'verandah').length >= 3, 'Shaded verandahs must wrap the court');
+{
+  // Measure along the main door's wall: one thinnai must sit on each side of the doorway.
+  const horiz = isHoriz(mainDoor.w), k = horiz ? 0 : 1, lo = Math.min(md.p0[k], md.p1[k]), hi = Math.max(md.p0[k], md.p1[k]);
+  const near = thinnai.filter((t) => rectDist(t, { x0: Math.min(md.p0[0], md.p1[0]), x1: Math.max(md.p0[0], md.p1[0]), z0: Math.min(md.p0[1], md.p1[1]), z1: Math.max(md.p0[1], md.p1[1]) }) <= 2.5);
+  const tLo = (t) => (k === 0 ? t.x1 : t.z1), tHi = (t) => (k === 0 ? t.x0 : t.z0);
+  check(near.some((t) => tLo(t) <= lo + 0.25) && near.some((t) => tHi(t) >= hi - 0.35), 'Thinnai must flank the path to the main door (one on each side, within 2.5 m)');
+}
 const courtW = D.COURT.x1 - D.COURT.x0, courtD = D.COURT.z1 - D.COURT.z0;
 check(courtW >= 2.4 - EPS && courtD >= 2.4 - EPS, `Nadumuttam must be at least 2.4 × 2.4 m (${fx(courtW)} × ${fx(courtD)})`);
-for (const r of D.ROOMS.filter((r) => r.use === 'verandah')) {
-  const clear = Math.min(r.x1 - r.x0, r.z1 - r.z0) - 0.10;
-  check(clear >= 0.95 - EPS, `${r.id} clear width after the guard ≥ 0.95 m (${fx(clear)} m)`);
+{
+  // The court opens to the hall/stair (north) and the family/kitchen side (east) behind a guard;
+  // bedroom walls with windows form its other sides (owner's brief, cycle 3).
+  const g = D.GUARDS.find((x) => x.level === 'first'), open = g?.sides || ['N', 'S', 'W', 'E'];
+  const edge = { N: [[D.COURT.x0, D.COURT.z0], [D.COURT.x1, D.COURT.z0]], S: [[D.COURT.x0, D.COURT.z1], [D.COURT.x1, D.COURT.z1]], W: [[D.COURT.x0, D.COURT.z0], [D.COURT.x0, D.COURT.z1]], E: [[D.COURT.x1, D.COURT.z0], [D.COURT.x1, D.COURT.z1]] };
+  const out = { N: [0, -1], S: [0, 1], W: [-1, 0], E: [1, 0] };
+  for (const side of ['N', 'S', 'W', 'E']) {
+    const [a, b] = edge[side], mid = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2], o = out[side];
+    if (open.includes(side)) {
+      const beyond = roomAt('first', mid[0] + o[0] * (g.t + 0.3), mid[1] + o[1] * (g.t + 0.3));
+      check(!!beyond && ['hall', 'family', 'living', 'kitchen'].includes(beyond.use), `Court ${side} side must open to the hall, family, living or kitchen (found ${beyond?.id || 'nothing'})`);
+      const clear = beyond ? (o[1] ? beyond.z1 - beyond.z0 : beyond.x1 - beyond.x0) : 0;
+      check(clear >= 0.95 - EPS, `Circulation beside the court (${side}) must be ≥ 0.95 m clear (${fx(clear)} m)`);
+    } else {
+      const wall = D.WALLS.find((w) => w.level === 'first' && (w.kind === 'grid' || w.kind === 'exterior') && isHoriz(w) === (side === 'N' || side === 'S') && inRect(mid[0] + o[0] * (w.t / 2), mid[1] + o[1] * (w.t / 2), wallRect(w), 0.01));
+      const room = roomAt('first', mid[0] + o[0] * 0.6, mid[1] + o[1] * 0.6);
+      check(!!wall && room?.use === 'bedroom', `Court ${side} side must be a bedroom wall (wall ${wall?.id || 'none'}, room ${room?.id || 'none'})`);
+      if (wall) {
+        const win = wall.openings.some((op) => op.type === 'window' && op.court && (() => { const sp = D.openingSpan(wall, op), kk = side === 'N' || side === 'S' ? 0 : 1; return Math.max(sp.p0[kk], sp.p1[kk]) > Math.min(a[kk], b[kk]) && Math.min(sp.p0[kk], sp.p1[kk]) < Math.max(a[kk], b[kk]); })());
+        check(win, `The bedroom wall on the court's ${side} side must have a window onto the court`);
+      }
+    }
+  }
 }
+for (const w of D.WALLS) for (const o of w.openings) if (o.court) check(o.type === 'window' && o.sill >= 0.85 && o.grille !== false, `Court window ${o.id} needs a sill ≥ 0.85 m and a grille (3.2 m drop)`);
 
 return C;
 }
