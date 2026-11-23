@@ -589,6 +589,31 @@
     addBox(grpSite, -8.62, 8.34, 1.35, 1.48, -5.76, -5.42, MAT.granite, false);
     addBox(grpSite, -8.62, 8.34, 1.35, 1.48, 5.42, 5.76, MAT.granite, false);
 
+    // Larger irregular local-stone facing: a restrained rubble course, not a tiled veneer.
+    // Keep the west gate opening clear; vary block size and rotation for a hand-laid look.
+    const rubbleGeo = new THREE.DodecahedronGeometry(1, 0);
+    function addRubbleRun(axis, fixed, start, end, faceSign = 1) {
+      let i = 0;
+      for (let p = start; p < end - 0.25; p += 0.72) {
+        const seed = i++;
+        const block = new THREE.Mesh(rubbleGeo, MAT.granite);
+        const along = Math.min(0.78, end - p);
+        const sx = axis === 'z' ? 0.24 : along * (0.48 + (seed % 3) * 0.08);
+        const sz = axis === 'z' ? along * (0.48 + (seed % 3) * 0.08) : 0.24;
+        block.scale.set(sx, 0.24 + (seed % 2) * 0.06, sz);
+        block.position.set(axis === 'z' ? fixed + faceSign * 0.12 : p + along / 2,
+          0.55 + (seed % 3) * 0.035,
+          axis === 'z' ? p + along / 2 : fixed + faceSign * 0.12);
+        block.rotation.set((seed % 3) * 0.08, (seed % 5) * 0.13, (seed % 4) * 0.06);
+        block.castShadow = true; block.receiveShadow = true; grpSite.add(block);
+      }
+    }
+    addRubbleRun('x', -5.6, -8.25, 8.0, -1);
+    addRubbleRun('x', 5.6, -8.25, 8.0, 1);
+    addRubbleRun('z', 8.2, -5.2, 5.2, 1);
+    addRubbleRun('z', -8.5, -5.2, -2.35, -1);
+    addRubbleRun('z', -8.5, 1.75, 5.2, -1);
+
     addBox(grpGF, -8.4, -3.5, 0.02, 0.06, -4.4, 1.5, MAT.stone, false, false, true);
     for (let i = 0; i < 6; i++) {
       addBox(grpGF, -3.4 + i * 0.68, -2.9 + i * 0.68, 0.03, 0.07, 1.55, 2.15, MAT.kota, false, false, true);
