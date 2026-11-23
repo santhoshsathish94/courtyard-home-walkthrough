@@ -9,7 +9,7 @@ Each pass follows **Context → Direction → Action → Success → Growth**. R
 ### Pass 1 — Context and direction
 - [x] Preserve the 1,620 sq ft west-road plot concept and three-level arrangement.
 - [x] Keep the nadumuttam open to sky and the terrace predominantly open.
-- [x] Keep the west-side solar array clear of the new east service eave.
+- [x] Keep the west-side solar array clear of the exposed east-wall tile caps.
 - [x] Use a restrained natural palette: local rubble stone, lime finish, natural stone floors, terracotta and reclaimed timber.
 
 ### Pass 2 — Roof and rainwater
@@ -20,7 +20,7 @@ Each pass follows **Context → Direction → Action → Success → Growth**. R
 - [x] Remove the redundant terrace perimeter gutter run; retain only the small open-courtyard sill channel.
 - [x] Add subtle visible falls to surface-water runs so water is not represented as a flat stagnant strip.
 - [x] Connect the courtyard-tree basin overflow to the planted recharge garden with a shallow surface channel.
-- [ ] Confirm real roof catchments, gradients, gutter/downpipe sizing, overflow and recharge capacity with a local engineer after site levels and rainfall design data are known.
+- [ ] Confirm exposed wall locations, tile projection, surface-channel falls, splash control, overflow and recharge capacity with a local engineer after site levels and rainfall design data are known.
 
 ### Pass 3 — Compound wall and materials
 - [x] Add a hand-laid irregular local-stone character to the compound wall.
@@ -39,8 +39,8 @@ Each pass follows **Context → Direction → Action → Success → Growth**. R
 - [ ] Walk through every room and verify door swings, furniture clearances, stair comfort, child safety and maintenance access against measured dimensions.
 
 ### Pass 5 — Final review and release
-- [x] Run source-level review of the roof/eave, solar, compound wall, balcony drain, downpipe and recharge geometry references.
-- [x] Add compass-plan indicators for the east eave, ground collector channels and recharge garden.
+- [x] Run source-level review of the wall-top tile caps, SW low-level inlets, high-level exhausts, entrance gate, surface drains and recharge geometry.
+- [x] Add compass-plan indicators for wall-top tile caps, ground surface channels and recharge garden.
 - [x] Display all four stated boundary side lengths and label the boundary geometry as schematic, not surveyed.
 - [x] Compile-check the module script after removing its three import declarations; JavaScript syntax passed.
 - [x] Restore desktop mouse-look when the user clicks the canvas after Escape releases pointer lock; clear held movement on window blur.
@@ -68,13 +68,13 @@ The UI labels the plot as **W33 · S46 · E33 · N51 ft** and **1,620 sq ft**, w
 | Main interior floors | Kadappa / Kota-type natural stone |
 | Wet and selected balcony zones | Shahabad or another suitable slip-resistant natural stone |
 | Walls | Lime-finish plaster |
-| Selective roof/eaves | Terracotta clay tiles with reclaimed timber |
+| Exposed service-wall tops | Individual terracotta clay tiles on short holders directly above the wall |
 | Jaali and screens | Terracotta; reclaimed timber where suitable |
 | Terrace | Weatherproof sloped finish with accessible drainage and planted beds |
 
 ## Current rainwater concept
 
-1. Individual clay tiles sit directly on short holders at the top of the exposed east service wall; there is no continuous roof deck or long rafter frame.
+1. Individual clay tiles sit directly on short holders at the top of the exposed east service wall; there is no continuous roof deck, long rafter frame, fascia, overhead gutter or tall downpipe.
 2. Rain falls directly from the outward-sloping tile edges onto the exterior splash apron and shallow east surface channel.
 3. The east surface channel has a small conceptual fall toward the south-east planted recharge area; the courtyard overflow has a separate shallow fall toward the same garden.
 4. First-floor balcony and courtyard sill channels remain illustrative local surface drains; their actual discharge and separation from greywater must be designed from surveyed levels.
