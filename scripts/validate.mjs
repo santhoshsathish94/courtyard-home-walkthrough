@@ -21,6 +21,9 @@ assert.match(html, /SW low-level breeze inlet/, 'SW low-level air inlet must rem
 assert.match(html, /High-level leeward exhaust/, 'High-level air exhaust must remain');
 assert.match(html, /WEST ROAD ENTRANCE GATE/, 'West entrance gate must remain');
 assert.match(html, /function addSlopedWaterRun/, 'Sloped surface-water geometry must remain');
+assert.match(html, /function addSlopedWaterRunX/, 'Cross-axis surface-water fall geometry must remain');
+assert.match(html, /const roofY = H_TF \+ 0\.95 \+ 0\.02/, 'Wall-top tiles must sit at terrace parapet height');
+assert.match(html, /Rain hoods specifically protect the low SW inlet/, 'Low and high jaali openings must have rain hoods');
 assert.match(html, /SW low inlet → cross-flow → high exhaust/, 'Ventilation must be visible on the first-floor plan');
 assert.doesNotMatch(html, /addNorthRoofWing|addWestRoofWing|addSouthRoofWing/, 'Removed broad roof wings must not return');
 assert.match(html, /aria-controls="controls-body"/, 'Controls toggle must expose its controlled panel');
