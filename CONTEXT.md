@@ -321,8 +321,60 @@ New palette:
 - **Test with doors open.** A closed-door flood fill missed a real blockage. Treating every leaf as open is the stricter, more honest check.
 - **Browser caches can serve stale ES modules even with no-store.** Disable the cache (CDP `Network.setCacheDisabled`) before re-checking a local fix.
 
+## Cycle 5 — owner direction (2026-11-23 → 24)
+The owner refined the cycle 4 plan step by step, through drawings and decisions:
+- 4 ft stairs, a 5 ft west-facing main door, the 4.60 / 3.45 / 4.60 m grid, no door under 4 ft.
+- Arrival in the north-east (living / hall with a good view of the pooja), family space E, kitchen SE.
+- Three bedrooms down the west, then the "exact plan": a west stair from a full-width south balcony up to the terrace, with a jaali shading the west walls, so people walk north → east → south → west to reach the terrace.
+- "Wash room can be raised if stairs need space." Then "make the layout from west and east 33 ft to 28 ft for the south balcony" and "you don't have to move the pillars".
+
+### Decisions (cycle 5, option A chosen by the owner)
+- **Columns unchanged.** The rooms' south wall moves in instead: rooms end at z 3.13 and a 5 ft (1.52 m) covered balcony runs along the whole south side. The row-4 columns stand free at its edge (4 ft clear past each).
+- **Arithmetic shown to the owner before building.** The house is 32 ft deep (33 ft minus two 6-inch compound walls), so a 5 ft balcony leaves the south row 4′6″, too shallow for a bedroom or kitchen. Option A (full balcony + loop, bedroom 2 dropped) versus option B (3 bedrooms, kitchen balcony only, stacked terrace stair). **The owner chose A.**
+- **Main stair:** from inside the NW front gate, rising east along the north wall. 15 × 190 mm risers on 250 mm treads, flights of 5 + 10 with a 1.22 m mid landing (meets both 12- and 15-riser rules). The open stairwell over the second flight arrives at the landing in front of the 5 ft main door on line C. The door faces west and opens outward; inside, the pooja on the east wall faces it.
+- **Raised common bath (the owner's idea):** three steps (0.45 m) up, over the first flight and mid landing; its slab soffit at 3.15 keeps exactly 2.20 m headroom over the mid landing. Bedroom 3 and the bath open off a short access.
+- **Master suite:** the bedroom in the W block (14′3″ × 8′5″); the dressing (entered from the south walkway on line B) and the ensuite fill the south strip. Bedroom 2 is gone.
+- **West stair:** in the open 1.03 m strip west of line A (0.98 m clear inside the jaali, because the column line stays). 17 × 188 mm risers in flights of 9 + 8 with a 1.0 m mid landing, rising north from the balcony's west end to the NW bay roof. A full-height terracotta jaali on the road side. No mumty: the tank stands on a steel stand on the terrace.
+- **East column:** hall (NE), family (E) and kitchen (SE) form one open space ending at the south wall. The kitchen has a sliding door to the balcony (service deck); the balcony's east end has a 1.8 m jaali screen.
+- **Airflow:** a low jaali inlet in the master's west wall (shaded by the stair and jaali; the window is flush, so nothing projects into the stair), across the court to the east exhausts and the court sky.
+
+### Verification controls changed in cycle 5 (disclose to the owner)
+- **Doors:** every door ≥ 1.22 m (4 ft); the main door ≥ 1.52 m (5 ft).
+- **Stairs (B5), per run:**
+  - Each run has its own axis (x or z) and lane.
+  - Width: main ≥ 1.22 m (owner's 4 ft); terrace stair ≥ 0.90 m.
+  - Each flight ≤ 15 risers.
+  - Foot and top landings must be real slab (not stairwell).
+  - Headroom is probed in each run's own lane.
+  - A raised floor's slab counts as the ceiling above it.
+- **Raised floors and steps:** steps must rise exactly to the raised floor, with risers ≤ 190 mm and treads ≥ 250 mm.
+- **Circulation:**
+  - The flood fill counts walls standing on a raised floor (foot ≤ 0.6 m above the level).
+  - The stair foot and landings are located per run.
+  - The terrace must be reachable from the west stair's landing; the stair-head door target is gone.
+- **Viewpoints:** a raised floor and its steps count as floors.
+- **Court (B15):** open sides may face the hall, family space, living, kitchen or library walk. Closed sides need a court window or jaali. At least 2 sides must be open, including the north.
+- **Columns:** the balcony row (row 4) counts as expressed columns (free-standing by design).
+- **Plan label:** "West low inlet → cross-flow → high exhaust" replaces the SW label.
+- **Unchanged and still naive:** the child-safety distance rule ignores intervening walls. Furniture was moved to satisfy it, not the rule relaxed.
+
+### Outcome log (cycle 5)
+- To-scale study pages, each answered by the owner before building: `first-floor-idea.html`, `exact-plan-check.html`, `terrace-options.html`, `south-balcony-options.html`.
+- **Generalised stair runs** (axis + lane) through design, validator, builder, plans and walk mode. Added raised floors, wall `base`, furniture `dy` and flush windows.
+- **Validator:** all 4,396 checks pass. Mutation tests: 37/37, including 3 new ones (raised-floor headroom, steps meeting the raised floor, terrace stair minimum width).
+- **Browser review:** every viewpoint and all three plans. Fixes:
+  - the master's bed and ensuite door had sealed the route through the arch (the validator caught it);
+  - the bath viewpoint was re-aimed up the steps;
+  - the terrace label was moved into the stair strip.
+
+### Growth (cycle 5)
+- **When the owner's sketch can't fit, draw it to scale and show the arithmetic.** "33 ft → 28 ft" looked like a simple shrink. Only the depth budget (32 ft house, 4′6″ left for the south row) made the bedroom trade-off visible, so the owner could decide.
+- **Fixed columns ≠ fixed walls.** Columns on the N–S lines stay embedded when the E–W walls move; only the balcony row becomes free-standing.
+- **Generalise geometry once.** Giving runs an axis and lane, plus `rect`/`pt`/`loc` helpers, kept one stair system for every consumer instead of a special case.
+
 ## Open questions for the owner
 1. Survey or FMB sketch: please confirm the north side (52 ft here; 51 ft in an earlier note), the derived east side (33′-6½″) and the corner angles.
-2. Local setback and coverage rules. The first floor now reaches the compound-wall line on three sides, and the balcony reaches the road boundary. These need approval.
-3. Structural confirmation of the cut line-B beam (a cantilever from B2 picking up the stair trimmer) and of the round exposed column C2.
-4. `render/` and `media/` show an older house. Keep, archive or delete?
+2. Local setback and coverage rules. The first floor reaches the compound-wall line on all four sides (the west bay and the stair strip reach the road boundary). These need approval.
+3. Structural confirmation: the cut line-B beam (a cantilever from B2 picking up the stair trimmer), the raised bath slab over the stair, the stair-strip and bay cantilevers, and the free-standing round C2/C3 and balcony-row columns.
+4. Local bylaw for the 0.98 m clear west stair (a private terrace stair).
+5. `render/` and `media/` show an older house. Keep, archive or delete?

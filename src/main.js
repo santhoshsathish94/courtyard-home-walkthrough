@@ -288,7 +288,6 @@ async function main() {
     make('Nadumuttam', 'open to sky', 'terrace', (D.COURT.x0 + D.COURT.x1) / 2, (D.COURT.z0 + D.COURT.z1) / 2, D.LEVELS.terrace + 1.6);
     make('Recharge pit', '', 'ground', D.DRAINAGE.rechargePit.x, D.DRAINAGE.rechargePit.z, 1.2);
     for (const g of D.GATES) make(g.label, g.type === 'sliding' ? 'slides open' : 'to the stair', 'ground', D.boundaryX('W', (g.z0 + g.z1) / 2) - 0.6, (g.z0 + g.z1) / 2, 2.4);
-    make('Balcony', 'west, off the master bedroom', 'first', (D.BALCONY.x0 + D.BALCONY.x1) / 2 - 0.3, 1.6, D.LEVELS.first + 2.6);
     return { group, items };
   }
 

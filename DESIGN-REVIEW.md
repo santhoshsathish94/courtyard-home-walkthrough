@@ -160,6 +160,15 @@ Owner's brief: stairs on the north (vastu), a SW entrance and car parking, a hal
 - [x] **Walk-mode fixes.** The open bath door no longer blocks the terrace stair, and the stair balustrade follows the flight.
 - [ ] Next: lighting moods, richer stilt-level landscape, survey-based plot correction.
 
+### Pass 10 — Owner's exact plan: raised bath, south balcony, west stair loop (cycle 5, 2026-11-24)
+- [x] **Grid kept.** 16 columns at 4.60 / 3.45 / 4.60 m; no column moved. The rooms' south wall moved in 5 ft, and the row-4 columns now stand free along a covered south balcony.
+- [x] **Arrival.** Front gate (NW) → covered walk → 4 ft main stair (5 + 10 risers, mid landing) → landing → 5 ft main door facing west → living / hall with the pooja straight ahead.
+- [x] **Raised common bath.** Three steps up, over the main stair's first flight and mid landing, with exactly 2.20 m headroom below. It sits beside the short access with bedroom 3.
+- [x] **Master suite.** The bedroom is in the W block, with the dressing and ensuite in the south strip, entered from the south walkway. Bedroom 2 gave way to the balcony (the owner chose this).
+- [x] **Loop to the terrace.** North (main stair) → east (hall, family space, kitchen) → south (5 ft balcony) → west (open stair, 0.98 m clear, 9 + 8 risers) → terrace. A full-height terracotta jaali shades the west walls. No mumty; the tank is on a steel stand.
+- [x] **Validated.** 4,396 checks, 37 mutation tests and browser tests on desktop and phone.
+- [ ] Next: owner review of the walkthrough; survey, setbacks and structural confirmation.
+
 ## Critical dimension check before any build-ready review
 
 **Resolved in Pass 6.** Before, the compound wall was 16.7 × 11.2 m (about 2,020 sq ft), larger than the plot.
@@ -173,10 +182,10 @@ Owner's brief: stairs on the north (vastu), a SW entrance and car parking, a hal
 | Zone | Proposed finish |
 |---|---|
 | Compound wall | Smooth white lime plaster with flat granite coping; board-formed concrete gate piers; slatted oak sliding car gate and hinged front gate on dark steel frames |
-| Stilt level and stair | Kota paving with an exposed-concrete driveway between granite strips; floating oak stair on a dark steel spine with steel balusters; board-formed concrete wall with terracotta jaali behind the stair; thinnai bench |
-| Rooms | Honed light stone through the open half (foyer, hall, living, kitchen); warm terrazzo in the bedrooms and dressing; large light tiles in the baths; teak deck on the balcony |
+| Stilt level and stair | Kota paving with an exposed-concrete driveway between granite strips; floating oak stair on a dark steel spine with steel balusters; board-formed concrete wall with terracotta jaali behind the stair |
+| Rooms | Honed light stone through the open half (foyer, hall, living, kitchen); warm terrazzo in the bedrooms and dressing; large light tiles in the baths; terracotta floor on the covered south balcony |
 | Walls and ceilings | Smooth white lime plaster |
-| Jaali and screens | Terracotta brick jaali (stair wall, high exhausts, low inlets, wash screen); full-height oak fin screen at the stairwell; frameless glass guards on the court and balcony |
+| Jaali and screens | Terracotta brick jaali (stair wall, full-height screen along the open west stair, balcony end screen, high exhausts, low inlet, wash screen); full-height oak fin screen at the stairwell; frameless glass guards on the court and balcony |
 | Terrace | Terracotta pavers falling to the court; flat stone coping on parapets; thin concrete wash canopy |
 | Joinery and windows | Flush light-oak doors and a grooved dark-teak main door; slim dark-aluminium windows with clear glass and room-side safety rails; thin flat concrete chajjas |
 
@@ -185,7 +194,7 @@ Owner's brief: stairs on the north (vastu), a SW entrance and car parking, a hal
 1. The terrace finish rises 60 mm from the court guard to the parapets (≥ 1:100), so rain runs to the open court.
 2. Nine stone scuppers in the court guard spout rain into the court rain garden, a permeable planted basin 0.10 m below grade.
 3. Overflow passes a weir on the east kerb. It runs through a shallow stone channel east (1:96), then north through the silt trap to the recharge pit in the north-east garden.
-4. The balcony and first floor roof the front strip, so no gate intercept is needed. No water discharges to the road. There are no downpipes or gutters.
+4. The first floor roofs the front strip, so no gate intercept is needed. No water discharges to the road. There are no downpipes or gutters.
 5. Channel sections, pit size and its distance from footings (currently ≥ 1.0 m from column centres) must be confirmed with rainfall data and soil percolation tests.
 
 ## Important limitations

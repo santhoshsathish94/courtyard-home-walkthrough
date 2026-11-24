@@ -97,7 +97,7 @@ export function buildRain() {
   const step = 1.1;
   for (let x = D.HOUSE.x0 + 0.6; x < D.HOUSE.x1 - 0.4; x += step) for (let z = D.HOUSE.z0 + 0.6; z < D.HOUSE.z1 - 0.4; z += step) {
     const inCourt = x > D.COURT.x0 - 0.4 && x < D.COURT.x1 + 0.4 && z > D.COURT.z0 - 0.4 && z < D.COURT.z1 + 0.4;
-    const inMumty = x > D.MUMTY.x0 && x < D.MUMTY.x1 && z > D.MUMTY.z0 && z < D.MUMTY.z1;
+    const inMumty = !!D.MUMTY && x > D.MUMTY.x0 && x < D.MUMTY.x1 && z > D.MUMTY.z0 && z < D.MUMTY.z1;
     if (inCourt || inMumty) continue;
     const tx = Math.min(Math.max(x, D.COURT.x0 - 0.3), D.COURT.x1 + 0.3), tz = Math.min(Math.max(z, D.COURT.z0 - 0.3), D.COURT.z1 + 0.3);
     const d = Math.hypot(tx - x, tz - z), L = Math.min(0.7, d);

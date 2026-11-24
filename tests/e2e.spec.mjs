@@ -22,7 +22,7 @@ test('loads the model without errors and renders a real image', async ({ page })
   const stats = await page.evaluate(() => window.__app.stats);
   expect(stats.meshes).toBeGreaterThan(80);
   expect(stats.triangles).toBeGreaterThan(15000);
-  expect(stats.doors).toBe(7);
+  expect(stats.doors).toBe(5);
   const px = await page.evaluate(() => {
     window.__app.renderNow();
     const src = document.getElementById('scene'), c = document.createElement('canvas');
@@ -47,7 +47,7 @@ test('the canvas fills the screen and the page does not scroll sideways', async 
   expect(m.sw).toBeLessThanOrEqual(m.w);
 });
 
-test('walk from the road through the front gate, up the straight stair, through the main door and on to the terrace', async ({ page }) => {
+test('walk from the road through the front gate, up the stair, through the main door, to the bedrooms and on to the terrace', async ({ page }) => {
   await boot(page);
   const r = await page.evaluate(() => {
     const a = window.__app, w = a.walker.state, out = {};
@@ -56,41 +56,47 @@ test('walk from the road through the front gate, up the straight stair, through 
     out.start = { level: a.walker.level, feet: w.feet };
     w.yaw = -Math.PI / 2; let s = a.walkStep(1, 1.8);            // through the front gate
     out.inside = { x: s.x };
-    w.z = -4.13; s = a.walkStep(1, 1.6);                          // along the entry path to the stair foot
+    w.z = -3.97; s = a.walkStep(1, 1.5);                          // along the covered entry to the stair foot
     out.foot = { x: s.x, feet: s.feet };
-    s = a.walkStep(1, 1.85); out.mid = s.feet;                    // flight 1 east to the mid landing
-    s = a.walkStep(1, 3.2); out.first = { feet: s.feet, level: s.level, x: s.x }; // flight 2 to the foyer
-    w.x = 1.81; w.yaw = Math.PI; s = a.walkStep(1, 1.2);          // south through the main door
-    out.hall = { z: s.z, level: s.level };
-    w.x = -0.5; w.z = -2.8; w.yaw = Math.PI / 2; s = a.walkStep(1, 2.1); // west through the lobby arch
-    out.lobby = { x: s.x };
-    w.yaw = 0; s = a.walkStep(1, 1.0);                            // north into the terrace-stair pocket
-    out.pocket = { z: s.z, feet: s.feet };
-    w.z = -4.13; w.yaw = -Math.PI / 2; s = a.walkStep(1, 4.4);    // east up the terrace run
-    out.top = { feet: s.feet, level: s.level };
-    w.x = 2.6; w.yaw = Math.PI; s = a.walkStep(1, 1.2);           // out of the stair-head door
-    out.terrace = { feet: s.feet, level: s.level, z: s.z };
+    s = a.walkStep(1, 3.6);                                       // up both flights to the landing
+    out.first = { feet: s.feet, level: s.level, x: s.x };
+    s = a.walkStep(1, 1.2);                                       // east through the main door into the hall
+    out.hall = { x: s.x };
+    w.x = 2.6; w.z = -2.0; w.yaw = Math.PI / 2; s = a.walkStep(1, 3.4); // west along the north walkway into the short access
+    out.access = { x: s.x, level: s.level };
+    w.x = -3.6; w.z = -2.0; s = a.walkStep(1, 1.5);               // west through the bedroom-3 door
+    out.bed3 = { x: s.x };
+    w.x = 1.0; w.z = 2.4; s = a.walkStep(1, 2.4);                 // west along the south walkway into the master suite
+    out.suite = { x: s.x };
+    w.x = -2.1; w.z = 2.4; w.yaw = 0; s = a.walkStep(1, 1.5);     // north through the arch into the master bedroom
+    out.master = { z: s.z };
+    a.jump('terrace-stair');
+    w.yaw = 0; s = a.walkStep(1, 4.5);                            // north up the open west stair
+    out.top = { feet: s.feet, level: s.level, z: s.z };
+    w.yaw = -Math.PI / 2; s = a.walkStep(1, 1.5);                 // east onto the terrace
+    out.terrace = { level: s.level, x: s.x };
     return out;
   });
   expect(r.start.level).toBe('ground');
   expect(r.start.feet).toBeLessThan(0);
   expect(r.inside.x).toBeGreaterThan(-6.6);
-  expect(r.foot.x).toBeGreaterThan(-4.4);
+  expect(r.foot.x).toBeGreaterThan(-4.5);
   expect(r.foot.feet).toBeLessThan(0.1);
-  expect(r.mid).toBeCloseTo(1.6, 1);
   expect(r.first.level).toBe('first');
-  expect(r.first.feet).toBeCloseTo(3.21, 1);
-  expect(r.first.x).toBeGreaterThan(1.2);
-  expect(r.hall.z).toBeGreaterThan(-2.9);
-  expect(r.hall.level).toBe('first');
-  expect(r.lobby.x).toBeLessThan(-3.0);
-  expect(r.pocket.z).toBeLessThan(-3.6);
-  expect(r.pocket.feet).toBeCloseTo(3.21, 1);
+  expect(r.first.feet).toBeCloseTo(2.86, 1);
+  expect(r.first.x).toBeGreaterThan(0.5);
+  expect(r.hall.x).toBeGreaterThan(2.4);
+  expect(r.access.x).toBeLessThan(-1.5);
+  expect(r.access.level).toBe('first');
+  expect(r.bed3.x).toBeLessThan(-4.3);
+  expect(r.suite.x).toBeLessThan(-1.5);
+  expect(r.master.z).toBeLessThan(1.5);
   expect(r.top.level).toBe('terrace');
+  expect(r.top.feet).toBeGreaterThan(6.0);
+  expect(r.top.z).toBeLessThan(-1.0);
   expect(r.terrace.level).toBe('terrace');
-  expect(r.terrace.z).toBeGreaterThan(-3.3);
+  expect(r.terrace.x).toBeGreaterThan(-5.5);
 });
-
 test('every walk viewpoint stands on a floor at eye height', async ({ page }) => {
   await boot(page);
   const res = await page.evaluate(() => window.__app.D.VIEWPOINTS.filter((v) => v.mode === 'walk').map((v) => {
@@ -105,17 +111,19 @@ test('doors: a closed door blocks, an open one does not, and clicking the gate t
   await boot(page);
   const r = await page.evaluate(() => {
     const a = window.__app, w = a.walker.state;
-    // Common bath, entered from the utility lobby (the door starts closed).
+    // Common bath, three steps up from the short access (the door starts closed).
     a.jump('hall');
-    w.x = -3.2; w.z = -2.82; w.feet = 3.21; w.yaw = Math.PI / 2;
-    const closed = a.walkStep(1, 1.2).x;
+    w.x = -2.79; w.z = -2.0; w.feet = a.D.LEVELS.first + 0.012; w.yaw = 0;
+    const closed = a.walkStep(1, 1.2).z;
     a.toggleDoor('cbath-door');
     for (let i = 0; i < 40; i++) a.world.update(0.05);
-    w.x = -3.2; w.z = -2.82;
-    return { closed, open: a.walkStep(1, 1.2).x };
+    w.x = -2.79; w.z = -2.0; w.feet = a.D.LEVELS.first + 0.012;
+    const s = a.walkStep(1, 1.2);
+    return { closed, open: s.z, feet: s.feet };
   });
-  expect(r.closed).toBeGreaterThan(-3.9);
-  expect(r.open).toBeLessThan(-4.3);
+  expect(r.closed).toBeGreaterThan(-3.0);
+  expect(r.open).toBeLessThan(-3.3);
+  expect(r.feet).toBeCloseTo(3.31, 1);
   // Back to orbit, then click/tap the sliding car-gate leaf on screen (real input through the UI).
   await page.evaluate(() => window.__app.jump('overview'));
   const pt = await page.evaluate(() => {

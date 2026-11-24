@@ -25,26 +25,33 @@ function wallSolids(w) {
 function buildColliders() {
   const rects = [], segs = [];
   for (const w of D.WALLS) {
-    const y0 = D.LEVELS[w.level];
+    const y0 = D.LEVELS[w.level] + (w.base || 0);
     for (const s of wallSolids(w)) rects.push({ ...s, y0, y1: y0 + w.h });
   }
   for (const f of D.FURNITURE) {
     if (f.h < 0.08) continue;
-    const base = D.LEVELS[f.level];
+    const base = D.LEVELS[f.level] + (f.dy || 0);
     rects.push({ x0: f.x0, x1: f.x1, z0: f.z0, z1: f.z1, y0: f.hang ? base + f.h - 0.08 : base, y1: base + f.h });
   }
   // Columns: stilts at ground level; the expressed round column also stands in the first floor.
   for (const c of D.COLUMNS) rects.push({ x0: c.x - c.w / 2, x1: c.x + c.w / 2, z0: c.z - c.d / 2, z1: c.z + c.d / 2, y0: 0, y1: c.expressed ? D.LEVELS.terrace : D.LEVELS.first });
-  // Open (south) side of the main stair: a balustrade that follows the flight (and stops
-  // walking under the stair) without reaching up into the first-floor pocket.
-  const run0 = D.STAIR_RUNS[0], lane = D.STAIR.lane, zc = (lane.z0 + lane.z1) / 2;
-  for (let x = run0.f1.x0 + 0.35; x < run0.x1 - 1e-6; x += 0.25) {
-    const x1 = Math.min(run0.x1, x + 0.25), y = D.stairWalkY(Math.min(x1, run0.x1 - 1e-4), zc, run0.y0) ?? run0.y1;
-    rects.push({ x0: x, x1, z0: lane.z1 - 0.06, z1: lane.z1, y0: 0.3, y1: y + 1.0 });
+  // Open (south) side of the main stair: a balustrade that follows the flights and stops
+  // walking under the stair. The west stair runs between the house wall and its jaali.
+  for (const run of D.STAIR_RUNS) {
+    if (run.axis !== 'x') continue;
+    const c1 = run.lane[1], cc = (run.lane[0] + run.lane[1]) / 2;
+    const [xa, xb] = run.dir > 0 ? [run.lo + 0.35, run.hi] : [run.lo, run.hi - 0.35];
+    for (let x = xa; x < xb - 1e-6; x += 0.25) {
+      const x1 = Math.min(xb, x + 0.25), xm = run.dir > 0 ? Math.min(x1, run.hi - 1e-4) : Math.max(x, run.lo + 1e-4);
+      const y = D.stairWalkY(...run.pt(xm, cc), run.y0) ?? run.y1;
+      rects.push({ x0: x, x1, z0: c1 - 0.06, z1: c1, y0: run.y0 + 0.3, y1: y + 1.0 });
+    }
   }
   for (const g of D.GUARDS) for (const r of D.guardBands(g)) rects.push({ ...r, y0: D.LEVELS[g.level], y1: D.LEVELS[g.level] + g.h });
   const yT = D.LEVELS.terrace;
   for (const p of D.TERRACE.planters) rects.push({ ...p, y0: yT, y1: yT + p.h });
+  const tk = D.TERRACE.tank, to = tk.r + 0.10;
+  rects.push({ x0: tk.x - to, x1: tk.x + to, z0: tk.z - to, z1: tk.z + to, y0: yT, y1: yT + (tk.stand || 0) + tk.h });
   for (const [x, z] of [...D.TERRACE.solar.posts, ...D.TERRACE.washCanopy.posts]) rects.push({ x0: x - 0.06, x1: x + 0.06, z0: z - 0.06, z1: z + 0.06, y0: yT, y1: yT + 2.4 });
   const tr = D.COURT_TREE;
   rects.push({ x0: tr.x - 0.09, x1: tr.x + 0.09, z0: tr.z - 0.09, z1: tr.z + 0.09, y0: -0.1, y1: 2.3 });
@@ -71,10 +78,10 @@ function buildColliders() {
   return { rects, segs };
 }
 const inR = (x, z, r) => x > r.x0 && x < r.x1 && z > r.z0 && z < r.z1;
-const inHouse = (x, z) => x >= D.HOUSE.x0 && x <= D.HOUSE.x1 && z >= D.HOUSE.z0 && z <= D.HOUSE.z1;
+const inTerrace = (x, z) => (D.TERRACE_RECTS || [D.HOUSE]).some((r) => x >= r.x0 && x <= r.x1 && z >= r.z0 && z <= r.z1);
 const inFirst = (x, z) => D.inFirstFloor(x, z);
 function terraceY(x, z) {
-  const C = D.COURT, g = 0.23, x0 = D.HOUSE.x0 + g, x1 = D.HOUSE.x1 - g, z0 = D.HOUSE.z0 + g, z1 = D.HOUSE.z1 - g;
+  const C = D.COURT, g = 0.23, x0 = (D.WEST_BAY ? D.WEST_BAY.x0 : D.HOUSE.x0) + g, x1 = D.HOUSE.x1 - g, z0 = D.HOUSE.z0 + g, z1 = D.HOUSE.z1 - g;
   const dmax = Math.max(C.x0 - g - x0, x1 - C.x1 - g, C.z0 - g - z0, z1 - C.z1 - g);
   const dx = Math.max(C.x0 - g - x, 0, x - C.x1 - g), dz = Math.max(C.z0 - g - z, 0, z - C.z1 - g);
   return D.LEVELS.terrace + 0.02 + D.TERRACE.fall * Math.min(1, Math.max(dx, dz) / dmax);
@@ -85,10 +92,11 @@ export function floorCandidates(x, z) {
   if (D.pointInPolygon([x, z], D.PLOT.vertices)) c.push(inR(x, z, D.DRAINAGE.courtBasin) ? D.DRAINAGE.courtBasin.floor : 0.014);
   else c.push(x < D.boundaryX('W', z) - 1.2 ? -D.ROAD.drop : -0.03);
   for (const lvl of ['first', 'terrace']) {
-    if (!(lvl === 'first' ? inFirst(x, z) : inHouse(x, z)) || D.SLAB_OPENINGS[lvl].some((o) => inR(x, z, o))) continue;
-    if (lvl === 'first') c.push(D.LEVELS.first + 0.012);
-    else c.push(inR(x, z, D.MUMTY) ? D.LEVELS.terrace + 0.012 : terraceY(x, z));
+    if (!(lvl === 'first' ? inFirst(x, z) : inTerrace(x, z)) || D.SLAB_OPENINGS[lvl].some((o) => inR(x, z, o))) continue;
+    if (lvl === 'first') { const rf = (D.RAISED || []).find((q) => inR(x, z, q)); c.push((rf ? rf.y : D.LEVELS.first) + 0.012); }
+    else c.push(D.MUMTY && inR(x, z, D.MUMTY) ? D.LEVELS.terrace + 0.012 : terraceY(x, z));
   }
+  for (const st of D.STEPS || []) for (const t of D.stepTreads(st)) if (inR(x, z, t)) c.push(t.top + 0.012);
   for (const run of D.STAIR_RUNS) { const y = D.stairWalkY(x, z, run.y0); if (y !== null) c.push(y); }
   return c;
 }

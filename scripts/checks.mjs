@@ -39,7 +39,7 @@ function wallRect(w) {
   if (Math.abs(ax - bx) < EPS) return { x0: ax - h, x1: ax + h, z0: Math.min(az, bz), z1: Math.max(az, bz) };
   return null;
 }
-const wallBand = (w) => [D.LEVELS[w.level], D.LEVELS[w.level] + w.h];
+const wallBand = (w) => [D.LEVELS[w.level] + (w.base || 0), D.LEVELS[w.level] + (w.base || 0) + w.h];
 // Openings people walk through (doors, arches and sliding glass doors).
 const PASSABLE = new Set(['door', 'arch', 'slider']);
 const colRect = (c) => ({ x0: c.x - c.w / 2, x1: c.x + c.w / 2, z0: c.z - c.d / 2, z1: c.z + c.d / 2 });
@@ -72,13 +72,18 @@ const sampleSeg = (a, b, step = 0.1) => {
 };
 const H = D.HOUSE, V = D.PLOT.vertices, S = D.STAIR, BAL = D.BALCONY;
 const inHouse = (x, z) => x >= H.x0 && x <= H.x1 && z >= H.z0 && z <= H.z1;
-// First-floor envelope = house + west balcony.
-const inFF = (x, z, tol = 0.001) => inRect(x, z, H, tol) || (!!BAL && inRect(x, z, BAL, tol));
+// First-floor envelope = house + north-west bay + west balcony; terrace = house + bay.
+const FFR = D.FF_RECTS || [H, ...(BAL ? [BAL] : [])], TRR = D.TERRACE_RECTS || [H];
+const inFF = (x, z, tol = 0.001) => FFR.some((r) => inRect(x, z, r, tol));
+const inTerr = (x, z) => TRR.some((r) => inRect(x, z, r));
+const inSlab = (lvl, x, z) => (lvl === 'first' ? inFF(x, z) : inTerr(x, z));
 const rectInFF = (r) => sampleSeg([r.x0, r.z0], [r.x1, r.z0], 0.05).concat(sampleSeg([r.x0, r.z1], [r.x1, r.z1], 0.05), sampleSeg([r.x0, r.z0], [r.x0, r.z1], 0.05), sampleSeg([r.x1, r.z0], [r.x1, r.z1], 0.05)).every(([x, z]) => inFF(x, z));
 const OPEN = (lvl) => D.SLAB_OPENINGS[lvl] || [];
 const inOpening = (lvl, x, z, tol = -0.001) => OPEN(lvl).some((o) => inRect(x, z, o, tol));
 const RUNS = S.runs.map((_, i) => D.stairRun(i));
-const laneRect = (x0, x1) => ({ x0, x1, z0: S.lane.z0, z1: S.lane.z1 });
+const LEVELS_FIRST = D.LEVELS.first;
+// Raised floor (if any) at a plan point: it replaces the first-floor slab there.
+const raisedAt = (x, z) => (D.RAISED || []).find((q) => inRect(x, z, q, -0.001)) || null;
 // Plot geometry computed independently of design.js helpers (they read module internals).
 const pip = ([x, z], pts = V) => {
   let inside = false;
@@ -142,7 +147,7 @@ check(/1,620/.test(html + allJs) && /1,617/.test(html + allJs), 'The stated vs m
 check(!/function addEastServiceEave|const rainPipe\s*=|const fascia\s*=/.test(allJs + html), 'Long roof frame and downpipe must not return');
 check(!/addNorthRoofWing|addWestRoofWing|addSouthRoofWing/.test(allJs + html), 'Removed broad roof wings must not return');
 const planSrc = src['plan.js'] || '';
-for (const label of ['16 columns', 'Courtyard overflow', 'Recharge pit', 'Silt trap', 'Flat stone coping', 'SW low inlet → cross-flow → high exhaust']) {
+for (const label of ['16 columns', 'Courtyard overflow', 'Recharge pit', 'Silt trap', 'Flat stone coping', 'West low inlet → cross-flow → high exhaust']) {
   check(planSrc.includes(label), `Plans must label "${label}"`);
 }
 const b3 = src['build3d.js'] || '';
@@ -175,19 +180,19 @@ facts.push(`Plot sides N ${fx(sides.N)} · S ${fx(sides.S)} · W ${fx(sides.W)} 
 // ---- B2 house in the plot ---------------------------------------------------
 // The first-floor envelope (house + balcony) may reach the compound-wall line but
 // never cross the plot boundary.
-for (const r of [H, ...(BAL ? [BAL] : [])]) for (const c of [[r.x0, r.z0], [r.x1, r.z0], [r.x1, r.z1], [r.x0, r.z1]]) {
+for (const r of FFR) for (const c of [[r.x0, r.z0], [r.x1, r.z0], [r.x1, r.z1], [r.x0, r.z1]]) {
   check(pip(c, V) && distB(c) >= 0.02, `First-floor corner (${c}) must stay inside the plot line (boundary distance ${fx(distB(c))} m)`);
 }
-const houseM2 = (H.x1 - H.x0) * (H.z1 - H.z0) + (BAL ? (BAL.x1 - BAL.x0) * (BAL.z1 - BAL.z0) : 0);
-facts.push(`First floor ${fx(H.x1 - H.x0)} × ${fx(H.z1 - H.z0)} m + balcony = ${fx(houseM2, 1)} m² (${fx(houseM2 / D.FT ** 2, 0)} sq ft), ${fx((100 * houseM2) / (plotSqFt * D.FT ** 2), 0)} % of the plot`);
+const houseM2 = FFR.reduce((a, r) => a + (r.x1 - r.x0) * (r.z1 - r.z0), 0);
+facts.push(`First floor ${fx(H.x1 - H.x0)} × ${fx(H.z1 - H.z0)} m + bay + balcony = ${fx(houseM2, 1)} m² (${fx(houseM2 / D.FT ** 2, 0)} sq ft), ${fx((100 * houseM2) / (plotSqFt * D.FT ** 2), 0)} % of the plot`);
 
 // ---- B3 columns ---------------------------------------------------------------
 check(D.COLUMNS.length === 16, `The structure must have 16 columns (has ${D.COLUMNS.length})`);
 const structWalls = (lvl) => D.WALLS.filter((w) => w.level === lvl && (w.kind === 'exterior' || w.kind === 'grid'));
-const groundStair = RUNS.filter((r) => r.from === 'ground').map((r) => laneRect(r.f1.x0, r.x1));
+const groundStair = RUNS.filter((r) => r.from === 'ground').map((r) => r.rect(r.lo, r.hi));
 for (const c of D.COLUMNS) {
   const r = colRect(c);
-  check(r.x0 >= H.x0 - EPS && r.x1 <= H.x1 + EPS && r.z0 >= H.z0 - EPS && r.z1 <= H.z1 + EPS, `Column ${c.id} must sit inside the house envelope`);
+  check(rectInFF(r), `Column ${c.id} must sit inside the first-floor envelope`);
   check(!OPEN('first').some((o) => rectOverlap(r, o)) && !groundStair.some((o) => rectOverlap(r, o)), `Column ${c.id} must not stand in the court void or the stair`);
   if (c.expressed) continue; // a deliberately exposed column stands free in the open plan
   const onWall = structWalls('first').some((w) => (isHoriz(w) ? Math.abs(c.z - w.a[1]) < 0.01 : Math.abs(c.x - w.a[0]) < 0.01) && inRect(c.x, c.z, wallRect(w), 0.16));
@@ -224,68 +229,80 @@ for (const w of D.WALLS) {
 }
 
 // ---- B5 stair rules -----------------------------------------------------------
-// One straight stair on the north side: each run = flight 1, mid landing, flight 2.
-const storeyH = D.LEVELS.first - D.LEVELS.ground;
-check(Math.abs(S.riser * S.risers - storeyH) < EPS && Math.abs(D.LEVELS.terrace - D.LEVELS.first - storeyH) < EPS, 'Both storeys must use the same equal risers');
-check(S.risers === 2 * S.perFlight, 'Each run is two equal flights');
-check(S.perFlight <= 15, `Risers per flight ≤ 15 (${S.perFlight})`);
-check(S.riser <= 0.19 + EPS, `Riser ≤ 190 mm (${fx(S.riser * 1000, 0)} mm)`);
-check(S.tread >= 0.25 - EPS, `Tread ≥ 250 mm (${fx(S.tread * 1000, 0)} mm)`);
-const blondel = 2 * S.riser + S.tread;
-check(blondel >= 0.60 && blondel <= 0.65, `2R + T within 600–650 mm (${fx(blondel * 1000, 0)} mm)`);
-const laneW = S.lane.z1 - S.lane.z0;
-check(laneW >= 0.90 - EPS && Math.abs(S.width - laneW) < EPS, `Flight width ≥ 0.90 m (${fx(laneW)})`);
-check(rectInFF(laneRect(Math.min(...RUNS.map((r) => r.f1.x0)), Math.max(...RUNS.map((r) => r.x1)))), 'The stair lane must lie inside the house');
+// Straight runs, each along x or z in its own lane; a run = one or more flights joined
+// by landings. The main stair keeps the owner's 4 ft; the terrace stair may be narrower
+// where the fixed column line limits its strip, but never under 0.90 m.
+const mainRun0 = RUNS.find((r) => r.from === 'ground');
+check(!!mainRun0 && Math.abs(S.width - mainRun0.width) < EPS, 'STAIR.width must match the main stair lane');
 for (const r of RUNS) {
-  check(Math.abs(r.f1.x1 - r.f1.x0 - (S.perFlight - 1) * S.tread) < EPS && Math.abs(r.f2.x1 - r.f2.x0 - (S.perFlight - 1) * S.tread) < EPS, `Run ${r.id}: each flight must be exactly (risers per flight − 1) treads long`);
-  check(r.mid.x1 - r.mid.x0 >= laneW - EPS, `Run ${r.id}: the mid landing must be at least as deep as the flight width`);
-  check(r.landing[1] - r.landing[0] >= laneW - EPS && Math.abs(r.landing[0] - r.x1) < 0.005, `Run ${r.id}: the top landing must abut the last riser and be ≥ the flight width`);
-  check(r.foot[1] - r.foot[0] >= laneW - EPS && Math.abs(r.foot[1] - r.f1.x0) < EPS, `Run ${r.id}: the foot landing must be ≥ the flight width`);
-  const op = S.openings[r.to];
-  if (op) check(Math.abs(op.x1 - r.x1) < 0.005, `Run ${r.id}: the ${r.to} slab opening must end at the top riser`);
+  const minW = r.from === 'ground' ? 1.22 : 0.90, laneW = r.width, cc = (r.lane[0] + r.lane[1]) / 2;
+  check(laneW >= minW - EPS, `Run ${r.id}: stair width ≥ ${minW === 1.22 ? '1.22 m, 4 ft' : `${fx(minW)} m`} (${fx(laneW)} m)`);
+  check(rectInFF(r.rect(r.lo, r.hi)), `Run ${r.id}: the stair must lie inside the first-floor envelope`);
+  const blondel = 2 * r.riser + r.tread;
+  check(Math.abs(r.riser * r.risers - (r.y1 - r.y0)) < EPS, `Run ${r.id}: equal risers must add up to the storey height`);
+  check(r.riser <= 0.19 + EPS, `Run ${r.id}: riser ≤ 190 mm (${fx(r.riser * 1000, 0)} mm)`);
+  check(r.tread >= 0.25 - EPS, `Run ${r.id}: tread ≥ 250 mm (${fx(r.tread * 1000, 0)} mm)`);
+  check(blondel >= 0.60 - EPS && blondel <= 0.65 + EPS, `Run ${r.id}: 2R + T within 600–650 mm (${fx(blondel * 1000, 0)} mm)`);
+  check(r.flights.reduce((t, f) => t + f.n, 0) === r.risers, `Run ${r.id}: flights must add up to the riser count`);
+  for (const f of r.flights) {
+    check(f.n <= 15, `Run ${r.id}: ≤ 15 risers per flight (${f.n})`);
+    check(Math.abs(f.x1 - f.x0 - (f.n - 1) * r.tread) < EPS, `Run ${r.id}: each flight must be exactly (risers − 1) treads long`);
+  }
+  check(r.mids.length === r.flights.length - 1, `Run ${r.id}: one landing between consecutive flights`);
+  for (const m of r.mids) check(m.x1 - m.x0 >= laneW - EPS, `Run ${r.id}: the mid landing must be at least as deep as the flight width`);
+  const L = r.landing, Fo = r.foot;
+  check(L[1] - L[0] >= laneW - EPS && Math.abs((r.dir > 0 ? L[0] : L[1]) - r.top) < 0.005, `Run ${r.id}: the top landing must abut the last riser and be ≥ the flight width`);
+  check(Fo[1] - Fo[0] >= laneW - EPS && Math.abs((r.dir > 0 ? Fo[1] : Fo[0]) - r.start) < EPS, `Run ${r.id}: the foot landing must abut the first riser and be ≥ the flight width`);
+  if (r.opening) check(Math.abs((r.dir > 0 ? r.opening[1] : r.opening[0]) - r.top) < 0.005, `Run ${r.id}: the ${r.to} slab opening must end at the top riser`);
+  const atL = (lvl, a) => { const [x, z] = r.pt(a, cc); return inSlab(lvl, x, z) && !inOpening(lvl, x, z); };
+  check(atL(r.to, (L[0] + L[1]) / 2), `Run ${r.id}: the top landing must be ${r.to} slab`);
+  check(r.from === 'ground' || atL(r.from, (Fo[0] + Fo[1]) / 2), `Run ${r.id}: the foot landing must be ${r.from} slab, not over a stairwell`);
   const treads = D.stairTreads(r.y0);
-  check(treads.length === S.risers - 2, `Run ${r.id}: tread count`);
-  check(Math.abs(Math.max(...treads.map((t) => t.top)) - (r.y0 + (S.risers - 1) * S.riser)) < EPS, `Run ${r.id}: top tread is one riser below the next floor`);
-  const zc = (S.lane.z0 + S.lane.z1) / 2;
-  check(Math.abs(D.stairWalkY(r.f1.x0, zc, r.y0) - r.y0) < 0.01, `Run ${r.id}: walking line starts at the floor`);
-  check(Math.abs(D.stairWalkY(r.f2.x1, zc, r.y0) - r.y1) < 0.01, `Run ${r.id}: walking line arrives at the next floor`);
+  check(treads.length === r.risers - r.flights.length, `Run ${r.id}: tread count`);
+  check(Math.abs(Math.max(...treads.map((t) => t.top)) - (r.y1 - r.riser)) < EPS, `Run ${r.id}: top tread is one riser below the next floor`);
+  check(Math.abs(D.stairWalkY(...r.pt(r.start, cc), r.y0) - r.y0) < 0.01, `Run ${r.id}: walking line starts at the floor`);
+  check(Math.abs(D.stairWalkY(...r.pt(r.top, cc), r.y0) - r.y1) < 0.01, `Run ${r.id}: walking line arrives at the next floor`);
 }
-// The upper run's foot landing must be a floor, reached from a room (not the stairwell).
-const upper = RUNS.find((r) => r.from === 'first');
-if (upper) check(!inOpening('first', (upper.foot[0] + upper.foot[1]) / 2, (S.lane.z0 + S.lane.z1) / 2), 'The terrace stair must start from first-floor slab, not over the stairwell');
 // Headroom measured vertically from the pitch line (nosings) and landings.
-const cosT = S.tread / Math.hypot(S.tread, S.riser), slope = S.riser / S.tread, Hf = S.perFlight * S.riser;
-const inLane = (z) => z > S.lane.z0 && z < S.lane.z1;
-const pitch = (r, fl, x) => (fl === 1 ? r.y0 + S.riser + (x - r.f1.x0) * slope : r.y0 + Hf + S.riser + (x - r.f2.x0) * slope);
-// Underside of each run (flights, mid landing) above a plan point, or null.
+const runSlope = (r) => r.riser / r.tread, runCos = (r) => r.tread / Math.hypot(r.tread, r.riser);
+const pitch = (r, f, a) => f.ys + r.riser + Math.abs(a - f.xs) * runSlope(r);
+// Underside of each run (flights, landings) above a plan point, or null.
 function runSoffit(r, x, z) {
-  if (!inLane(z)) return null;
-  if (x > r.f1.x0 && x < r.f1.x1) return r.y0 + (x - r.f1.x0) * slope - S.waist / cosT;
-  if (x >= r.mid.x0 && x <= r.mid.x1) return r.y0 + Hf - S.waist;
-  if (x > r.f2.x0 && x < r.f2.x1) return r.y0 + Hf + (x - r.f2.x0) * slope - S.waist / cosT;
+  const [a, c] = r.loc(x, z);
+  if (!(c > r.lane[0] && c < r.lane[1])) return null;
+  for (const f of r.flights) if (a > f.x0 && a < f.x1) return f.ys + Math.abs(a - f.xs) * runSlope(r) - S.waist / runCos(r);
+  for (const m of r.mids) if (a >= m.x0 && a <= m.x1) return m.y - S.waist;
   return null;
 }
 function lowestAbove(x, z, y) {
   let best = Infinity;
   const take = (v) => { if (v !== null && v > y + 0.05 && v < best) best = v; };
-  for (const lvl of ['first', 'terrace']) if (inFF(x, z) && !inOpening(lvl, x, z)) take(D.LEVELS[lvl] - D.SLAB);
+  for (const lvl of ['first', 'terrace']) if (inSlab(lvl, x, z) && !inOpening(lvl, x, z)) { const rf = lvl === 'first' && raisedAt(x, z); take((rf ? rf.y : D.LEVELS[lvl]) - D.SLAB); }
   for (const b of D.BEAMS) if (inRect(x, z, b, -0.001)) take(b.y0);
-  if (inRect(x, z, D.MUMTY, -0.001)) take(D.MUMTY.roofTop - D.SLAB);
+  if (D.MUMTY && inRect(x, z, D.MUMTY, -0.001)) take(D.MUMTY.roofTop - D.SLAB);
   for (const r of RUNS) take(runSoffit(r, x, z));
   return best;
 }
 let minHead = Infinity, minAt = null;
 const probe = (x, z, y) => { const hr = lowestAbove(x, z, y) - y; if (hr < minHead) { minHead = hr; minAt = [x, z, y]; } };
-const laneZs = [S.lane.z0 + 0.03, (S.lane.z0 + S.lane.z1) / 2, S.lane.z1 - 0.03];
 for (const r of RUNS) {
-  for (const [fl, f] of [[1, r.f1], [2, r.f2]]) for (let x = f.x0 + 0.005; x < f.x1; x += 0.02) for (const z of laneZs) probe(x, z, pitch(r, fl, x));
-  for (let x = r.mid.x0 + 0.01; x < r.mid.x1; x += 0.05) for (const z of laneZs) probe(x, z, r.y0 + Hf);
-  for (let x = r.foot[0] + 0.01; x < r.foot[1]; x += 0.05) for (const z of laneZs) probe(x, z, r.y0);
-  for (let x = r.landing[0] + 0.01; x < r.landing[1]; x += 0.05) for (const z of laneZs) probe(x, z, r.y1);
+  const cs = [r.lane[0] + 0.03, (r.lane[0] + r.lane[1]) / 2, r.lane[1] - 0.03];
+  const at = (a, y) => { for (const c of cs) probe(...r.pt(a, c), y); };
+  for (const f of r.flights) for (let a = f.x0 + 0.005; a < f.x1; a += 0.02) at(a, pitch(r, f, a));
+  for (const m of r.mids) for (let a = m.x0 + 0.01; a < m.x1; a += 0.05) at(a, m.y);
+  for (let a = r.foot[0] + 0.01; a < r.foot[1]; a += 0.05) at(a, r.y0);
+  for (let a = r.landing[0] + 0.01; a < r.landing[1]; a += 0.05) at(a, r.y1);
 }
 check(minHead >= 2.20, `Stair headroom ≥ 2.20 m on flights and landings (min ${fx(minHead)} m at ${minAt?.map((v) => fx(v)).join(', ')})`);
-facts.push(`Stair: straight, north side, rising west → east; ${S.risers} risers × ${fx(S.riser * 1000, 0)} mm, treads ${fx(S.tread * 1000, 0)} mm, 2R+T ${fx(blondel * 1000, 0)} mm, width ${fx(laneW)} m, terrace run stacked above, min headroom ${fx(minHead)} m`);
-
+const heading = (r) => (r.axis === 'z' ? (r.dir > 0 ? 'south' : 'north') : r.dir > 0 ? 'east' : 'west');
+facts.push(`Stairs: straight; ${RUNS.map((r) => `${r.id} ${fx(r.width)} m wide, ${r.risers} × ${fx(r.riser * 1000, 0)} mm on ${fx(r.tread * 1000, 0)} mm treads in flights of ${r.flights.map((f) => f.n).join(' + ')}, rising ${heading(r)}, ${fx(r.hi - r.lo)} m long`).join('; ')}; min headroom ${fx(minHead)} m`);
+// Raised floors: the floor above a stair's low end must leave the stair 2.2 m (checked
+// above) and is reached by equal steps of ≤ 190 mm.
+for (const st of D.STEPS || []) {
+  const rf = (D.RAISED || []).find((q) => inRect((st.x0 + st.x1) / 2, st.z0 - 0.05, q));
+  check(!!rf && Math.abs(LEVELS_FIRST + st.n * st.rise - rf.y) < EPS, `Steps ${st.id} must rise exactly to the raised floor`);
+  check(st.rise <= 0.19 + EPS && (st.z1 - st.z0) / (st.n - 1) >= 0.25 - EPS, `Steps ${st.id}: riser ≤ 190 mm, tread ≥ 250 mm`);
+}
 // ---- B6 rooms -------------------------------------------------------------------
 const minByUse = { bedroom: [7.5, 2.4], living: [9.5, 2.4], kitchen: [5.0, 1.8], bath: [2.8, 1.2], study: [2.5, 1.2], pooja: [1.5, 1.0], family: [4.0, 1.8] };
 for (const r of D.ROOMS) {
@@ -349,8 +366,7 @@ for (const w of D.WALLS) {
     if (o.vent) check(o.head + 0.40 <= w.h - 0.05 + EPS, `Opening ${o.id} vent transom must fit under the beam`);
     if (i > 0) check(ops[i - 1].s + ops[i - 1].w + 0.10 <= o.s + EPS, `Openings ${ops[i - 1].id} and ${o.id} need a ≥ 100 mm pier between them`);
     if (o.type === 'door') {
-      const use = D.ROOMS.find((r) => r.id === o.room)?.use;
-      check(o.w >= (o.main ? 1.0 : use === 'bath' ? 0.70 : 0.75) - EPS, `Door ${o.id} clear width (${fx(o.w)} m)`);
+      check(o.w >= (o.main ? 1.52 : 1.22) - EPS, `Door ${o.id} clear width ≥ ${o.main ? '1.52 m (5 ft main door)' : '1.22 m (4 ft)'} (${fx(o.w)} m)`);
       check(o.head >= 2.0, `Door ${o.id} head ≥ 2.0 m`);
     }
     const { p0, p1 } = D.openingSpan(w, o);
@@ -440,8 +456,8 @@ for (const f of D.FURNITURE) {
   if (f.level === 'ground') check(corners.every((p) => pip(p, V) && distB(p) >= D.COMPOUND.t - 0.001), `${f.id} must sit inside the compound wall`);
   else check(f.level === 'first' ? rectInFF(f) : f.x0 >= H.x0 && f.x1 <= H.x1 && f.z0 >= H.z0 && f.z1 <= H.z1, `${f.id} must sit inside the house`);
   if (f.level === 'first') check(!OPEN('first').some((o) => rectOverlap(f, o)), `${f.id} must not stand over the court void or stairwell`);
-  if (f.level === 'terrace') check(!OPEN('terrace').some((o) => rectOverlap(f, o)) && !rectOverlap(f, D.MUMTY), `${f.id} must not stand in the court or stair head`);
-  const fy = D.LEVELS[f.level];
+  if (f.level === 'terrace') check(!OPEN('terrace').some((o) => rectOverlap(f, o)) && !(D.MUMTY && rectOverlap(f, D.MUMTY)), `${f.id} must not stand in the court or stair head`);
+  const fy = D.LEVELS[f.level] + (f.dy || 0);
   for (const w of D.WALLS) {
     const [y0, y1] = wallBand(w);
     if (fy + f.h <= y0 + EPS || fy >= y1 - EPS) continue;
@@ -489,13 +505,13 @@ function freeGrid(level, r, skip = []) {
   };
   for (let j = 0; j < NZ; j++) for (let i = 0; i < NX; i++) {
     const x = GX0 + (i + 0.5) * RES, z = GZ0 + (j + 0.5) * RES;
-    const out = level === 'ground' ? !pip([x, z], V) || distB([x, z]) < D.COMPOUND.t + r : level === 'first' ? !inFF(x, z) : !inHouse(x, z);
+    const out = level === 'ground' ? !pip([x, z], V) || distB([x, z]) < D.COMPOUND.t + r : level === 'first' ? !inFF(x, z) : !inTerr(x, z);
     if (out) blocked[j * NX + i] = 1;
   }
   const ly = D.LEVELS[level];
   for (const w of D.WALLS) {
     const [y0, y1] = wallBand(w);
-    if (y0 > ly + 0.3 || y1 <= ly + 0.3) continue;
+    if (y0 > ly + 0.6 || y1 <= ly + 0.3) continue;
     for (const s of wallSolids(w)) block(s);
   }
   for (const f of D.FURNITURE) if (f.level === level && !f.passable && !f.hang && !skip.includes(f.id)) block(f);
@@ -560,13 +576,12 @@ const doorFront = (dr, d) => { const sp = D.openingSpan(dr.w, dr.o), sw = SW[dr.
 // A point in front of a seat (the side opposite its back).
 const seatFront = (f) => { const bk = SW[f.back || 'N'], c = [(f.x0 + f.x1) / 2, (f.z0 + f.z1) / 2], hd = Math.abs(bk[0]) ? (f.x1 - f.x0) / 2 : (f.z1 - f.z0) / 2; return [c[0] - bk[0] * (hd + 0.4), c[1] - bk[1] * (hd + 0.4)]; };
 const waterPt = D.FURNITURE.find((f) => f.type === 'waterpot');
-const laneZ = (S.lane.z0 + S.lane.z1) / 2;
 const mainRun = RUNS.find((r) => r.from === 'ground'), upperRun = RUNS.find((r) => r.from === 'first');
-const stairFoot = [mainRun.f1.x0 - 0.40, laneZ];
+const laneMid = (r) => (r.lane[0] + r.lane[1]) / 2, runAt = (r, a) => r.pt(a, laneMid(r));
+const stairFoot = runAt(mainRun, mainRun.start - mainRun.dir * 0.40);
 for (const t of reachable('ground', 0.3, pedIn, [
   { id: 'stair foot', p: stairFoot },
   { id: 'courtyard garden edge', p: [D.COURT.x1 + 0.6, (D.COURT.z0 + D.COURT.z1) / 2] },
-  ...D.FURNITURE.filter((f) => f.type === 'thinnai').map((f) => ({ id: `thinnai ${f.id}`, p: seatFront(f), rad: 0.3 })),
   ...(waterPt ? [{ id: 'water point', p: [waterPt.x1 + 0.4, (waterPt.z0 + waterPt.z1) / 2] }] : []),
 ])) check(t.ok, `Ground: ${t.id} must be reachable on foot from the front gate`);
 for (const r of D.ROOMS.filter((r) => r.level === 'ground' && r.vehicle === 'two-wheeler')) {
@@ -581,16 +596,14 @@ if (carBay) {
   check(!!car && inRect(car.x0, car.z0, carBay) && inRect(car.x1, car.z1, carBay), 'The parked car must sit inside the car bay');
   check(carBay.z0 >= carGate.z0 - 0.3 && carBay.z1 <= carGate.z1 + 0.3, 'The car bay must line up with the car gate');
 }
-const ffArrive = [(mainRun.landing[0] + mainRun.landing[1]) / 2, laneZ];
+const ffArrive = runAt(mainRun, (mainRun.landing[0] + mainRun.landing[1]) / 2);
 for (const t of reachable('first', 0.25, ffArrive, [
   ...D.ROOMS.filter((r) => r.level === 'first' && !['void', 'stair'].includes(r.use)).map((r) => roomTarget(r.id)),
-  { id: 'terrace-stair foot', p: [(upperRun.foot[0] + upperRun.foot[1]) / 2, laneZ], rad: 0.3 },
+  { id: 'terrace-stair foot', p: runAt(upperRun, (upperRun.foot[0] + upperRun.foot[1]) / 2), rad: 0.3 },
 ])) {
   check(t.ok, `First floor: ${t.id} must be reachable from the stair arrival (0.5 m body)`);
 }
-const mumtyDoor = doors.find((d) => d.o.id === 'mumty-door');
-for (const t of reachable('terrace', 0.25, [(upperRun.landing[0] + upperRun.landing[1]) / 2, laneZ], [
-  { id: 'terrace via stair-head door', p: doorFront(mumtyDoor, 0.6) },
+for (const t of reachable('terrace', 0.25, runAt(upperRun, (upperRun.landing[0] + upperRun.landing[1]) / 2), [
   roomTarget('t-wash'), { id: 'terrace NE corner', p: [5.0, -2.8] }, { id: 'terrace NW (solar)', p: [-4.0, -2.0] },
 ])) check(t.ok, `Terrace: ${t.id} must be reachable from the stair (0.5 m body)`);
 
@@ -643,10 +656,10 @@ for (const p of D.AIRFLOW.paths) {
       const Y = D.LEVELS[lvl];
       if ((P[1] - Y) * (Q[1] - Y) >= 0) continue;
       const t = (Y - P[1]) / (Q[1] - P[1]), x = P[0] + t * (Q[0] - P[0]), z = P[2] + t * (Q[2] - P[2]);
-      if (inHouse(x, z)) check(D.SLAB_OPENINGS[lvl].some((o) => inRect(x, z, o, 0.01)), `Airflow ${p.id} must pass the ${lvl} slab through the court or stairwell (at ${fx(x)}, ${fx(z)})`);
+      if (inSlab(lvl, x, z)) check(D.SLAB_OPENINGS[lvl].some((o) => inRect(x, z, o, 0.01)), `Airflow ${p.id} must pass the ${lvl} slab through the court or stairwell (at ${fx(x)}, ${fx(z)})`);
     }
-    const Ym = D.MUMTY.roofTop - D.SLAB;
-    if ((P[1] - Ym) * (Q[1] - Ym) < 0) {
+    const Ym = D.MUMTY ? D.MUMTY.roofTop - D.SLAB : Infinity;
+    if (D.MUMTY && (P[1] - Ym) * (Q[1] - Ym) < 0) {
       const t = (Ym - P[1]) / (Q[1] - P[1]);
       check(!inRect(P[0] + t * (Q[0] - P[0]), P[2] + t * (Q[2] - P[2]), D.MUMTY), `Airflow ${p.id} must not pass through the stair-head roof`);
     }
@@ -727,8 +740,9 @@ function floorAt(x, z, nearY) {
   const c = [];
   if (pip([x, z], V)) c.push(D.LEVELS.ground);
   else if (x < westX(z)) c.push(-D.ROAD.drop);
-  if (inFF(x, z) && !inOpening('first', x, z)) c.push(D.LEVELS.first);
-  if (inHouse(x, z) && !inOpening('terrace', x, z)) c.push(D.LEVELS.terrace);
+  if (inFF(x, z) && !inOpening('first', x, z)) c.push(raisedAt(x, z)?.y ?? D.LEVELS.first);
+  for (const st of D.STEPS || []) for (const t of D.stepTreads(st)) if (inRect(x, z, t)) c.push(t.top);
+  if (inTerr(x, z) && !inOpening('terrace', x, z)) c.push(D.LEVELS.terrace);
   for (const r of RUNS) { const y = D.stairWalkY(x, z, r.y0); if (y !== null) c.push(y); }
   return c.reduce((b, y) => (Math.abs(y - nearY) < Math.abs(b - nearY) ? y : b), Infinity);
 }
@@ -743,42 +757,39 @@ for (const v of D.VIEWPOINTS) {
   if (lvl === 'ground') check(!D.COLUMNS.some((c) => inRect(x, z, colRect(c), 0.25)), `Viewpoint ${v.id} must not stand in a column`);
 }
 
-// ---- B15 thinnai, court edges --------------------------------------------------------------
-const thinnai = D.FURNITURE.filter((f) => f.type === 'thinnai');
-check(thinnai.length >= 1 && thinnai.every((t) => t.h >= 0.40 && t.h <= 0.50), 'A thinnai bench with a 400–500 mm seat must be provided');
-check(thinnai.some((t) => rectDist(t, laneRect(stairFoot[0], mainRun.f1.x0)) <= 2.5), 'The thinnai must sit by the stair foot (within 2.5 m), where shoes come off');
+// ---- B15 court edges ------------------------------------------------------------------------
 const courtW = D.COURT.x1 - D.COURT.x0, courtD = D.COURT.z1 - D.COURT.z0;
 check(courtW >= 2.4 - EPS && courtD >= 2.4 - EPS, `Nadumuttam must be at least 2.4 × 2.4 m (${fx(courtW)} × ${fx(courtD)})`);
 {
-  // Court edges follow the void: sides with a guard band open to the hall/kitchen,
-  // the others are bedroom-suite walls with windows onto the court (owner's brief).
+  // Guarded court sides open to the walkway, living, kitchen or library walk; closed
+  // sides are walls with an opening (window or jaali) onto the court.
   const g = D.GUARDS.find((x) => x.court) || D.GUARDS.find((x) => x.level === 'first');
-  const C0 = D.COURT, L = D.COURT_LANDING || { x0: C0.x1, z0: C0.z1 };
-  const edge = { N: [[C0.x0, C0.z0], [C0.x1, C0.z0]], S: [[C0.x0, C0.z1], [L.x0, C0.z1]], W: [[C0.x0, C0.z0], [C0.x0, C0.z1]], E: [[C0.x1, C0.z0], [C0.x1, L.z0]] };
+  const C0 = D.COURT;
+  const edge = { N: [[C0.x0, C0.z0], [C0.x1, C0.z0]], S: [[C0.x0, C0.z1], [C0.x1, C0.z1]], W: [[C0.x0, C0.z0], [C0.x0, C0.z1]], E: [[C0.x1, C0.z0], [C0.x1, C0.z1]] };
   const out = { N: [0, -1], S: [0, 1], W: [-1, 0], E: [1, 0] };
-  const guarded = (p, o) => guardRects.some((b) => b.level === 'first' && inRect(p[0] + o[0] * 0.05, p[1] + o[1] * 0.05, b, 0.001));
+  const guarded = (pt, o) => guardRects.some((bd) => bd.level === 'first' && inRect(pt[0] + o[0] * 0.05, pt[1] + o[1] * 0.05, bd, 0.001));
   const openSides = [];
   for (const side of ['N', 'S', 'W', 'E']) {
-    const [a, b] = edge[side], mid = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2], o = out[side];
+    const [ea, eb] = edge[side], mid = [(ea[0] + eb[0]) / 2, (ea[1] + eb[1]) / 2], o = out[side];
     if (guarded(mid, o)) {
       openSides.push(side);
       const beyond = roomAt('first', mid[0] + o[0] * (g.t + 0.3), mid[1] + o[1] * (g.t + 0.3));
-      check(!!beyond && ['hall', 'family', 'living', 'kitchen'].includes(beyond.use), `Court ${side} side must open to the hall, family, living or kitchen (found ${beyond?.id || 'nothing'})`);
+      check(!!beyond && ['hall', 'family', 'living', 'kitchen', 'library'].includes(beyond.use), `Court ${side} side must open to the walkway, living, kitchen or library (found ${beyond?.id || 'nothing'})`);
       const clear = beyond ? (o[1] ? beyond.z1 - beyond.z0 : beyond.x1 - beyond.x0) : 0;
       check(clear >= 0.95 - EPS, `Circulation beside the court (${side}) must be ≥ 0.95 m clear (${fx(clear)} m)`);
     } else {
       const wall = D.WALLS.find((w) => w.level === 'first' && (w.kind === 'grid' || w.kind === 'exterior') && isHoriz(w) === (side === 'N' || side === 'S') && inRect(mid[0] + o[0] * (w.t / 2), mid[1] + o[1] * (w.t / 2), wallRect(w), 0.01));
-      const room = roomAt('first', mid[0] + o[0] * 0.6, mid[1] + o[1] * 0.6);
-      check(!!wall && (room?.use === 'bedroom' || !!room?.suite), `Court ${side} side must be a bedroom-suite wall (wall ${wall?.id || 'none'}, room ${room?.id || 'none'})`);
+      check(!!wall, `Court ${side} side must be guarded or closed by a wall (none found)`);
       if (wall) {
-        const win = wall.openings.some((op) => op.type === 'window' && op.court && (() => { const sp = D.openingSpan(wall, op), kk = side === 'N' || side === 'S' ? 0 : 1; return Math.max(sp.p0[kk], sp.p1[kk]) > Math.min(a[kk], b[kk]) && Math.min(sp.p0[kk], sp.p1[kk]) < Math.max(a[kk], b[kk]); })());
-        check(win, `The bedroom wall on the court's ${side} side must have a window onto the court`);
+        const kk = side === 'N' || side === 'S' ? 0 : 1;
+        const win = wall.openings.some((op) => op.court && (op.type === 'window' || op.type === 'jaali') && (() => { const sp = D.openingSpan(wall, op); return Math.max(sp.p0[kk], sp.p1[kk]) > Math.min(ea[kk], eb[kk]) && Math.min(sp.p0[kk], sp.p1[kk]) < Math.max(ea[kk], eb[kk]); })());
+        check(win, `The wall on the court's ${side} side must have a window or jaali onto the court`);
       }
     }
   }
-  check(openSides.includes('N') && openSides.length === 2, `The court must open on exactly two sides, including the hall (north) (open: ${openSides.join(', ')})`);
+  check(openSides.includes('N') && openSides.length >= 2, `The court must open on at least two sides, including the north walkway (open: ${openSides.join(', ')})`);
 }
-for (const w of D.WALLS) for (const o of w.openings) if (o.court) check(o.type === 'window' && o.sill >= 0.85 && o.grille !== false, `Court window ${o.id} needs a sill ≥ 0.85 m and a grille (3.2 m drop)`);
+for (const w of D.WALLS) for (const o of w.openings) if (o.court) check((o.type === 'window' || o.type === 'jaali') && o.sill >= 0.85 && o.grille !== false, `Court opening ${o.id} needs a sill ≥ 0.85 m and a grille or jaali (first floor over the court)`);
 
 return C;
 }

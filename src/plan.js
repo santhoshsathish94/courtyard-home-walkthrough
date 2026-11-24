@@ -251,9 +251,10 @@ function drawWalker(T, wk) {
 // ---------------------------------------------------------------- levels ----
 function drawGround(T, overlays) {
   poly(T, rectPts(D.HOUSE), { stroke: C.soft, width: 0.9, dash: [5, 4] });
-  poly(T, rectPts(D.BALCONY), { stroke: C.soft, width: 0.9, dash: [5, 4] });
+  poly(T, rectPts(D.WEST_STRIP), { stroke: C.soft, width: 0.9, dash: [5, 4] });
+  if (D.WEST_BAY) poly(T, rectPts(D.WEST_BAY), { stroke: C.soft, width: 0.9, dash: [5, 4] });
   if (!T.compact) text(T, 'first floor above', D.HOUSE.x1 - 1.3, D.HOUSE.z1 - 0.3, { size: 0.1, color: C.soft, weight: '500' });
-  if (!T.compact) text(T, 'balcony above', (D.BALCONY.x0 + D.BALCONY.x1) / 2, 0.2, { size: 0.09, color: C.soft, weight: '500', rot: -Math.PI / 2 });
+  if (!T.compact) text(T, 'stair strip above', (D.WEST_STRIP.x0 + D.WEST_STRIP.x1) / 2, 0.2, { size: 0.09, color: C.soft, weight: '500', rot: -Math.PI / 2 });
   const cb = D.DRAINAGE.courtBasin;
   poly(T, rectPts(cb), { fill: C.greenFill, stroke: C.green, width: 1 });
   const tr = D.COURT_TREE;
@@ -263,7 +264,7 @@ function drawGround(T, overlays) {
   for (const w of D.WALLS) if (w.level === 'ground') drawWall(T, w, w.kind === 'low' ? '#7a5a44' : C.poche);
   drawColumns(T);
   for (const r of D.ROOMS.filter((r) => r.level === 'ground')) if (r.use !== 'stair') text(T, r.name, (r.x0 + r.x1) / 2, (r.z0 + r.z1) / 2 + (r.use === 'garden' ? 0.75 : 0), { size: 0.13, bg: 'rgba(247,242,231,0.8)' });
-  if (!T.compact) text(T, 'Entry path', -5.9, (D.STAIR.lane.z0 + D.STAIR.lane.z1) / 2 + 0.55, { size: 0.1, color: C.soft, bg: 'rgba(247,242,231,0.8)' });
+  if (!T.compact) text(T, 'Covered entry', (D.STAIR_RUNS[0].foot[0] + D.STAIR_RUNS[0].lo) / 2, (D.STAIR.lane.z0 + D.STAIR.lane.z1) / 2, { size: 0.1, color: C.soft, bg: 'rgba(247,242,231,0.8)' });
   if (!T.compact) text(T, `16 columns · 4 × 4 grid on the boundary walls · max span ${Math.max(...D.BEAMS.map((b) => b.span || 0)).toFixed(1)} m (230 × ${Math.round(D.DEEP_BEAM * 1000)} mm beams)`, (D.HOUSE.x0 + D.HOUSE.x1) / 2, D.HOUSE.z1 + 1.5, { size: 0.11, color: C.grid, weight: '600' });
   if (!overlays) return;
   for (const c of D.DRAINAGE.channels) {
@@ -282,33 +283,44 @@ function drawGround(T, overlays) {
   text(T, 'Courtyard overflow', 4.6, 0.55, { size: 0.11, color: C.water, bg: 'rgba(247,242,231,0.85)' });
 }
 function drawStair(T, y0, level) {
-  // Straight runs along the north wall, rising west → east: the main run from the
-  // stilt garden to the foyer, the terrace run stacked above it.
-  const S = D.STAIR, z0 = S.lane.z0, z1 = S.lane.z1, zc = (z0 + z1) / 2;
+  // Straight runs: the main stair (stilts → first floor) rises east along the north wall
+  // to the landing; the west stair (first floor → terrace) rises north in the west strip.
   const run = D.STAIR_RUNS.find((r) => Math.abs(r.y0 - y0) < 1e-6);
   const below = D.STAIR_RUNS.find((r) => Math.abs(r.y1 - y0) < 1e-6);
-  if (run) {
-    poly(T, rectPts({ x0: run.f1.x0, x1: run.x1, z0, z1 }), { fill: 'rgba(255,255,255,0.45)' });
-    for (const t of D.stairTreads(y0)) poly(T, rectPts(t), { stroke: C.soft, width: 0.6 });
-    poly(T, rectPts({ x0: run.mid.x0, x1: run.mid.x1, z0, z1 }), { stroke: C.soft, width: 0.6 });
-    arrow(T, [run.f1.x0 + 0.15, zc], [run.x1 - 0.12, zc], { stroke: C.ink, width: 1, head: 0.14 });
-    text(T, 'UP', run.f1.x0 + 0.45, zc - 0.24, { size: 0.1 });
-  }
   if (below && level !== 'ground') {
-    arrow(T, [below.x1 - 0.1, zc + 0.24], [below.x1 - 1.1, zc + 0.24], { stroke: C.soft, width: 1, head: 0.13 });
-    text(T, 'DN', below.x1 - 0.55, zc + 0.02, { size: 0.09, color: C.soft });
+    // Treads of the run arriving at this level, where no slab hides them.
+    const slabs = level === 'first' ? D.FF_RECTS : D.TERRACE_RECTS || [D.HOUSE];
+    const covered = (t) => {
+      const cx = (t.x0 + t.x1) / 2, cz = (t.z0 + t.z1) / 2;
+      return slabs.some((r) => cx >= r.x0 && cx <= r.x1 && cz >= r.z0 && cz <= r.z1) && !D.SLAB_OPENINGS[level].some((o) => cx > o.x0 && cx < o.x1 && cz > o.z0 && cz < o.z1);
+    };
+    for (const t of D.stairTreads(below.y0)) if (!covered(t)) poly(T, rectPts(t), { stroke: C.faint, width: 0.5, dash: [2, 2] });
+    const cc = (below.lane[0] + below.lane[1]) / 2, w = below.lane[1] - below.lane[0];
+    arrow(T, below.pt(below.top - below.dir * 0.1, cc + w * 0.2), below.pt(below.top - below.dir * 1.1, cc + w * 0.2), { stroke: C.soft, width: 1, head: 0.13 });
+    text(T, 'DN', ...below.pt(below.top - below.dir * 0.55, cc - w * 0.18), { size: 0.09, color: C.soft });
+  }
+  if (run) {
+    const cc = (run.lane[0] + run.lane[1]) / 2, w = run.lane[1] - run.lane[0];
+    poly(T, rectPts(run.rect(run.lo, run.hi)), { fill: 'rgba(255,255,255,0.45)' });
+    for (const t of D.stairTreads(y0)) poly(T, rectPts(t), { stroke: C.soft, width: 0.6 });
+    for (const m of run.mids) poly(T, rectPts(run.rect(m.x0, m.x1)), { stroke: C.soft, width: 0.6 });
+    arrow(T, run.pt(run.start + run.dir * 0.15, cc), run.pt(run.top - run.dir * 0.12, cc), { stroke: C.ink, width: 1, head: 0.14 });
+    text(T, 'UP', ...run.pt(run.start + run.dir * 0.45, cc - w * 0.2), { size: 0.1 });
   }
 }
 function drawFirst(T, overlays) {
   const yF = D.LEVELS.first;
-  for (const r of D.ROOMS.filter((r) => r.level === 'first' && r.use !== 'void' && r.use !== 'stair')) poly(T, rectPts(r), { fill: ['hall', 'living', 'family', 'kitchen', 'foyer'].includes(r.use) ? 'rgba(214,170,110,0.14)' : r.use === 'bath' ? 'rgba(160,190,200,0.18)' : r.use === 'balcony' ? 'rgba(122,163,92,0.12)' : 'rgba(255,255,255,0.5)' });
+  for (const r of D.ROOMS.filter((r) => r.level === 'first' && r.use !== 'void' && r.use !== 'stair')) poly(T, rectPts(r), { fill: ['hall', 'living', 'family', 'kitchen', 'foyer', 'library', 'lobby'].includes(r.use) ? 'rgba(214,170,110,0.14)' : r.use === 'bath' ? 'rgba(160,190,200,0.18)' : r.use === 'balcony' || r.use === 'porch' ? 'rgba(122,163,92,0.12)' : 'rgba(255,255,255,0.5)' });
   for (const v of D.COURT_VOID) {
     poly(T, rectPts(v), { fill: C.court });
     line(T, [[v.x0, v.z0], [v.x1, v.z1]], { stroke: C.water, width: 0.6 });
     line(T, [[v.x1, v.z0], [v.x0, v.z1]], { stroke: C.water, width: 0.6 });
   }
-  poly(T, rectPts(D.COURT_LANDING), { fill: 'rgba(214,170,110,0.14)', stroke: C.soft, width: 0.5 });
   drawFurniture(T, 'first');
+  for (const st of D.STEPS || []) {
+    for (const t of D.stepTreads(st)) poly(T, rectPts(t), { stroke: C.soft, width: 0.6 });
+    if (!T.compact) text(T, `${st.n} steps up`, (st.x0 + st.x1) / 2, st.z1 + 0.16, { size: 0.085, color: C.soft });
+  }
   drawStair(T, yF, 'first');
   for (const g of D.GUARDS) for (const r of D.guardBands(g)) poly(T, rectPts(r), { fill: '#7a5a44' });
   for (const w of D.WALLS) if (w.level === 'first') drawWall(T, w);
@@ -326,15 +338,15 @@ function drawFirst(T, overlays) {
     }
   }
   if (T.compact) return;
-  text(T, 'SW low inlet → cross-flow → high exhaust', -0.2, D.HOUSE.z1 + 1.5, { size: 0.12, color: C.cool, weight: '700', bg: 'rgba(247,242,231,0.85)' });
-  text(T, 'low jaali inlets', -4.75, D.HOUSE.z1 + 0.85, { size: 0.1, color: C.cool });
+  text(T, 'West low inlet → cross-flow → high exhaust', -0.2, D.HOUSE.z1 + 1.5, { size: 0.12, color: C.cool, weight: '700', bg: 'rgba(247,242,231,0.85)' });
+  text(T, 'low jaali inlet behind the west stair', -4.0, D.HOUSE.z1 + 0.85, { size: 0.1, color: C.cool });
   text(T, 'high jaali exhausts', D.HOUSE.x1 + 0.35, -1.2, { size: 0.1, color: C.warm, rot: -Math.PI / 2 });
 }
 function drawTerrace(T, overlays) {
   const yT = D.LEVELS.terrace;
-  poly(T, rectPts(D.HOUSE), { fill: 'rgba(177,95,57,0.12)' });
-  poly(T, rectPts(D.BALCONY), { fill: 'rgba(150,150,150,0.12)', stroke: C.soft, width: 0.6, dash: [3, 2] });
-  if (!T.compact) text(T, 'balcony roof (no access)', (D.BALCONY.x0 + D.BALCONY.x1) / 2, 1.9, { size: 0.085, color: C.soft, weight: '500', rot: -Math.PI / 2 });
+  for (const r of D.TERRACE_RECTS || [D.HOUSE]) poly(T, rectPts(r), { fill: 'rgba(177,95,57,0.12)' });
+  poly(T, rectPts(D.WEST_STRIP), { fill: 'rgba(150,150,150,0.08)', stroke: C.soft, width: 0.6, dash: [3, 2] });
+  if (!T.compact) { const ws = D.STAIR_RUNS.find((r) => r.axis === 'z'); if (ws?.mids[0]) text(T, 'west stair', (ws.lane[0] + ws.lane[1]) / 2, (ws.mids[0].x0 + ws.mids[0].x1) / 2, { size: 0.085, color: C.soft, weight: '600', rot: -Math.PI / 2 }); }
   for (const p of D.TERRACE.planters) poly(T, rectPts(p), { fill: C.greenFill, stroke: C.green, width: 0.8 });
   const so = D.TERRACE.solar;
   poly(T, rectPts(so), { fill: 'rgba(40,60,110,0.12)', stroke: '#2b3a67', width: 0.8, dash: [4, 2] });
@@ -345,8 +357,7 @@ function drawTerrace(T, overlays) {
   for (const w of D.WALLS) if (w.level === 'terrace') drawWall(T, w, w.jaaliAbove ? '#7a4a30' : C.poche);
   const tk = D.TERRACE.tank;
   T.ctx.beginPath(); const [kx, ky] = T.P(tk.x, tk.z); T.ctx.arc(kx, ky, tk.r * T.s, 0, Math.PI * 2); T.ctx.strokeStyle = C.soft; T.ctx.lineWidth = 0.8 * T.dpr; T.ctx.setLineDash([3 * T.dpr, 2 * T.dpr]); T.ctx.stroke(); T.ctx.setLineDash([]);
-  text(T, 'Stair head', (D.MUMTY.x0 + D.MUMTY.x1) / 2 - 1.0, (D.MUMTY.z0 + D.MUMTY.z1) / 2 + 0.2, { size: 0.11, bg: 'rgba(247,242,231,0.8)' });
-  if (!T.compact) text(T, '1,000 L tank above', tk.x + 0.2, tk.z + 0.75, { size: 0.095, color: C.soft });
+  if (!T.compact) text(T, '1,000 L tank on a stand', tk.x + 0.2, tk.z + 0.75, { size: 0.095, color: C.soft });
   text(T, 'PV pergola', (so.x0 + so.x1) / 2, (so.z0 + so.z1) / 2, { size: 0.12, color: '#2b3a67', rot: -Math.PI / 2, bg: 'rgba(247,242,231,0.7)' });
   text(T, 'Wash + drying', (D.TERRACE.washCanopy.x0 + D.TERRACE.washCanopy.x1) / 2, 2.95, { size: 0.1 });
   text(T, 'Terrace garden', 3.7, -1.5, { size: 0.13 });
@@ -382,7 +393,7 @@ function drawLegend(T, level, side, [x, y, w, h], overlays) {
   put(`Plot: straight 33′ road side (west), S 46′, N 52′ (north-east corner extended), E ${D.fmtFtIn(D.PLOT.sidesFt.E * FT)} derived. Area 33 × (46 + 52) / 2 = ${areaM2.toFixed(1)} m² = ${Math.round(areaM2 / FT / FT).toLocaleString('en-IN')} sq ft vs the stated 1,620 sq ft. Corner angles and levels unsurveyed.`, 11, '500', C.soft);
   cy += 4 * dpr;
   const items = level === 'ground'
-    ? [['#1d1916', '16 columns (stilts)'], [C.greenFill, 'Courtyard rain garden'], ['rgba(160,74,46,0.4)', 'Thinnai by the stair foot'], ['#6b4126', 'Car gate (sliding) · front gate (hinged)'], ...(overlays ? [[C.water, 'Drains: overflow → silt trap → recharge pit (NE)']] : [])]
+    ? [['#1d1916', '16 columns (stilts)'], [C.greenFill, 'Courtyard rain garden'], ['rgba(255,255,255,0.45)', 'Covered entry + stair from the front gate'], ['#6b4126', 'Car gate (sliding) · front gate (hinged)'], ...(overlays ? [[C.water, 'Drains: overflow → silt trap → recharge pit (NE)']] : [])]
     : level === 'first'
       ? [[C.poche, 'Walls'], [C.court, 'Nadumuttam (open to sky)'], ['#7a5a44', 'Glass guards (1.0 m)'], ['rgba(180,97,58,0.5)', 'Jaali (perforated screen)'], ...(overlays ? [[C.cool, 'SW low inlet (cool air)'], [C.warm, 'High exhaust (warm air)']] : [])]
       : [[C.poche, 'Parapets 1.0 m + stone coping'], [C.greenFill, 'Planters (≥ 0.6 m from guards)'], ['rgba(40,60,110,0.3)', 'PV pergola 11° south'], ...(overlays ? [[C.water, 'Falls + scuppers to the court']] : [])];

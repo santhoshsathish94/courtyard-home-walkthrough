@@ -5,7 +5,7 @@ import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import * as D from './design.js';
 
-const { LEVELS, SLAB, HOUSE, COURT, STAIR, WALLS, ROOMS, BEAMS, FURNITURE, COLUMNS, TERRACE, DRAINAGE, SCUPPERS, PLOT, COMPOUND, GATES, ROAD, MUMTY, COPING, FACE, BALCONY } = D;
+const { LEVELS, SLAB, HOUSE, COURT, STAIR, WALLS, ROOMS, BEAMS, FURNITURE, COLUMNS, TERRACE, DRAINAGE, SCUPPERS, PLOT, COMPOUND, GATES, ROAD, COPING, FACE, BALCONY, WEST_BAY, WEST_STRIP } = D;
 const SWD = { N: [0, -1], S: [0, 1], E: [1, 0], W: [-1, 0] };
 const EPS = 1e-6;
 const isHoriz = (w) => Math.abs(w.a[1] - w.b[1]) < EPS;
@@ -134,8 +134,7 @@ function leafClump(b, key, x, y, z, size, rot = 0) {
 // -------------------------------------------------------------- walls -----
 const houseCentre = [(HOUSE.x0 + HOUSE.x1) / 2, (HOUSE.z0 + HOUSE.z1) / 2];
 function outwardOf(w) {
-  let c = houseCentre;
-  if (w.id.startsWith('tr-mumty')) c = [(MUMTY.x0 + MUMTY.x1) / 2, (MUMTY.z0 + MUMTY.z1) / 2];
+  const c = houseCentre;
   return isHoriz(w) ? [0, Math.sign(w.a[1] - c[1]) || 1] : [Math.sign(w.a[0] - c[0]) || 1, 0];
 }
 // Map wall-local (s along the wall, n across it from the centreline) to plan coordinates.
@@ -173,7 +172,7 @@ function addCoping(b, p0, p1, y, t) {
 }
 
 function buildWall(b, w, opts) {
-  const y0 = LEVELS[w.level], h = w.h, m = wallMap(w), t = w.t / 2;
+  const y0 = LEVELS[w.level] + (w.base || 0), h = w.h, m = wallMap(w), t = w.t / 2;
   const mat = opts.mat || 'lime', ops = [...w.openings].sort((a, c) => a.s - c.s);
   if (w.kind === 'screen') {
     // Full-height slender oak fins (95 mm gaps) between dark steel rails: a modern jaali.
@@ -212,7 +211,7 @@ function buildWall(b, w, opts) {
 }
 
 function fillOpening(b, w, o, opts) {
-  const y0 = LEVELS[w.level], t = w.t / 2, m = wallMap(w), ext = w.kind === 'exterior' || w.kind === 'mumty' || w.level === 'ground';
+  const y0 = LEVELS[w.level] + (w.base || 0), t = w.t / 2, m = wallMap(w), ext = w.kind === 'exterior' || w.level === 'ground';
   const s0 = o.s, s1 = o.s + o.w;
   if (o.type === 'jaali') {
     addJaali(b, w, s0, s1, y0 + o.sill, y0 + o.head, ext ? 'jaaliClay' : 'jaaliTeak');
@@ -247,7 +246,8 @@ function fillOpening(b, w, o, opts) {
     }
     // Main first-floor windows get a projecting dark box frame (shade + depth on the
     // facade); smaller ones keep a thin chajja.
-    if (ext && w.kind === 'exterior' && w.level === 'first' && o.w >= 1.0) {
+    // A flush window (shaded by the west stair) gets neither a frame box nor a hood.
+    if (o.flush) { /* no projection */ } else if (ext && w.kind === 'exterior' && w.level === 'first' && o.w >= 1.0) {
       const out = outwardOf(w), sg = Math.sign(out[0] * m.nx + out[1] * m.nz) || 1, n0 = sg * t, n1 = sg * (t + 0.28);
       const lo = Math.min(n0, n1), hi = Math.max(n0, n1), k = 0.06;
       const yb = y0 + (o.lowJaali ? o.lowJaali[0] : o.sill) - k, yt = y0 + o.head + (o.vent ? 0.40 : 0) + k;
@@ -333,7 +333,7 @@ function buildDoors(M, groups) {
   const doors = [];
   for (const w of WALLS) for (const o of w.openings) {
     if (o.type !== 'door') continue;
-    const level = w.level, y0 = LEVELS[level], sw = { N: [0, -1], S: [0, 1], E: [1, 0], W: [-1, 0] }[o.swing];
+    const level = w.level, y0 = LEVELS[level] + (w.base || 0), sw = { N: [0, -1], S: [0, 1], E: [1, 0], W: [-1, 0] }[o.swing];
     const leaves = D.doorLeaves(w, o).map((lf) => {
       const lw = lf.w - 0.06 - 0.005, h = o.head - 0.06 - 0.01;
       const pivot = new THREE.Group();
@@ -388,7 +388,7 @@ function buildGates(M, group) {
 
 // --------------------------------------------------------- furniture ----
 function buildFurnitureItem(b, M, f, dyn) {
-  const y = LEVELS[f.level];
+  const y = LEVELS[f.level] + (f.dy || 0);
   const back = f.head || f.back || (f.face ? opposite[f.face] : autoBack(f));
   const F = frame(f, back, y), W = F.W, Dp = F.Dp;
   switch (f.type) {
@@ -912,10 +912,10 @@ export function buildWorld(M) {
     const cg = GATES.find((g) => g.type === 'sliding');
     B.site.box('concrete', xIn, carBay.x1, 0.0, 0.016, cg.z0, cg.z1);
     for (const z of [cg.z0, cg.z1 - 0.08]) B.site.box('granite', xIn, carBay.x1, 0.0, 0.02, z, z + 0.08);
-    // Entrance path: large granite pavers from the front gate to the stair foot.
-    const pg = GATES.find((g) => g.type === 'swing'), x1 = RUNS[0].f1.x0;
-    for (let x = xIn + 0.04; x < x1 - 0.1; x += 0.66) B.site.box('granite', x, Math.min(x + 0.62, x1 - 0.02), 0.0, 0.022, pg.z0 + 0.02, pg.z1 - 0.1);
-    B.site.box('graniteBlack', RUNS[0].foot[0], x1, 0.0, 0.024, lane.z0, lane.z1);
+    // Covered entry: large granite pavers from the front gate to a black stone at the stair foot.
+    const x1 = RUNS[0].lo, xa = D.boundaryX('W', 0) + COMPOUND.t;
+    for (let x = xa + 0.04; x < x1 - 0.7; x += 0.66) B.site.box('granite', x, Math.min(x + 0.62, x1 - 0.70), 0.0, 0.022, lane.z0 + 0.04, lane.z1 - 0.04);
+    B.site.box('graniteBlack', x1 - 0.66, x1, 0.0, 0.024, lane.z0, lane.z1);
   }
 
   // ---- compound wall (smooth lime plaster, flat stone coping) and gate piers ----
@@ -999,7 +999,7 @@ export function buildWorld(M) {
   // ---- columns (stilts) and beams ----
   for (const c of COLUMNS) {
     if (c.round) {
-      // The one expressed column: round, fair-faced concrete, visible on both floors.
+      // Expressed round columns: fair-faced concrete, visible on both floors.
       B.L0.add('concrete', cylG(c.x, c.z, c.w / 2, 0, yF - D.BEAM.d, 28));
       B.L1.add('concrete', cylG(c.x, c.z, c.w / 2, yF, yT - D.BEAM.d, 28));
       B.L0.add('graniteBlack', cylG(c.x, c.z, c.w / 2 + 0.03, 0, 0.06, 28));
@@ -1008,61 +1008,83 @@ export function buildWorld(M) {
     const w = c.w + 0.006, d = c.d + 0.006;
     B.L0.box('graniteBlack', c.x - w / 2 - 0.02, c.x + w / 2 + 0.02, 0, 0.08, c.z - d / 2 - 0.02, c.z + d / 2 + 0.02);
     B.L0.box('concrete', c.x - w / 2, c.x + w / 2, 0.08, yF - D.BEAM.d, c.z - d / 2, c.z + d / 2);
+    // Row 4 stands free at the balcony edge: square, fair-faced, up to the terrace beam.
+    if (c.expressed) B.L1.box('concrete', c.x - w / 2, c.x + w / 2, yF, yT - D.BEAM.d, c.z - d / 2, c.z + d / 2);
   }
   // Exposed concrete under the first floor (the stilt ceiling); plastered beams indoors.
   for (const bm of BEAMS) lvlBatch(bm.level === 'first' ? 'first' : 'terrace').box(bm.level === 'first' ? 'concrete' : 'lime', bm.x0 - 0.008, bm.x1 + 0.008, bm.y0, bm.y1 - 0.004, bm.z0 - 0.008, bm.z1 + 0.008);
 
   // ---- slabs, balcony, floor finishes, terrace surface ----
-  for (const r of rectMinus(HOUSE, D.SLAB_OPENINGS.first)) B.L1.box('concrete', r.x0, r.x1, yF - SLAB, yF, r.z0, r.z1);
+  const RAISED = D.RAISED || [];
+  for (const r of rectMinus(HOUSE, [...D.SLAB_OPENINGS.first, ...RAISED])) B.L1.box('concrete', r.x0, r.x1, yF - SLAB, yF, r.z0, r.z1);
   for (const r of rectMinus(HOUSE, D.SLAB_OPENINGS.terrace)) B.L2.box('lime', r.x0, r.x1, yT - SLAB, yT, r.z0, r.z1);
-  // West balcony: cantilevered deck (teak boards) and a thin concrete frame roof.
-  B.L1.box('concrete', BALCONY.x0, BALCONY.x1, yF - SLAB, yF, BALCONY.z0, BALCONY.z1);
-  for (let z = BALCONY.z0 + 0.06; z < BALCONY.z1 - 0.07; z += 0.14) B.L1.box('teak', BALCONY.x0 + 0.06, BALCONY.x1, yF, yF + 0.02, z, Math.min(z + 0.13, BALCONY.z1 - 0.06));
-  B.L2.box('limeExt', BALCONY.x0, BALCONY.x1, yT - SLAB, yT + 0.06, BALCONY.z0, BALCONY.z1);
-  B.L1.box('concreteBoard', BALCONY.x0, BALCONY.x1, yF, yT - SLAB, BALCONY.z1 - 0.15, BALCONY.z1);
-  for (const [x0, x1, z0, z1, key] of [[3.75, 5.35, -3.60, -2.62, 'fabricLinen'], [-4.30, -1.90, 2.30, 4.35, 'fabricGrey'], [-1.25, 1.05, 2.35, 4.35, 'fabricSage'], [4.20, 6.30, 2.55, 4.45, 'fabricLinen']]) B.F1.box(key, x0, x1, yF + 0.016, yF + 0.026, z0, z1);
-  addCoping(B.L2, [BALCONY.x0 + 0.04, BALCONY.z0], [BALCONY.x0 + 0.04, BALCONY.z1], yT + 0.06, 0.1);
-  // One continuous Kota floor through the open half (foyer, hall, living, kitchen);
+  // Common bath: a raised slab over the main stair's low end (solid where it sits on the
+  // first-floor slab south of the stair lane), reached by steps from the short access.
+  for (const rf of RAISED) {
+    B.L1.box('concrete', rf.x0, rf.x1, rf.y - SLAB, rf.y, rf.z0, Math.min(rf.z1, lane.z1));
+    if (rf.z1 > lane.z1) B.L1.box('concrete', rf.x0, rf.x1, yF - SLAB, rf.y, lane.z1, rf.z1);
+  }
+  for (const st of D.STEPS || []) for (const t of D.stepTreads(st)) B.L1.box('kotaSlab', t.x0, t.x1, yF, t.top, t.z0, t.z1);
+  // North-west bay: first-floor and terrace slabs cantilevered off column line A.
+  B.L1.box('concrete', WEST_BAY.x0, WEST_BAY.x1, yF - SLAB, yF, WEST_BAY.z0, WEST_BAY.z1);
+  B.L2.box('lime', WEST_BAY.x0, WEST_BAY.x1, yT - SLAB, yT, WEST_BAY.z0, WEST_BAY.z1);
+  // West stair strip: a cantilevered slab with granite paving, open to the sky.
+  B.L1.box('concrete', WEST_STRIP.x0, WEST_STRIP.x1, yF - SLAB, yF, WEST_STRIP.z0, WEST_STRIP.z1);
+  B.L1.box('granite', WEST_STRIP.x0, WEST_STRIP.x1, yF, yF + 0.012, WEST_STRIP.z0, BALCONY.z0);
+  // South balcony: terracotta floor between the rooms' south wall and the slab edge.
+  B.L1.box('terracotta', BALCONY.x0, BALCONY.x1, yF, yF + 0.012, BALCONY.z0, BALCONY.z1);
+  for (const [x0, x1, z0, z1, key] of [[4.20, 5.60, -0.85, 0.25, 'fabricLinen'], [-5.30, -3.55, -0.25, 1.05, 'fabricGrey'], [-6.30, -4.60, -2.40, -1.55, 'fabricSage']]) B.F1.box(key, x0, x1, yF + 0.016, yF + 0.026, z0, z1);
+  // One continuous Kota floor through the open half (hall, walkways, family, kitchen);
   // bedrooms and baths get their own finish on top (slightly thicker, so no z-fighting).
-  for (const r of rectMinus({ x0: FACE.A, x1: FACE.D, z0: FACE.N, z1: FACE.S }, D.SLAB_OPENINGS.first)) B.L1.box('kotaSlab', r.x0, r.x1, yF, yF + 0.010, r.z0, r.z1);
+  for (const r of rectMinus({ x0: FACE.A, x1: FACE.D, z0: FACE.N, z1: FACE.SB }, [...D.SLAB_OPENINGS.first, ...RAISED])) B.L1.box('kotaSlab', r.x0, r.x1, yF, yF + 0.010, r.z0, r.z1);
   const finishOf = { bedroom: 'terrazzoWarm', dressing: 'terrazzoWarm', bath: 'bathTile' };
-  for (const r of ROOMS) if (r.level === 'first' && finishOf[r.use]) B.L1.box(finishOf[r.use], r.x0, r.x1, yF, yF + 0.014, r.z0, r.z1);
-  // Stair-head floor around the terrace opening.
-  const tOpen = D.SLAB_OPENINGS.terrace.find((o) => o.id === 'stair');
-  for (const r of rectMinus({ x0: MUMTY.x0 + 0.23, x1: MUMTY.x1 - 0.23, z0: lane.z0, z1: lane.z1 }, [tOpen])) B.L2.box('kotaSlab', r.x0, r.x1, yT, yT + 0.012, r.z0, r.z1);
-  // Slab drip bands: a 100 mm projecting edge at each slab casts a crisp shadow line.
+  for (const r of ROOMS) if (r.level === 'first' && finishOf[r.use]) { const y = yF + (r.floorY || 0); B.L1.box(finishOf[r.use], r.x0, r.x1, y, y + 0.014, r.z0, r.z1); }
+  // Slab drip bands: a projecting edge at each slab casts a crisp shadow line. The east
+  // band stays within the plot line at the south-east corner; the west bay and the
+  // stair strip already reach the road line, so they get none.
   for (const [b, y] of [[B.L1, yF], [B.L2, yT]]) {
-    const p = 0.1, x0 = HOUSE.x0 - p, x1 = HOUSE.x1 + p, z0 = HOUSE.z0 - p, z1 = HOUSE.z1 + p, ya = y - SLAB - 0.04, yb = y + (y === yT ? 0.02 : 0);
-    b.box('limeExt', x0, x1, ya, yb, z0, HOUSE.z0);
-    b.box('limeExt', HOUSE.x0, x1, ya, yb, HOUSE.z1, z1);
-    b.box('limeExt', x0, HOUSE.x0, ya, yb, HOUSE.z0, BALCONY.z0);
-    b.box('limeExt', HOUSE.x1, x1, ya, yb, HOUSE.z0, HOUSE.z1);
+    const p = 0.1, ya = y - SLAB - 0.04, yb = y + (y === yT ? 0.02 : 0);
+    b.box('limeExt', WEST_BAY.x0, HOUSE.x1 + 0.03, ya, yb, HOUSE.z0 - p, HOUSE.z0);
+    b.box('limeExt', HOUSE.x0, HOUSE.x1, ya, yb, HOUSE.z1, HOUSE.z1 + p);
+    b.box('limeExt', HOUSE.x1, HOUSE.x1 + 0.03, ya, yb, HOUSE.z0, HOUSE.z1);
   }
   buildTerraceSurface(B.L2);
 
   // ---- walls, openings, jaalis, rain hoods, coping ----
   for (const w of WALLS) {
-    const mat = w.level === 'ground' ? 'concreteBoard' : w.kind === 'parapet' || w.kind === 'guard' || w.kind === 'mumty' ? 'limeExt' : 'lime';
+    const mat = w.level === 'ground' ? 'concreteBoard' : w.kind === 'parapet' || w.kind === 'guard' ? 'limeExt' : 'lime';
     buildWall(lvlBatch(w.level), w, { mat });
   }
-  // Mumty roof slab with a drip edge; the tank stands on it.
-  B.L2.box('lime', MUMTY.x0 - 0.05, MUMTY.x1 + 0.05, MUMTY.roofTop - SLAB, MUMTY.roofTop, MUMTY.z0 - 0.05, MUMTY.z1 + 0.05);
-  addCoping(B.L2, [MUMTY.x0 - 0.05, MUMTY.z0 - 0.05], [MUMTY.x1 + 0.05, MUMTY.z0 - 0.05], MUMTY.roofTop, 0.12);
-  const tk = TERRACE.tank;
-  B.L2.box('concrete', tk.x - tk.r - 0.1, tk.x + tk.r + 0.1, MUMTY.roofTop, MUMTY.roofTop + 0.15, tk.z - tk.r - 0.1, tk.z + tk.r + 0.1);
-  B.L2.add('white', cylG(tk.x, tk.z, tk.r, MUMTY.roofTop + 0.15, MUMTY.roofTop + 0.15 + tk.h, 24));
-  B.L2.add('white', cylG(tk.x, tk.z, tk.r * 0.35, MUMTY.roofTop + 0.15 + tk.h, MUMTY.roofTop + 0.25 + tk.h, 16));
-  B.L2.add('iron', cylG(MUMTY.x1 + 0.08, MUMTY.z1 - 0.3, 0.02, yT + 0.1, MUMTY.roofTop + 0.4, 8));
+  // Water tank on a steel stand over the landing, near column C1.
+  {
+    const tk = TERRACE.tank, sy = yT + tk.stand, o = tk.r + 0.05;
+    for (const [u, v] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) {
+      const px = tk.x + u * o, pz = tk.z + v * o;
+      B.L2.box('concrete', px - 0.09, px + 0.09, yT, yT + 0.08, pz - 0.09, pz + 0.09);
+      B.L2.box('steel', px - 0.035, px + 0.035, yT + 0.08, sy, pz - 0.035, pz + 0.035);
+    }
+    B.L2.box('steel', tk.x - o - 0.05, tk.x + o + 0.05, sy - 0.08, sy, tk.z - o - 0.05, tk.z + o + 0.05);
+    B.L2.add('white', cylG(tk.x, tk.z, tk.r, sy, sy + tk.h, 24));
+    B.L2.add('white', cylG(tk.x, tk.z, tk.r * 0.35, sy + tk.h, sy + tk.h + 0.10, 16));
+  }
 
-  // ---- stairs: main run (stilts → first floor), terrace run stacked above ----
-  buildStairRun(B.L0, RUNS[0], true);
-  buildStairRun(B.L1, RUNS[1], false);
+  // ---- stairs: main run (stilts → landing) and the open-air west stair (balcony → terrace) ----
+  buildStairRun(B.L0, RUNS[0], 'c1');
+  buildStairRun(B.L1, RUNS[1], null, true);
 
-  // ---- guards: frameless glass in a stone kerb with a slim steel cap rail ----
+  // ---- guards: frameless glass in a stone kerb with a slim steel cap rail, or a
+  // terracotta jaali screen in a dark steel frame ----
   for (const g of D.GUARDS) for (const r of D.guardBands(g)) {
     const y0 = LEVELS[g.level], bb = lvlBatch(g.level), along = r.x1 - r.x0 > r.z1 - r.z0;
     const cx = (r.x0 + r.x1) / 2, cz = (r.z0 + r.z1) / 2;
     bb.box('kotaSlab', r.x0, r.x1, y0, y0 + g.kerb, r.z0, r.z1);
+    if (g.jaali) {
+      const pw = { a: along ? [r.x0, cz] : [cx, r.z0], b: along ? [r.x1, cz] : [cx, r.z1], t: g.t };
+      const L = along ? r.x1 - r.x0 : r.z1 - r.z0, n = Math.max(1, Math.round(L / 1.5));
+      addJaali(bb, pw, 0.02, L - 0.02, y0 + g.kerb + 0.035, y0 + g.h - 0.035, 'jaaliClay', 0, 'frameDark');
+      for (let i = 0; i <= n; i++) { const s = Math.min(L - 0.04, Math.max(0, (L * i) / n - 0.02)); wallBox(bb, 'frameDark', pw, s, s + 0.04, y0 + g.kerb, y0 + g.h, -g.t / 2 - 0.01, g.t / 2 + 0.01); }
+      continue;
+    }
     if (along) {
       bb.box('glass', r.x0, r.x1, y0 + g.kerb, y0 + g.h - 0.035, cz - 0.006, cz + 0.006);
       bb.box('steel', r.x0, r.x1, y0 + g.h - 0.035, y0 + g.h, cz - 0.02, cz + 0.02);
@@ -1115,7 +1137,7 @@ export function buildWorld(M) {
   // ---- furniture ----
   for (const f of FURNITURE) buildFurnitureItem(furnBatch(f.level), M, f, dyn);
   // Potted plants (terracotta pots): entrance, stilts, living, balcony and terrace.
-  for (const [x, z, y, s] of [[-6.45, -2.45, 0, 0.6], [-2.05, -3.35, 0, 0.55], [6.25, -1.55, yF, 0.55], [-6.62, 4.45, yF, 0.5], [-5.2, -3.85, yT, 0.6], [4.6, -2.75, yT, 0.55]]) {
+  for (const [x, z, y, s] of [[-6.45, -2.20, 0, 0.6], [-2.05, -3.00, 0, 0.55], [6.40, -1.05, yF, 0.55], [-6.62, 4.45, yF, 0.5], [-6.30, -3.00, yT, 0.6], [4.6, -2.75, yT, 0.55]]) {
     const pot = new THREE.LatheGeometry([[0, 0], [0.14, 0], [0.19, 0.3], [0.21, 0.33], [0.2, 0.36]].map(([r, h]) => new THREE.Vector2(r, h)), 16);
     pot.translate(x, y, z);
     const fb = furnBatch(y === 0 ? 'ground' : y === yF ? 'first' : 'terrace');
@@ -1174,8 +1196,8 @@ export function buildWorld(M) {
   function buildTerraceSurface(b) {
     // Terracotta pavers rising 60 mm from the court guard to the parapets: rain runs to the court.
     // Tile edges include every hole edge, so no paver overhangs the void or the stair head.
-    const holes = [...D.SLAB_OPENINGS.terrace, { x0: MUMTY.x0, x1: MUMTY.x1, z0: MUMTY.z0, z1: MUMTY.z1 }];
-    const x0 = HOUSE.x0 + 0.23, x1 = HOUSE.x1 - 0.23, z0 = HOUSE.z0 + 0.23, z1 = HOUSE.z1 - 0.23, step = 0.2;
+    const holes = [...D.SLAB_OPENINGS.terrace, { x0: WEST_BAY.x0 - 1, x1: HOUSE.x0 + 0.23, z0: WEST_BAY.z1 - 0.23, z1: HOUSE.z1 + 1 }];
+    const x0 = WEST_BAY.x0 + 0.23, x1 = HOUSE.x1 - 0.23, z0 = HOUSE.z0 + 0.23, z1 = HOUSE.z1 - 0.23, step = 0.2;
     const grid = (a, c, keys) => { const s = new Set([a, c]); for (let v = a + step; v < c - 1e-6; v += step) s.add(Math.round(v * 1e4) / 1e4); for (const k of keys) if (k > a && k < c) s.add(k); return [...s].sort((p, q) => p - q); };
     const X = grid(x0, x1, holes.flatMap((h) => [h.x0, h.x1])), Z = grid(z0, z1, holes.flatMap((h) => [h.z0, h.z1]));
     const dmax = Math.max(COURT.x0 - 0.23 - x0, x1 - COURT.x1 - 0.23, COURT.z0 - 0.23 - z0, z1 - COURT.z1 - 0.23);
@@ -1196,50 +1218,52 @@ export function buildWorld(M) {
     g.computeVertexNormals();
     b.addRaw('terracotta', g);
   }
-  function buildStairRun(b, run, openSouth) {
-    // Floating stair: 50 mm oak treads with open risers on a dark steel spine per
-    // flight, an oak-topped steel mid landing, slim steel balusters on any open side.
-    const S = STAIR, r = S.riser, T = S.tread, z0 = lane.z0, z1 = lane.z1, zc = (z0 + z1) / 2, y0 = run.y0, Hf = S.perFlight * r, slope = r / T, th = Math.atan(slope);
-    for (const t of D.stairTreads(y0)) b.box('oak', t.x0 - 0.015, t.x1 + 0.005, t.top - 0.05, t.top, z0 + 0.02, z1 - 0.02);
-    for (const [fl, f] of [[1, run.f1], [2, run.f2]]) {
-      const ya = y0 + (fl === 1 ? 0 : Hf), L = f.x1 - f.x0, len = Math.hypot(L, L * slope) + 0.1, d = 0.2;
-      const xm = (f.x0 + f.x1) / 2, ytop = ya + 0.5 * r - 0.05 + (xm - f.x0) * slope;
-      const g = new THREE.BoxGeometry(len, d, 0.16);
-      g.rotateZ(th);
-      g.translate(xm, ytop - (d / 2) / Math.cos(th), zc);
-      b.add('frameDark', worldUV(g));
-    }
-    const yL = y0 + Hf;
-    b.box('oak', run.mid.x0 - 0.015, run.mid.x1 + 0.005, yL - 0.05, yL, z0 + 0.02, z1 - 0.02);
-    b.box('frameDark', run.mid.x0 + 0.02, run.mid.x1 - 0.02, yL - 0.16, yL - 0.05, z0 + 0.08, z1 - 0.08);
-    if (y0 === LEVELS.ground) b.add('frameDark', cylG((run.mid.x0 + run.mid.x1) / 2, z1 - 0.16, 0.04, 0, yL - 0.16, 12));
-    else b.box('frameDark', run.mid.x0 + 0.1, run.mid.x1 - 0.1, yL - 0.32, yL - 0.16, z0, z0 + 0.05);
-    // Handrail on the wall side, 0.9 m above the nosings.
-    const rail = (zr, key) => {
-      for (const [fl, f] of [[1, run.f1], [2, run.f2]]) {
-        const ya = y0 + (fl === 1 ? 0 : Hf) + r + 0.9, yb = ya + (f.x1 - f.x0) * slope, L = f.x1 - f.x0;
-        const g = new THREE.BoxGeometry(Math.hypot(L, yb - ya), 0.045, 0.045);
-        g.rotateZ(Math.atan2(yb - ya, L));
-        g.translate((f.x0 + f.x1) / 2, (ya + yb) / 2, zr);
-        b.add(key, worldUV(g));
-      }
-      b.box(key, run.mid.x0, run.mid.x1, yL + 0.9 - 0.0225 + r, yL + 0.9 + 0.0225 + r, zr - 0.0225, zr + 0.0225);
+  function buildStairRun(b, run, openSide, outdoor = false) {
+    // Floating stair: 50 mm treads with open risers on a dark steel spine per flight,
+    // steel mid landings, slim steel balusters on an open side. Built in run
+    // coordinates (a along the run, q across it) and mapped to plan. Indoors: oak;
+    // the open-air west stair: granite treads and steel rails.
+    const r = run.riser, T = run.tread, [c0, c1] = run.lane, cc = (c0 + c1) / 2, slope = r / T, th = Math.atan(slope), dir = run.dir;
+    const zAxis = run.axis === 'z', treadKey = outdoor ? 'granite' : 'oak', railKey = outdoor ? 'steel' : 'oak';
+    const box = (key, a0, a1, y0, y1, q0, q1) => (zAxis ? b.box(key, q0, q1, y0, y1, a0, a1) : b.box(key, a0, a1, y0, y1, q0, q1));
+    const sloped = (key, len, h, w, am, ym, qm) => {
+      const g = new THREE.BoxGeometry(len, h, w);
+      g.rotateZ(dir * th);
+      if (zAxis) { g.rotateY(-Math.PI / 2); g.translate(qm, ym, am); } else g.translate(am, ym, qm);
+      b.add(key, worldUV(g));
     };
-    rail(z0 + 0.05, 'oak');
-    if (!openSouth) return;
-    // Open (south) side of the main run: 12 mm steel balusters at < 100 mm and an oak rail.
-    const zb = z1 - 0.035;
-    rail(zb, 'oak');
-    for (const [fl, f] of [[1, run.f1], [2, run.f2]]) {
-      const ya = y0 + (fl === 1 ? 0 : Hf);
-      for (let x = f.x0 + 0.05; x < f.x1 - 0.02; x += 0.095) {
-        const k = Math.min(S.perFlight - 1, Math.floor((x - f.x0) / T) + 1), base = ya + k * r, topY = ya + r + (x - f.x0) * slope + 0.9;
-        b.box('frameDark', x - 0.006, x + 0.006, base, topY, zb - 0.006, zb + 0.006);
+    for (const t of D.stairTreads(run.y0)) box(treadKey, t.a0 - 0.01, t.a1 + 0.01, t.top - 0.05, t.top, c0 + 0.02, c1 - 0.02);
+    for (const f of run.flights) {
+      const L = f.x1 - f.x0, len = Math.hypot(L, L * slope) + 0.1, d = 0.2;
+      const ytop = f.ys + 0.5 * r - 0.05 + (L / 2) * slope;
+      sloped('frameDark', len, d, 0.16, (f.x0 + f.x1) / 2, ytop - (d / 2) / Math.cos(th), cc);
+    }
+    for (const m of run.mids) {
+      box(treadKey, m.x0 - 0.01, m.x1 + 0.01, m.y - 0.05, m.y, c0 + 0.02, c1 - 0.02);
+      box('frameDark', m.x0 + 0.02, m.x1 - 0.02, m.y - 0.16, m.y - 0.05, c0 + 0.08, c1 - 0.08);
+      box('frameDark', m.x0 + 0.1, m.x1 - 0.1, m.y - 0.32, m.y - 0.16, c0, c0 + 0.05);
+    }
+    // Handrails 0.9 m above the nosings.
+    const rail = (qr, key) => {
+      for (const f of run.flights) {
+        const L = f.x1 - f.x0, ya = f.ys + r + 0.9, yb = ya + L * slope;
+        sloped(key, Math.hypot(L, L * slope), 0.045, 0.045, (f.x0 + f.x1) / 2, (ya + yb) / 2, qr);
+      }
+      for (const m of run.mids) box(key, m.x0, m.x1, m.y + 0.9 - 0.0225 + r, m.y + 0.9 + 0.0225 + r, qr - 0.0225, qr + 0.0225);
+    };
+    rail(c0 + 0.05, railKey);
+    if (openSide !== 'c1') { rail(c1 - 0.05, railKey); return; }
+    // Open side: 12 mm steel balusters at < 100 mm and a rail.
+    const qb = c1 - 0.035;
+    rail(qb, railKey);
+    for (const f of run.flights) {
+      for (let a = f.x0 + 0.05; a < f.x1 - 0.02; a += 0.095) {
+        const dd = Math.abs(a - f.xs), k = Math.min(f.n - 1, Math.floor(dd / T) + 1), base = f.ys + k * r, topY = f.ys + r + dd * slope + 0.9;
+        box('frameDark', a - 0.006, a + 0.006, base, topY, qb - 0.006, qb + 0.006);
       }
     }
-    for (let x = run.mid.x0 + 0.05; x < run.mid.x1; x += 0.095) b.box('frameDark', x - 0.006, x + 0.006, yL, yL + 0.9 + r, zb - 0.006, zb + 0.006);
-  }
-  function buildStructure() {
+    for (const m of run.mids) for (let a = m.x0 + 0.05; a < m.x1; a += 0.095) box('frameDark', a - 0.006, a + 0.006, m.y, m.y + 0.9 + r, qb - 0.006, qb + 0.006);
+  }  function buildStructure() {
     // X-ray view: the 16 columns and the beam grid, ground to terrace.
     const g = new THREE.Group();
     const colMat = new THREE.MeshStandardMaterial({ color: 0xd2691e, emissive: 0x6b2a05, roughness: 0.6 });
